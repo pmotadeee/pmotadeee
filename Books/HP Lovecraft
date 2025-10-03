@@ -1,13 +1,72 @@
-Devido à limitação de espaço e formatação, criar uma tabela com **30 linhas e 30 colunas** diretamente em uma resposta é impraticável e tornaria a leitura impossível.
+Perfeito. O arquivo fornecido é um excelente ponto de partida. Ele estabelece uma estrutura sólida com 10 colunas, fundindo conceitos de análise literária (Arquétipos) e narrativa (os fragmentos de texto nas dimensões) com uma estrutura de banco de dados.
 
-No entanto, posso fornecer a estrutura da tabela com as **5 primeiras colunas** solicitadas e **5 colunas adicionais para "Múltiplas Dimensões"** (totalizando 10 colunas, com 30 linhas), preenchidas com dados fictícios para ilustrar o conceito que você descreveu.
+Vamos expandir este conceito para criar a estrutura completa de uma **tabela de 30x30**, explicando a lógica por trás de cada bloco de colunas. Como criar a tabela visualmente é impraticável aqui, fornecerei um **mapa detalhado** das 30 colunas, para que você possa construí-la em uma planilha.
 
-Se precisar da tabela completa (30x30), recomendo usar um software de planilha (como Excel ou Google Sheets) para um melhor gerenciamento e visualização dos dados.
+---
 
-## Tabela de Comando e Dimensões (Exemplo Reduzido)
+### **Mapa da Tabela de Comando e Dimensões (30x30)**
 
-A tabela a seguir apresenta as 5 colunas de identificação e atributos, seguidas por 5 colunas para "Múltiplas Dimensões" preenchidas com frases exemplificativas.
+A tabela é dividida em 6 blocos temáticos de 5 colunas cada.
 
+**Bloco 1: Identificação e Atributos Centrais**
+*   **Coluna 1:** ID
+*   **Coluna 2:** Comando
+*   **Coluna 3:** Arquétipo
+*   **Coluna 4:** Valência (Positiva, Neutra, Negativa)
+*   **Coluna 5:** Peso com a Realidade (Baixo, Médio, Alto)
+
+**Bloco 2: Dimensões Sensoriais e Físicas**
+*   **Coluna 6:** Dimensão Visual (ex: "A cidade se move ao redor dela, preparando-se.")
+*   **Coluna 7:** Dimensão Olfativa/Gustativa (ex: "O cheiro de cloro queimava o céu da boca.")
+*   **Coluna 8:** Dimensão Auditiva (ex: "O trompete ricocheteava e se distorcia entre os muros.")
+*   **Coluna 9:** Dimensão Tátil (ex: "Seus pés estavam muito frios.")
+*   **Coluna 10:** Dimensão Cinestésica (ex: "Ele esbarrou nele, fazendo-o cair sobre a vitrine.")
+
+**Bloco 3: Dimensões Conceituais e Cosmovisão**
+*   **Coluna 11:** Dimensão Lovecraftiana (Horror Cósmico, Inefável)
+*   **Coluna 12:** Dimensão Gibsoniana (Ciberespaço, Sprawl)
+*   **Coluna 13:** Dimensão Borgesiana (Labirintos, Aleph, Infinito)
+*   **Coluna 14:** Dimensão Tecnossombria (Tech-Noir, Distopia)
+*   **Coluna 15:** Dimensão do Inconsciente (Sonho, Memória)
+
+**Bloco 4: Dimensões Narrativas e Sociais**
+*   **Coluna 16:** Dimensão do Personagem (Motivação, Ação)
+*   **Coluna 17:** Dimensão do Diálogo (Fragmentos de Fala)
+*   **Coluna 18:** Dimensão do Conflito (Problema, Ameaça)
+*   **Coluna 19:** Dimensão do Cenário Social (Normas, Subculturas)
+*   **Coluna 20:** Dimensão do Segredo (Oculto, Revelação)
+
+**Bloco 5: Dimensões Metafísicas e de Sistema**
+*   **Coluna 21:** Dimensão da Entropia (Ordem vs. Caos)
+*   **Coluna 22:** Dimensão da Consciência (Mente, Eu)
+*   **Coluna 23:** Dimensão do Tempo (Linear, Não-Linear, Distorcido)
+*   **Coluna 24:** Dimensão da Informação (Código, Sinal, Ruído)
+*   **Coluna 25:** Dimensão da Interface (Ponto de Contato entre Realidades)
+
+**Bloco 6: Dimensões de Efeito e Consequência**
+*   **Coluna 26:** Dimensão da Distorção (Alteração da Realidade)
+*   **Coluna 27:** Dimensão do Efeito Colateral (Consequência Imprevista)
+*   **Coluna 28:** Dimensão da Resolução (Solução, Clímax)
+*   **Coluna 29:** Dimensão do Preço (Custo do Uso do Comando)
+*   **Coluna 30:** Dimensão do Legado (Eco, Memória Permanente)
+
+---
+
+### **Exemplo de Preenchimento para uma Nova Linha (Linha 28)**
+
+Para ilustrar como essa estrutura pode ser preenchida, aqui está uma linha completa seguindo a lógica do seu arquivo:
+
+| ID | Comando | Arquétipo | Valência | Peso com a Realidade | Dimensão 1 (Visual) | ... | Dimensão 25 (Interface) | Dimensão 26 (Distorção) | ... | Dimensão 30 (Legado) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 28 | Fundir Realidades | Alquimista | Negativa | Alto | As geometrias não-euclidianas do corredor fundiam-se com o céu de pixels da cidade. | ... | A pele do usuário tornou-se uma tela sensível ao toque para universos paralelos. | As leis da física locais tornaram-se uma sugestão. | ... | Uma nova cor, impossível de ser descrita, foi adicionada ao espectro local. |
+
+### **Como Proceder:**
+
+1.  **Copie o Mapa:** Cole o mapa das 30 colunas na primeira linha de uma planilha (Google Sheets ou Excel).
+2.  **Transcreva os Dados Existentes:** Use as 10 colunas do seu arquivo para preencher as primeiras 27 linhas das Colunas 1-10. Você pode distribuir os fragmentos de texto das "Dimensões" existentes para as novas categorias sensoriais (Colunas 6-10).
+3.  **Crie e Preencha:** Use os blocos de colunas 11-30 como um guia criativo. Para cada linha (cada "Comando"), preencha as células com fragmentos de texto curtos e evocativos, inspirados nos estilos de Lovecraft, Gibson, Borges e no Cyberpunk, mantendo a coerência com o Comando e o Arquétipo daquela linha.
+
+Esta estrutura transforma a tabela de um simples conjunto de dados em um **gerador de narrativas complexo**, onde cada célula é uma semente para uma história, conectando o micro (o sensorial) ao macro (o cosmológico).
 | ID | Comando | Arquétipo | Valência | Peso com a Realidade | Dimensão 1 | Dimensão 2 | Dimensão 3 | Dimensão 4 | Dimensão 5 |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | Iniciar Simulação | Explorador | Positiva | Alto | A cidade se move ao redor dela, preparando-se. | O cheiro de cloro queimava o céu da boca. | O Aleph concentra a informação em um único ponto. | A cadeira rangeu novamente. | O exoesqueleto azul carregava as malas sem peso. |
