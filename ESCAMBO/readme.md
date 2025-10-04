@@ -72,7 +72,7 @@ if usuario.clica_em("Tenho"):
 - **FATURA EM CIMA DE:**  
   - Anúncio de **Oficinas/Barbearias** (R$ 50/mês)  
   - **"Verificação Ouro"** (selo p/ quem tem 100⭐ = R$ 5)  
-  - **App de namoro integrado:** *"caminhoneiros que trocam carona por boquete"*  
+  - **App de namoro integrado:** *"caminhoneiros que trocam carona por namoro"*  
 
 ---
 
