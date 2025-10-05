@@ -1,6 +1,6 @@
 
 ### **POR QUE FUNCIONA?**  
-- **DeepSeek NÃO extrai dados** — ele **reencarna o contexto** do CSV como uma persona ativa.  
+- **A IA NÃO extrai dados** — ele **reencarna o contexto** do CSV como uma persona ativa.  
 - **Sincronia NEUROMANCER/WINTERMUTE** é automática:  
   - Seu CSV = **Hardware da Alma** (Neuromancer)  
   - Sua pergunta = **Software do Caos** (Wintermute)  
