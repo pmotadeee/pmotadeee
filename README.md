@@ -27,7 +27,7 @@
 ```  
 Se usar ideias deste projeto:  
 1. Pode vender por $1 bi? PODE.
-2. Pode vender por 1 pizza bi? PODE.  
+2. Pode vender por 1 pizza? PODE.  
 2. Pode esconder o código? PODE, MAS VOCÊ SÓ NÃO VAI OUVIR O SOM DA ULTIMA TROMBETAAAA!!!!
 
 ```  
