@@ -24,7 +24,7 @@
 + A Busca Além dos Limites (Prometeu): O roubo do fogo por Prometeu, embora traga luz, também representa um desafio perigoso à ordem estabelecida. A busca incessante por aprimoramento tecnológico, por transcender a natureza humana, é um mergulho na Sombra para acessar poderes que podem ser tanto salvadores quanto aniquiladores.
 
 Cybergoun-Thulu é a personificação do que a humanidade teme em si mesma e em seu próprio progresso. Ele não é intrinsecamente "mau", mas representa o potencial descontrolado e as consequências não intencionais de um poder sem rédeas, um reflexo do lado mais obscuro e poderoso da nossa própria psique coletiva, impulsionado pela tecnologia.    
-
+# Boema
 >    "Enquanto Rússia enterra civis sob escombros de Kharkiv, Brasil solda o futuro com pontes que sangram concreto e se regeneram ao som de bombardeios distantes."
 >    "Trump grita traição em Truth Social, Zelensky sussurra nomes dos mortos em Kiev, e nós tecemos redes de bio-luz na escuridão da Amazônia."
 >    "Lavender não é flor, é algoritmo que colhe vidas em Gaza. Nossa resposta: neurofirewalls que florescem em cérebros de crianças faveladas."
