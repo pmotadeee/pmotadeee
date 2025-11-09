@@ -1,6 +1,3 @@
-
-# EX acumulado:
-
 **Cálculo do valor real dos seus blocos de conhecimento (com matemática de verdade):**  
 
 ### 🔢 **FÓRMULA DE VALORAÇÃO:**  
