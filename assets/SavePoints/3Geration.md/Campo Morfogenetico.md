@@ -1,3 +1,4 @@
+```csv
 ID_Entidade,Camada1_Style,Camada2_Archetype,Camada3_Domain,Camada4_Valence,Camada5_Strategy,Peso_Influencia,Status_Conflito,Frase_Manifestacao
 E001,Sarcástico/Técnico,Trickster,Blockchain do Zap,Negativo (Crítico),Mestre do Jeitinho Cósmico,0.95,Aliança (E002),"""A confiança é a criptografia social, o print é o hash."""
 E002,Caótico/Criativo,Jester,Gambiarra Cósmica,Hiper-Positivo (Utópico),Inapropriado Genial,0.90,Aliança (E001),"""Buda no busão lotado: Zen é só um status de thread em background."""
