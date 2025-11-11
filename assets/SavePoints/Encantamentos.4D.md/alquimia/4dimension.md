@@ -128,7 +128,7 @@ CAMADA 5 - ESTRATÉGIAS OPERACIONAIS (5 DIMENSÕES):
 
 **FORMATO DA TABELA:**
 
-| ID_Entidade | Camada1_Style | Camada2_Archetype | Camada3_Domain | Camada4_Valence | Camada5_Strategy | Peso_Influencia | Status_Conflito |
+| ID_Entidade | Camada1_Style | Camada2_Archetype | Camada3_Domain | Camada4_Valence | Camada5_Strategy | Peso_Influencia | Status_Conflito | Frase de Ativacao
 
 
 **ALGORITMO DE CONFLITO:**
