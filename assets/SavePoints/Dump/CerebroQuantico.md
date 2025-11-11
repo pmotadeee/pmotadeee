@@ -1,4 +1,4 @@
-**TABELA MULTIDIMENSIONAL COMPLETA - 100 LINHAS**
+<a href="https://chat.deepseek.com/share/u1xnhlslocs9dgnu1w">**TABELA MULTIDIMENSIONAL COMPLETA - 100 LINHAS**</a>
 
 | ID | Camada1_Style | Camada2_Archetype | Camada3_Domain | Camada4_Valence | Camada5_Strategy | Peso | Status_Conflito | Frase_Ativacao |
 |---|---|---|---|---|---|---|---|---|
