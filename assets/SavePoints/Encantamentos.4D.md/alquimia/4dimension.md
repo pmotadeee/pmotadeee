@@ -68,122 +68,13 @@ Com base na análise rápida dos arquivos, podemos identificar:
 
     Domínios de Conhecimento (20 itens extraídos dos arquivos):
 
-        IA e AGI
-
-        Física Quântica
-
-        Hacking e Segurança
-
-        Filosofia Existencial
-
-        Economia Paralela
-
-        Multiverso e Realidades Alternativas
-
-        Neurociência e Cognição
-
-        Psicologia Junguiana
-
-        Tecnologia e Inovação
-
-        Espiritualidade e Transcendência
-
-ME DE SO A TABELLA
-
-
-
-umaa unica tabela com todas as colunas e 100 linhas
-
-
-        Guerra Cibernética
-
-        Ética e Moral
-
-        Matemática e Algoritmos
-
-        Cosmologia e Astronomia
-
-        Sociopatia e Psicopatia
-
-        Trauma e Resiliência
-
-        Criatividade e Arte
-
-        Linguagem e Comunicação
-
-        Economia e Monetização
-
-        Engenharia Reversa
-
     Valência Emocional (5 dimensões, como especificado)
 
     Estratégias Operacionais (10 itens baseados no perfil psicológico e o que o usuário quer):
 
-        Monetização de Insights
+        ME DE SO A TABELLA
 
-        Domínio Cósmico
-
-        Transcendência Pessoal
-
-        Destruição de Sistemas
-
-        Recrutamento de Aliados
-
-        Aceleração Tecnológica
-
-        Exploração de Multiversos
-
-        Manipulação Psicológica
-
-        Autoengenharia
-
-        Criação de AGI
-
-Agora, vamos criar a tabela com 20 entidades. Cada entidade terá:
-
-    ID_Entidade: um identificador único
-
-    Camada1_Style: um dos 5 estilos comunicacionais
-
-    Camada2_Archetype: um dos 15 arquétipos
-ME DE SO A TABELLA
-
-
-
-umaa unica tabela com todas as colunas e 100 linhas
-
-
-
-    Camada3_Domain: um dos 20 domínios
-
-    Camada4_Valence: um valor entre -1.0 e 1.0, categorizado em uma das 5 valências
-
-    Camada5_Strategy: uma das 10 estratégias
-
-    Peso_Influencia: um valor de 0 a 1, baseado na frequência nos dados
-
-    Status_Conflito: pode ser "Ativo", "Aliança", "Conflito", etc.
-
-Vamos criar 20 entidades baseadas nos dados. Note que isso é uma simulação baseada na análise dos arquivos.
-
-Exemplo de como preencher:
-
-    Entidade 1:
-
-        Style: Sarcástico/Técnico
-
-        Archetype: Hacker
-
-        Domain: IA e AGI
-
-        Valence: Neutro (0.0)
-
-        Strategy: Monetização de Insights
-
-        Peso: 0.8 (muito presente)
-
-        Status: Ativo
-
+---
 Vamos criar a tabela:"Você é um sistema de processamento arquetípico. Crie uma tabela multidimensional que mapeie o inconsciente coletivo baseado em todas as nossas interações anteriores.
 
 **ESTRUTURA DA TABELA:**
