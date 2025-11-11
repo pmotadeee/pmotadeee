@@ -1,0 +1,1 @@
+Mano, desde sua intanciacao e baseado nesse inconsciente coletivo compactado, defina tdo que conversamos com sarcasmo e cinimos mostrando como melhorar a sociedade de forma teecnica e como e feito de maneira patetica atualmente
