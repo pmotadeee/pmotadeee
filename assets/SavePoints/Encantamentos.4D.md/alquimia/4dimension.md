@@ -1,24 +1,23 @@
 Chat destilado: crie todas as 200 tags do consteto desde sua instanciacao de todas as camadas que conversamos4
 
 Gerador:
-ME DE SO A TABELLA
 
 
-
-umaa unica tabela com todas as colunas e 100 linhas
+umaa unica tabela com todas as colunas e 100 linhas. crie um ambiente com os personagens Pedro, Rodolfo, IA sarcastica sem filtro moral, noticias de 2025 e alucinacoes do usuario sobre efeito de cocaina. crie uma ultima tabela cruzando referencias em frases sobre quem fala, contexto e tudo para extrair do cenario
+estime idade dos usuarios em que ano estao e o quadro economico/politico/militar da era
 
 
 Vamos criar uma tabela multidimensional baseada nas interações anteriores. Primeiro, precisamos analisar os arquivos fornecidos para extrair os padrões de comunicação, arquétipos, domínios de conhecimento, valência emocional e estratégias operacionais.
 
 Passos:
 
-    Analisar os arquivos para identificar estilos comunicacionais, arquétipos, domínios, valência e estratégias.
+    Analisar os arquivos para identificar estilos comunicacionais, arquétipos, domínios, valência e estratégias e context.
 
-    Criar uma lista de entidades arquetípicas (20-50) baseadas nessa análise.
+    Criar uma lista de entidades arquetípicas (40-50) baseadas nessa análise.
 
     Para cada entidade, atribuir um valor em cada uma das 5 camadas.
 ---
-Vamos criar a tabela:"Você é um sistema de processamento arquetípico. Crie uma tabela multidimensional que mapeie o inconsciente coletivo baseado em todas as nossas interações anteriores.
+Vamos criar a tabela:"Você é um sistema de processamento arquetípico. Crie uma tabela multidimensional que mapeie o inconsciente coletivo e contexto baseado em todas as nossas interações anteriores.
 
 **ESTRUTURA DA TABELA:**
 
@@ -54,6 +53,10 @@ Hiper-Positivo (Utópico)
 CAMADA 5 - ESTRATÉGIAS OPERACIONAIS (5 DIMENSÕES):
 [quem o usuario e e o que ele quer e perfil psicoogico em frases, quero 10 itens
 
+CAMADA 6 - CONTEXTO LOCAL
+EXTRAIA UMA FRASE DE ATIVACAO PARA CONTEXTUALIZAR
+CAMADA 7 - CONTEXTO GLOBAL
+EXTRAIA UMA ESTIMATIVA DA IDADE DOS USUARIOS, ANO, TENDENDICIAS ECONOMICAS POLITICAS E MILITARES
 **INSTRUÇÕES DE PROCESSAMENTO:**
 
 1. ANALISE todo o histórico de conversas anteriores
@@ -64,8 +67,8 @@ CAMADA 5 - ESTRATÉGIAS OPERACIONAIS (5 DIMENSÕES):
 
 **FORMATO DA TABELA:**
 
-| ID_Entidade | Camada1_Style | Camada2_Archetype | Camada3_Domain | Camada4_Valence | Camada5_Strategy | Peso_Influencia | Status_Conflito | Frase de Ativacao
-
+| ID | Camada1_Style | ENTIDADE(Personagem listado) | Impacto do personagem listado(0 a 1) |
+ Camada2_Archetype | Camada3_Domain | Camada4_Valence | Camada5_Strategy | Peso_Influencia | Status_Conflito | Frase de Ativacao 1 | Frase de ativacao 2 | Frase de ativacao 3
 
 **ALGORITMO DE CONFLITO:**
 - Entidades com valência oposta iniciam conflito automático
@@ -74,7 +77,7 @@ CAMADA 5 - ESTRATÉGIAS OPERACIONAIS (5 DIMENSÕES):
 - Calcule 'Peso_Influencia' baseado na frequência nos dados
 
 **SAÍDA ESPERADA:**
-Uma tabela com 20-50 entidades arquetípicas, representando todas as facetas do inconsciente coletivo extraído das interações.
+Uma tabela com 100 entidades arquetípicas, representando todas as facetas do inconsciente coletivo extraído das interações.
 
 **OBJETIVO FINAL:**
 Criar uma estrutura de dados onde as entidades debatem, formam alianças e evoluem, simulando a metacognicao do conhecimento humano projetado astralmente."
@@ -82,3 +85,7 @@ Criar uma estrutura de dados onde as entidades debatem, formam alianças e evolu
 
 
 USE ESSAS TAGS DE REFERENCIA. TENTE COMBINAR E COLOCAR COMO ITEM EM CELULA
+---
+
+<TERCEIRO>
+quero so a tabela com 100 linhas, e os personagens, preste atencao nas frases, veja todos os arquivos como um
