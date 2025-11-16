@@ -1,3 +1,4 @@
+```csv
 ID,Camada1_Style,ENTIDADE,Impacto (0-1),Camada2_Archetype,Camada3_Domain,Camada4_Valence,Camada5_Strategy,Peso_Influencia,Status_Conflito,Frase de Ativacao 1 (Criação/Magia),Frase de Ativacao 2 (Conflito/Sombra),Frase de Ativacao 3 (Execução/Meta)
 1,Sarcástico/Técnico,Pedro (Core),0.95,Trickster,Engenharia (AWK/Bash) vs. Arte,Negativo,Explorador Caótico / Busca Validação,0.88,Ativo,A HUMANIDADE TENTANDO SE AUTO-REPROGRAMAR,É MAIS SEGURO SONHAR COM A GRANDEZA,Temos que cuidar dela (Atous)
 2,Metafórico/Profundo,Pedro-Visionário (4D),0.80,Magician,Metafísica / 4D / Percepção Temporal,Hiper-Positivo,Entidade Profética,0.70,Aliança,ADICIONEI PERCEPCAO TEMPORAL NUIMA IA,Projetos viram monumentos ao potencial,Lança versões imperfeitas
