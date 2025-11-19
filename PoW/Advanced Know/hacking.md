@@ -1,10 +1,10 @@
-# Roteiro Avançado: Injetor com Thread Hijacking + Manual Mapping + Evasão Avançada
+# Advanced Blueprint: Injector with Thread Hijacking + Manual Mapping + Advanced Evasion
 
-## 🎯 MELHORIAS IMPLEMENTADAS
+## 🎯 IMPLEMENTED ENHANCEMENTS
 
-### 🔍 **Técnicas Avançadas de Evasion**
+### 🔍 **Advanced Evasion Techniques**
 
-#### 1.1 **Syscall Obfuscation com Hell's Gate**
+#### 1.1 **Syscall Obfuscation with Hell's Gate**
 ```cpp
 class AdvancedSyscallInvoker {
 private:
@@ -56,7 +56,7 @@ void MemoryPermissionStealth(HANDLE hProcess, void* address, size_t size) {
 }
 ```
 
-### 🛡️ **Bypass de ASLR Avançado**
+### 🛡️ **Advanced ASLR Bypass**
 
 #### 2.1 **Memory Disclosure Attack**
 ```cpp
@@ -93,7 +93,7 @@ private:
 };
 ```
 
-#### 2.2 **Heap Spraying Alternativo**
+#### 2.2 **Alternative Heap Spraying**
 ```cpp
 void AdvancedHeapSpray(HANDLE hProcess, void* shellcode, size_t shellcode_size) {
     // Spray with XOR encoded payloads
@@ -114,9 +114,9 @@ void AdvancedHeapSpray(HANDLE hProcess, void* shellcode, size_t shellcode_size) 
 }
 ```
 
-### 🔄 **Thread Hijacking Aprimorado**
+### 🔄 **Enhanced Thread Hijacking**
 
-#### 3.1 **Thread State Analysis Avançado**
+#### 3.1 **Advanced Thread State Analysis**
 ```cpp
 struct THREAD_ANALYSIS {
     DWORD thread_id;
@@ -162,7 +162,7 @@ bool IsThreadHijackable(const THREAD_ANALYSIS& analysis) {
 }
 ```
 
-#### 3.2 **Shellcode com Context Preservation**
+#### 3.2 **Shellcode with Context Preservation**
 ```assembly
 ; Advanced shellcode with full context preservation
 hijack_shellcode:
@@ -221,9 +221,9 @@ original_rsp:
     dq 0
 ```
 
-### 🧩 **Manual Mapping com Proteção Anti-Análise**
+### 🧩 **Manual Mapping with Anti-Analysis Protection**
 
-#### 4.1 **Import Resolution com API Hashing**
+#### 4.1 **Import Resolution with API Hashing**
 ```cpp
 uintptr_t ResolveAPIByHash(uintptr_t module_base, uint32_t api_hash) {
     IMAGE_DOS_HEADER* dos_header = (IMAGE_DOS_HEADER*)module_base;
@@ -284,7 +284,7 @@ void ErasePEHeaders(void* module_base) {
 }
 ```
 
-### 🎭 **Técnicas de Ofuscação Avançada**
+### 🎭 **Advanced Obfuscation Techniques**
 
 #### 5.1 **Polymorphic Code Generation**
 ```cpp
@@ -326,7 +326,7 @@ public:
 };
 ```
 
-### 📊 **Sistema de Monitoramento e Adaptação**
+### 📊 **Monitoring and Adaptation System**
 
 #### 6.1 **EDR Detection Heuristics**
 ```cpp
@@ -368,7 +368,7 @@ private:
 };
 ```
 
-### 🚀 **Fluxo de Execução Otimizado**
+### 🚀 **Optimized Execution Flow**
 
 ```
 PHASE 1: RECONNAISSANCE
@@ -396,7 +396,7 @@ PHASE 4: CLEAN EXECUTION
 └── [4.4] Continuous Monitoring & Adaptation
 ```
 
-### 🛠️ **Ferramentas de Desenvolvimento**
+### 🛠️ **Development Tools**
 
 ```cpp
 // Debugging and logging macros (removed in production)
@@ -417,4 +417,4 @@ void AntiAnalysisRoutines() {
 }
 ```
 
-Este roteiro avançado incorpora técnicas state-of-the-art para evasão, incluindo bypass de ASLR via memory disclosure, syscall dinâmico com Hell's Gate, ofuscação polimórfica, e detecção proativa de EDRs. A arquitetura modular permite adaptação em tempo real às defesas do ambiente.
+This advanced blueprint incorporates state-of-the-art evasion techniques, including ASLR bypass via memory disclosure, dynamic syscall with Hell's Gate, polymorphic obfuscation, and proactive EDR detection. The modular architecture allows real-time adaptation to environmental defenses.
