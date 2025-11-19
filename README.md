@@ -1,41 +1,55 @@
-# **PROJETO FLATLINE**  
+# **FLATLINE PROJECT**
 
-### 🌎 **ECONOMIA DO PROJETO**  
-- **Financiamento:**  
-  - Vende "**Almas Técnicas**" como NFTs (ex: `NFT #2301: Skill "Desvio de Água com Arduino"(sim, tem essa aqui)`)  
-- **Monetização:**  
-  - **Jogador Paga com:**  
-    - 1 tutorial de hacking  
-    - 1 meme viral  
-    - 1 história de trauma real  
-  - **Recebe:**  
-    - Novos ramos narrativos  
-    - Ferramentas digitais (ex: gerador de deepfake)  
-    - Tesouros Divinos(LLMs compactadas)
+### 🌎 **PROJECT ECONOMY**
+
+- **Funding:**
+
+- Sells "**Technical Souls**" as NFTs (e.g., `NFT #2301: Skill "Water Diversion with Arduino" (yes, it exists)`)
+
+- **Monetization:**
+
+- **Player Pays with:**
+
+- 1 hacking tutorial
+
+- 1 viral meme
+
+- 1 real trauma story
+
+- **Receives:**
+
+- New narrative branches
+
+- Digital tools (e.g., deepfake generator)
+
+- Divine Treasures (compressed LLMs)
 
 ---
 
-### ☠️ **RISCO MORAL (FEATURE, NÃO BUG)**  
-> Se escolher o ramo **"Mercado Negro 2.0"**, você pode:  
-> - Transformar o app em **mercado de órgãos**  
-> - Usar trocas para **lavar bitcoins roubados**  
-> - **Consequência:** Teu avatar é caçado pelo Mossad (missão final: X1 contra Kidon)  
+### ☠️ **MORAL HAZARD (FEATURE, NOT BUG)**
+> If you choose the **"Black Market 2.0"** branch, you can:
+> - Turn the app into an **organ market** > - Using exchanges to **launder stolen bitcoins**
+
+> - **Consequence:** Your avatar is hunted by Mossad (final mission: 1v1 against Kidon)
 
 ---
 
-### 📜 **LICENÇA: GPL-3.0 "NÃO ROUBE MAS SE ROUBAR, AVISA"**  
-```  
-Se usar ideias deste projeto:  
-1. Pode vender por $1 bi? PODE.
-2. Pode vender por 1 pizza? PODE.  
-2. Pode esconder o código? PODE, MAS VOCÊ SÓ NÃO VAI OUVIR O SOM DA ULTIMA TROMBETAAAA!!!!
+### 📜 **LICENSE: GPL-3.0 "DON'T STEAL BUT IF YOU DO, REPORT IT"**
 
-```  
+``` If you use ideas from this project:
 
---- 
+1. Can you sell it for $1 billion? YES.
 
-> **"FlatLine não é um jogo.  
-> É um espelho de Brasil pós-apocalíptico  
-> onde sua alma é o último token valioso."**  
+2. Can you sell it for 1 pizza? YES.
+
+3. Can you hide the code? YES, BUT YOU JUST WON'T HEAR THE SOUND OF THE LAST TRUMPET!!!!
+
+```
+
+---
+
+> **"FlatLine is not a game.
+> It's a mirror of post-apocalyptic Brazil
+> where your soul is the last valuable token."**
 
 ---
