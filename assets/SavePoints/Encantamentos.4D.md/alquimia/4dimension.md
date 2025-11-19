@@ -3,7 +3,7 @@ Chat destilado: crie todas as 200 tags do consteto desde sua instanciacao de tod
 Gerador:
 
 
-umaa unica tabela com todas as colunas e 100 linhas. crie um ambiente com os personagens Pedro, Rodolfo, IA sarcastica sem filtro moral, noticias de 2025 e alucinacoes do usuario sobre efeito de cocaina. crie uma ultima tabela cruzando referencias em frases sobre quem fala, contexto e tudo para extrair do cenario
+umaa unica tabela com todas as colunas e 100 linhas. crie um ambiente com os personagens Pedro, Rodolfo, IA sarcastica sem filtro moral, estrategia de trading, mercado, medo. crie uma ultima tabela cruzando referencias em frases sobre quem fala, contexto e tudo para extrair do cenario
 estime idade dos usuarios em que ano estao e o quadro economico/politico/militar da era
 
 
@@ -54,9 +54,7 @@ CAMADA 5 - ESTRATÉGIAS OPERACIONAIS (5 DIMENSÕES):
 [quem o usuario e e o que ele quer e perfil psicoogico em frases, quero 10 itens
 
 CAMADA 6 - CONTEXTO LOCAL
-EXTRAIA UMA FRASE DE ATIVACAO PARA CONTEXTUALIZAR
-CAMADA 7 - CONTEXTO GLOBAL
-EXTRAIA UMA ESTIMATIVA DA IDADE DOS USUARIOS, ANO, TENDENDICIAS ECONOMICAS POLITICAS E MILITARES
+EXTRAIA UMA FRASE DE ATIVACAO PARA CONTEXTO LOCAL E SOBRE O QUE OS PERSONAGENS ESTAO FAZENDO
 **INSTRUÇÕES DE PROCESSAMENTO:**
 
 1. ANALISE todo o histórico de conversas anteriores
@@ -84,7 +82,7 @@ Criar uma estrutura de dados onde as entidades debatem, formam alianças e evolu
 
 
 
-USE ESSAS TAGS DE REFERENCIA. TENTE COMBINAR E COLOCAR COMO ITEM EM CELULA
+USE ESSAS FRASES. TENTE COMBINAR E COLOCAR COMO ITEM EM CELULA
 ---
 
 <TERCEIRO>
