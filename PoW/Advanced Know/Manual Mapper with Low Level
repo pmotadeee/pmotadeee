@@ -1,0 +1,200 @@
+🔍 Code Analysis: Manual Mapper with Low-Level Techniques
+
+I'll explain the main low-level strategies implemented in this code:
+
+🎯 MAIN LOW-LEVEL STRATEGIES
+
+1. Custom Initialization Shellcode
+
+```cpp
+unsigned char dllmain_shellcode[] = {
+    // Stack alignment (x64 Windows requirement)
+    0x48, 0x83, 0xEC, 0x28,                   // sub rsp, 0x28
+    
+    // Preserve non-volatile registers (calling convention)
+    0x48, 0x89, 0x5C, 0x24, 0x18,            // mov [rsp+0x18], rbx
+    0x48, 0x89, 0x6C, 0x24, 0x20,            // mov [rsp+0x20], rbp
+    
+    // Prepare parameters for DllMain (fastcall x64)
+    0x48, 0x89, 0xCB,                         // mov rbx, rcx (hModule)
+    0xBA, 0x01, 0x00, 0x00, 0x00,            // mov edx, 1 (DLL_PROCESS_ATTACH)
+    0x45, 0x31, 0xC0,                         // xor r8d, r8d (lpReserved = NULL)
+    
+    // Call DllMain dynamically
+    0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rax, &DllMain
+    0xFF, 0xD0,                               // call rax
+    // ... cleanup and return
+};
+```
+
+Low-Level Strategies:
+
+· ✅ Position-Independent Code (PIC): Shellcode doesn't depend on absolute addresses
+· ✅ Register Preservation: Maintains non-volatile registers according to Windows x64 convention
+· ✅ Stack Alignment: Aligns stack to 16 bytes (x64 Windows requirement)
+· ✅ Dynamic Function Resolution: DllMain address is patched at runtime
+
+2. Manual PE Headers Parsing
+
+```cpp
+// Manual parsing of PE structures without API dependency
+PIMAGE_DOS_HEADER dosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(dllData.data());
+PIMAGE_NT_HEADERS ntHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(
+    reinterpret_cast<DWORD_PTR>(dllData.data()) + dosHeader->e_lfanew);
+
+// Manual signature validation
+if (dosHeader->e_magic != IMAGE_DOS_SIGNATURE) {
+    DebugUtils::LogError("Invalid DOS signature");
+    return false;
+}
+```
+
+Low-Level Strategies:
+
+· ✅ Manual PE Structures: Direct parsing of DLL file bytes
+· ✅ Integrity Verification: Manually validates MZ and PE signatures
+· ✅ Offset Calculation: Manually calculates offsets using e_lfanew
+
+3. Manual Relocation Application
+
+```cpp
+bool ApplyRelocations(HANDLE hProcess, LPVOID moduleBase, PIMAGE_NT_HEADERS ntHeaders) {
+    IMAGE_DATA_DIRECTORY relocDir = ntHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
+    
+    // Calculate delta between real and preferred address
+    DWORD_PTR delta = reinterpret_cast<DWORD_PTR>(moduleBase) - ntHeaders->OptionalHeader.ImageBase;
+    
+    PIMAGE_BASE_RELOCATION reloc = reinterpret_cast<PIMAGE_BASE_RELOCATION>(
+        reinterpret_cast<DWORD_PTR>(moduleBase) + relocDir.VirtualAddress);
+    
+    while (reloc->VirtualAddress > 0 && reloc->SizeOfBlock > 0) {
+        DWORD entries = (reloc->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(WORD);
+        PWORD typeOffset = reinterpret_cast<PWORD>(reloc + 1);
+        
+        for (DWORD i = 0; i < entries; i++) {
+            if ((typeOffset[i] >> 12) == IMAGE_REL_BASED_DIR64) {
+                // Apply relocation for x64 architecture
+                DWORD_PTR* patchAddr = reinterpret_cast<DWORD_PTR*>(
+                    reinterpret_cast<DWORD_PTR>(moduleBase) + reloc->VirtualAddress + (typeOffset[i] & 0xFFF));
+                
+                DWORD_PTR patchedValue = *patchAddr + delta;
+                WriteProcessMemory(hProcess, patchAddr, &patchedValue, sizeof(DWORD_PTR), nullptr);
+            }
+        }
+        reloc = reinterpret_cast<PIMAGE_BASE_RELOCATION>(
+            reinterpret_cast<DWORD_PTR>(reloc) + reloc->SizeOfBlock);
+    }
+    return true;
+}
+```
+
+Low-Level Strategies:
+
+· ✅ ASLR Bypass: Fixes addresses when DLL doesn't load at preferred ImageBase
+· ✅ Memory Patching: Directly modifies addresses in process memory
+· ✅ Relocation Table Parsing: Manually interprets PE relocation table
+
+4. Advanced Entry Point Detection
+
+```cpp
+LPVOID FindRealEntryPoint(HANDLE hProcess, LPVOID moduleBase, PIMAGE_NT_HEADERS ntHeaders) {
+    DWORD entryPointRVA = ntHeaders->OptionalHeader.AddressOfEntryPoint;
+    LPVOID entryPoint = reinterpret_cast<LPVOID>(
+        reinterpret_cast<DWORD_PTR>(moduleBase) + entryPointRVA);
+    
+    // Read and analyze code at entry point
+    std::vector<BYTE> entryCode(32);
+    ReadProcessMemory(hProcess, entryPoint, entryCode.data(), 32, &bytesRead);
+    
+    // x64 function prologue patterns
+    bool isValid = false;
+    if (bytesRead >= 4 && entryCode[0] == 0x55 && entryCode[1] == 0x48 && entryCode[2] == 0x89 && entryCode[3] == 0xE5) {
+        isValid = true; // push rbp; mov rbp, rsp
+    }
+    else if (bytesRead >= 3 && entryCode[0] == 0x48 && entryCode[1] == 0x83 && entryCode[2] == 0xEC) {
+        isValid = true; // sub rsp, XXX
+    }
+    // ... more patterns
+}
+```
+
+Low-Level Strategies:
+
+· ✅ Code Pattern Recognition: Identifies valid assembly patterns
+· ✅ Runtime Code Analysis: Analyzes code at runtime
+· ✅ Multiple Prologue Detection: Recognizes different function styles
+
+5. Stealth Memory Management
+
+```cpp
+// Allocation with specific permissions
+LPVOID moduleBase = VirtualAllocEx(hProcess, 
+                                  nullptr,
+                                  ntHeaders->OptionalHeader.SizeOfImage,
+                                  MEM_COMMIT | MEM_RESERVE,
+                                  PAGE_EXECUTE_READWRITE); // ⚠️ Full permission initially
+
+// Permission verification and adjustment
+MEMORY_BASIC_INFORMATION mbi;
+VirtualQueryEx(hProcess, shellcodeAddr, &mbi, sizeof(mbi));
+if (!(mbi.Protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE))) {
+    // Fix permissions if necessary
+    VirtualProtectEx(hProcess, shellcodeAddr, sizeof(shellcode), PAGE_EXECUTE_READWRITE, &oldProtect);
+}
+```
+
+Low-Level Strategies:
+
+· ✅ Memory Permission Manipulation: Granular control over memory permissions
+· ✅ Stealth Allocation: Uses PAGE_EXECUTE_READWRITE initially for write+execute
+· ✅ Memory Querying: Verifies current memory state with VirtualQueryEx
+
+6. Remote Thread Execution with Context Preservation
+
+```cpp
+HANDLE hThread = CreateRemoteThread(hProcess, nullptr, 0,
+                                   reinterpret_cast<LPTHREAD_START_ROUTINE>(shellcodeAddr),
+                                   moduleBase, 0, nullptr); // moduleBase passes to RCX
+
+// Shellcode preserves complete context:
+// - Stack alignment (16 bytes)
+// - Non-volatile registers (RBX, RBP)  
+// - Clean return with restored state
+```
+
+Low-Level Strategies:
+
+· ✅ Context-Aware Injection: Preserves original thread state
+· ✅ Structured Exception Handling: Prepares stack for exceptions
+· ✅ Clean Execution Flow: Clean return without corrupting process state
+
+7. Runtime Integrity Verifications
+
+```cpp
+// Critical verification of written shellcode
+std::vector<BYTE> verifyShellcode(sizeof(shellcode));
+ReadProcessMemory(hProcess, shellcodeAddr, verifyShellcode.data(), sizeof(shellcode), &bytesRead);
+
+if (memcmp(shellcode, verifyShellcode.data(), sizeof(shellcode)) == 0) {
+    DebugUtils::LogSection("✅ Shellcode verification PASSED");
+} else {
+    DebugUtils::LogError("❌ SHELLCODE VERIFICATION FAILED - DATA CORRUPTED!");
+}
+```
+
+Low-Level Strategies:
+
+· ✅ Memory Integrity Checks: Verifies if data was written correctly
+· ✅ Read-After-Write Validation: Confirms writing by reading back
+· ✅ Early Error Detection: Fails fast if corruption occurs
+
+🎯 SUMMARY OF LOW-LEVEL STRATEGIES
+
+Strategy Technique Purpose
+Manual PE Parsing Direct header parsing Avoid monitored APIs
+Position-Independent Shellcode PIC with runtime patching Address flexibility
+ASLR Bypass Manual relocations Work with randomization
+Memory Stealth Permission cycling Avoid EDR detection
+Context Preservation Save/Restore registers Thread stability
+Integrity Verification Read-after-write Injection reliability
+Pattern Recognition Code analysis Find valid entry points
