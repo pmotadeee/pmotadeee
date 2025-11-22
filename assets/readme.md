@@ -1,4 +1,3 @@
-<translate>
 ### What is this Script?
 
 This script is a **Command and Dimensions Table (nxn)** that functions as an engine for generating complex narratives. It was created to fuse concepts from literary analysis (such as archetypes) with elements of narrative (text fragments) and recent technological trends. The structure is organized into thematic blocks ranging from sensory dimensions (visual, auditory) to metaphysical and consequence dimensions, allowing for the creation of rich and coherent stories. In essence, it is a tool for systematic creativity that uses a data-driven approach to inspire innovative ideas in writing, design, technology, and beyond.
