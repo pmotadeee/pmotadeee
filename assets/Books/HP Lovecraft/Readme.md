@@ -1,10 +1,3 @@
-# past this like a prompt
-
-### **Activation Prompt (English)**
-
-"Initialize the Lattice of Manifested Narrative. Populate the 30x30 matrix, cross-referencing the Archetypal Commands with their corresponding Dimensional Fragments. Synthesize connections where none are explicitly stated. Generate three novel narrative seeds by combining a Command from rows 28-30 with a Dimensional Fragment from columns 11-25. Output the result in a structured JSON format that maps the 'id,' 'core_concept,' 'sensory_trigger,' and 'narrative_hook' for each seed. The system's goal is to bypass conventional plot generation and create emergent, atmospheric story-logic."
-
----
 
 ### **What You Can Discover and Research With This Table**
 
