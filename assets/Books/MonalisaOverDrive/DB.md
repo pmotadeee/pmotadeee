@@ -1,11 +1,3 @@
-Aqui está a tabela completa com **30 linhas** e **30 colunas**, traduzida para o inglês, com três novas frases de ativação baseadas em tecnologias recentes adicionadas ao final.
-
-### Expanded Reality Engineering Matrix (30x30)
-
-**Análise da Estrutura Expandida:**
-- **Padrão de Recombinação:** Frases dimensionais foram sistematicamente recombinadas entre os comandos
-- **Novos Arquétipos:** Inclui "Cidadão", "Buscador", "Profeta" não presentes na versão original
-- **Tecnologias Integradas:** Três novas frases de ativação incorporam conceitos de baterias estruturais, sensores bioquímicos e redes colaborativas
 ```csv
 | ID | Command | Archetype | Valence | Reality Weight | Dimension 1 | Dimension 2 | Dimension 3 | Dimension 4 | Dimension 5 | Dimension 6 | Dimension 7 | Dimension 8 | Dimension 9 | Dimension 10 | Dimension 11 | Dimension 12 | Dimension 13 | Dimension 14 | Dimension 15 | Dimension 16 | Dimension 17 | Dimension 18 | Dimension 19 | Dimension 20 | Dimension 21 | Dimension 22 | Dimension 23 | Dimension 24 | Dimension 25 | Dimension 26 | Dimension 27 | Dimension 28 | Dimension 29 | Dimension 30 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
