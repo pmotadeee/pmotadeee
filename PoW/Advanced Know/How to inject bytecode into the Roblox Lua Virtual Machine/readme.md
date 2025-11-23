@@ -450,3 +450,12 @@ int main() {
   - [ ] Debug spoofing
   - [ ] Hook detection
   - [ ] Memory stealth
+
+## ⚠️ **Important Considerations**
+
+- **Educational**: This blueprint is for security education purposes
+- **Complexity**: Requires advanced Windows internals and Luau VM knowledge
+- **Risks**: Use in online games may violate TOS and result in bans
+- **Ethics**: Use this knowledge responsibly
+
+This blueprint provides a complete technical foundation for understanding and implementing Luau bytecode injection, integrating all techniques from the provided texts in a practical and accessible way.
