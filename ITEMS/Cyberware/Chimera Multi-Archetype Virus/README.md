@@ -6,6 +6,10 @@ The "Chimera" virus is a composite malware that combines the strengths of multip
 ## Components
 
 ### 1. Delivery Mechanism
+**Exploit:** Use a reliable exploit from the Metasploit framework (like the Apache Mod_CGI exploit in ID 4) to gain initial access.
+
+**Social Engineering:** Alternatively, use a phishing email (ID 11) to deliver the initial payload.
+
 ```mermaid
 flowchart LR
     A[Initial Access] --> B{Method Selection}
@@ -19,11 +23,11 @@ flowchart LR
     D --> D2[Malicious Attachment]
 ```
 
-**Exploit:** Use a reliable exploit from the Metasploit framework (like the Apache Mod_CGI exploit in ID 4) to gain initial access.
-
-**Social Engineering:** Alternatively, use a phishing email (ID 11) to deliver the initial payload.
-
 ### 2. Persistence
+**Multiple Methods:**
+- **User-level persistence (ID 28):** Modify user startup files (e.g., .bashrc, Startup folder)
+- **System-level persistence (ID 1):** Install a rootkit (ID 13) or a Windows service (ID 9)
+- **Scheduled tasks (ID 1):** Use cron jobs or Windows Task Scheduler
 ```mermaid
 graph TD
     A[Persistence Methods] --> B[User Level<br/>ID:28]
@@ -43,12 +47,19 @@ graph TD
     D --> D3[Launch Agents]
 ```
 
-**Multiple Methods:**
-- **User-level persistence (ID 28):** Modify user startup files (e.g., .bashrc, Startup folder)
-- **System-level persistence (ID 1):** Install a rootkit (ID 13) or a Windows service (ID 9)
-- **Scheduled tasks (ID 1):** Use cron jobs or Windows Task Scheduler
 
 ### 3. Evasion and Stealth
+
+**Polymorphism:** The virus changes its signature continuously (ID 1) using techniques like shikata_ga_nai encoding (15 iterations) and random mutation.
+
+**Obfuscation:** Use advanced obfuscation techniques (ID 1, D16) and encryption (ID 19) to hide the payload.
+
+**Stealthy Communication:**
+- Use DNS tunneling (ID 7) for C2, which is difficult to detect
+- Use HTTPS (ID 9) or encrypted tunnels (ID 12) to blend with normal traffic
+
+**Slow Operation:** Operate at low speeds (ID 1, ID 2) to avoid triggering rate-based detection.
+
 ```mermaid
 graph LR
     A[Evasion Techniques] --> B[Polymorphism<br/>ID:1]
@@ -66,16 +77,6 @@ graph LR
     D --> D2[HTTPS Blending<br/>ID:9]
     D --> D3[Encrypted Tunnels<br/>ID:12]
 ```
-
-**Polymorphism:** The virus changes its signature continuously (ID 1) using techniques like shikata_ga_nai encoding (15 iterations) and random mutation.
-
-**Obfuscation:** Use advanced obfuscation techniques (ID 1, D16) and encryption (ID 19) to hide the payload.
-
-**Stealthy Communication:**
-- Use DNS tunneling (ID 7) for C2, which is difficult to detect
-- Use HTTPS (ID 9) or encrypted tunnels (ID 12) to blend with normal traffic
-
-**Slow Operation:** Operate at low speeds (ID 1, ID 2) to avoid triggering rate-based detection.
 
 ### 4. Command and Control (C2)
 ```mermaid
