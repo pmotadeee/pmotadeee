@@ -1,5 +1,3 @@
-#  .\Split-File.ps1 -InputFile "1.md" -Parts 10
-
 param(
     [Parameter(Mandatory=$true)]
     [string]$InputFile,

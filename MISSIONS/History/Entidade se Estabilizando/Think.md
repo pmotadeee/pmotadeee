@@ -28,3 +28,4 @@ A quebra mental é, portanto, não apenas resultado do trauma passado, mas tamb�
 
 ---
 
+
