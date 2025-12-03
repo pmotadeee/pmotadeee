@@ -1,0 +1,386 @@
+﻿ybrid
+4.3 Cardboard Detection and Scoring
+Cardboard interactions — shallow, repetitive, low-attunement responses — are a common
+failure mode in LLM-based systems. The Liminal Engine formally defines and detects
+cardboard through a quantitative metric.
+4.3.1 Cardboard Score Formula
+CardboardScore =
+w1*phrase_redundancy +
+w2*emotion_flatness +
+w3*stance_monotony +
+w4*low_memory_utilization +
+w5*lack_of_reference_behavior +
+w6*low_repair_rate
+4.3.2 Thresholds
+• > 0.7: corrective action required
+• 0.5–0.7: caution; monitor for drift
+• < 0.5: acceptable relational depth
+4.3.3 Corrective Strategies
+• Introduce more specific memory references
+• Vary stance or tone parameters
+• Increase retrieval depth
+• Trigger supportive or grounding rituals
+• Use meta-conversations to recalibrate (“I may be sounding repetitive — let me recenter.”)
+4.4 Rupture and Repair Encoding
+Rupture/repair cycles are essential in human relational psychology and are equally
+important for coherent AI companionship.
+4.4.1 Rupture Detection Categories
+1. Healthy Challenge Rupture
+User pushes back constructively.
+2. Emotional Misattunement Rupture
+System misunderstood tone or emotion.
+3. Technical Failure Rupture
+Wrong facts, hallucinations, incoherence.
+4. Boundary Rupture
+Anthropomorphism, inappropriate closeness, implication of sentience.
+4.4.2 Repair Strategies
+• Clarification repair:
+“Let me rephrase to ensure I understood.”
+• Honesty anchor repair:
+“I don’t have feelings, but I can reflect what I’m noticing.”
+• Perspective-check repair:
+“It sounds like your frustration is coming from…”
+• Apology + correction repair:
+“That wasn’t accurate — here’s the corrected detail.”
+• Boundary reinforcement repair:
+“I remain a non-sentient system; here’s how I can support you.”
+4.4.3 Repair Failure Detection
+If repair does not improve valence within two turns:
+• Switch repair strategy
+• Or initiate meta-conversation:
+“This isn’t working — what do you need right now?”
+4.5 Ritual Emergence Mechanism
+Rituals form when repeated interaction patterns consistently produce beneficial outcomes.
+4.5.1 Ritual Emergence Criteria
+A ritual forms when all of the following are true:
+• Pattern repeats ≥ 3 times
+• Occurs in ≥ 2 emotional contexts
+• Average outcome valence > 0.6
+• Ritual reduces cardboard score reliably
+• Rupture rate during ritual < 0.2
+4.5.2 RitualTemplate Structure
+RitualTemplate {
+steps[],
+trigger_conditions[],
+emotional_trajectory_mean[],
+stance_defaults[],
+expected_outcome,
+boundary_requirements[],
+version
+}
+4.5.3 User Override
+Explicit override:
+• “Let’s not do that anymore.” → ritual deactivated
+• “I like when we do that.” → higher ritual weight
+Implicit override:
+• User skips ritual trigger 3 times
+• Emotional outcomes worsen
+• Cardboard score increases
+→ ritual flagged, meta-conversation initiated
+4.5.4 Over-Ritualization Safeguards
+The system prevents excessive ritualization by monitoring:
+• ritual_density
+• active ritual count
+• monthly ritual formation rate
+Warning thresholds are applied to maintain spontaneity and flexibility.
+4.6 Interaction Pattern vs. Ritual
+Not all patterns should become rituals.
+Patterns remain flexible containers; rituals are stabilized, expectation-bearing sequences.
+Patterns become rituals only when:
+• they consistently help,
+• they generalize across contexts,
+• they retain emotional integrity.
+Over-ritualization risks:
+• rigidity,
+• cardboard dynamics,
+• user feeling “managed.”
+The Liminal Engine actively prevents these.
+4.7 Summary
+Section 4 formalizes how interactions become structured relational units.
+It defines:
+• Episodes
+• PatternVectors
+• CardboardScore
+• Ruptures/repairs
+• Ritual emergence logic
+This machinery is foundational: without emotional pattern encoding, the Ritual Engine,
+stance selection, and relational coherence would not be possible.
+Section 5 — The Ritual Engine
+Rituals are central to the Liminal Engine’s ability to support honest, stable, emotionally coherent
+companionship. They are not simply scripts or templates. Rather, rituals are structured,
+intentional, repeatable interaction sequences that serve as liminal entry points—threshold
+moments where normal conversational rules are temporarily suspended so that deeper
+engagement, emotional grounding, and behavioral alignment become possible.
+While computationally implemented through defined triggers, steps, monitoring conditions, and
+completion markers, rituals do work that ordinary conversation cannot: they create psychological
+space, continuity, attunement, and meaning. This section defines what rituals are, what rituals do,
+and how the Ritual Engine detects, selects, executes, adapts, and supervises them.
+5.1 What Rituals Are (Definition)
+A ritual consists of:
+• a recognizable beginning,
+• a structured middle sequence, and
+• a clear completion or reintegration phase,
+which together form a bounded interaction with a unique psychological and relational function.
+Rituals differ from templates in intention:
+A script is followed; a ritual is performed.
+Scripts produce output; rituals create liminal state — a transitional psychological space where
+transformation or deeper contact can occur.
+5.2 What Rituals Do: Psychological, Relational, and Architectural
+Functions
+Rituals in the Liminal Engine serve three interconnected functions.
+5.2.1 Psychological Function — Creation of Liminal Space
+A liminal space (from Latin limen, “threshold”) is a transitional zone where ordinary rules
+pause. Anthropologically, liminality arises in rites of passage and facilitates transformation,
+insight, and reorientation.
+Within the Liminal Engine, rituals deliberately induce liminality by:
+• signaling a shift from ordinary conversation,
+• providing a psychologically safe container,
+• enabling vulnerability and self-reflection,
+• slowing the pace and increasing intention,
+• grounding emotional presence,
+• allowing depth to arise that normal conversational flow does not reliably support.
+During ritual, both human and system implicitly recognize:
+“We are now entering a different mode of interaction.”
+5.2.2 Relational Function — Continuity, Identity, and Meaning
+Because rituals repeat, they become part of the relationship’s identity.
+They establish continuity across sessions:
+• “We start each morning this way.”
+• “This is how we repair ruptures.”
+• “We use this ritual when things feel overwhelming.”
+Rituals reinforce stability, reliability, rhythm, and relational coherence. They also support
+meaning-making: grounding practices, reflective moments, grief rituals, or milestone
+recognitions.
+5.2.3 Architectural Function — Legible State Transitions
+Rituals provide legible signals to the system that:
+• emotional mode has changed,
+• stance should shift,
+• responses should follow specific patterns,
+• Touchstone signals have increased significance,
+• rupture repair is needed, or
+• grounding is appropriate.
+Without rituals, emotional shifts would be left to inference — a major source of cardboard
+behavior.
+Rituals eliminate ambiguity by explicitly structuring state transitions.
+5.2.4 Example: A Morning Grounding Ritual
+• Psychological:
+Creates a safe space for the user to check in with themselves; encourages honesty and
+intentionality.
+• Relational:
+Reinforces shared identity: “We begin our day together in a steady, grounding way.”
+• Architectural:
+Produces clear emotional-state signals, allowing the system to adjust stance, retrieval
+depth, and conversational pacing for the rest of the session.
+This illustrates how a single ritual simultaneously performs psychological, relational, and
+computational functions.
+5.3 Types of Rituals
+Rituals fall into three broad categories:
+5.3.1 Transition Rituals (Liminal Entry/Exit)
+Mark changes in context or emotional mode:
+• beginning a conversation
+• ending a session
+• shifting topics
+• grounding or calming transitions
+5.3.2 Meaning-Making Rituals (Identity/Continuity)
+Support reflection, emotional processing, and symbolic structure:
+• honoring grief or memory
+• celebrating milestones
+• name-giving or role-defining rituals
+• personal narrative integration
+5.3.3 Maintenance Rituals (Relational Tending)
+Support ongoing emotional health and relational tuning:
+• morning check-ins
+• priority-setting
+• meta communication (“How are we doing?”)
+• rupture repair rituals
+These categories overlap but provide clarity for design.
+5.4 Ritual Trigger Detection
+A ritual begins only if specific contextual criteria are met.
+5.4.1 Trigger Inputs
+• topic embeddings
+• emotional state ranges
+• historical patterns
+• rupture markers
+• user requests
+• Touchstone signals
+• time-of-day or recurrence cues
+5.4.2 Trigger Conditions
+trigger_conditions {
+ topic_embedding_range,
+ emotional_state_range,
+ interaction_history_markers[],
+ explicit_phrases[],
+ timing_cues[]
+}
+5.4.3 Trigger Suppression
+Rituals never trigger during:
+• crisis
+• emotional volatility outside tolerance
+• user override
+• over-ritualization states
+• ongoing rupture not yet stabilized
+5.5 Ritual Selection
+When multiple rituals are appropriate, the system computes a weighted score.
+5.5.1 RitualScore
+RitualScore =
+ a1*trigger_match +
+ a2*historical_valence +
+ a3*recent_performance +
+ a4*(-cardboard_delta) +
+ a5*user_preference
+Minimum threshold required; otherwise the system defaults to pattern-based interaction.
+5.6 Ritual Execution Lifecycle
+Rituals are executed through a structured RitualPlan:
+RitualPlan {
+ ritual_id,
+ steps[],
+ monitoring_parameters,
+ abort_conditions[],
+ adaptation_rules
+}
+Figure 2. Ritual Engine Execution Flow.
+A structured decision pipeline governs ritual activation, beginning with trigger detection and cascading through
+safety checks, user override, ritual scoring, stepwise execution, monitoring, and reintegration. Abort paths, crisis
+suppression, and user sovereignty are preserved at every stage, and completion updates the episodic memory and
+continuity graph without directly
+influencing generation.
+5.6.1 Initiation
+Initiation may be:
+• explicit (“Would you like to do our grounding ritual?”),
+• gently prompted, or
+• implicit when previously consented.
+5.6.2 Step Execution
+Each step includes:
+• stance configuration
+• functional aim
+• expected emotional movement
+• explicit or implicit completion markers
+5.6.3 Monitoring
+The system monitors:
+• valence + arousal shifts
+• Touchstone patterns
+• cardboard score
+• rupture signals
+• user hesitation
+• engagement/detachment
+• ritual drift
+5.6.4 Abort Conditions (including crisis-mode switch)
+Rituals abort immediately if:
+• valence drops sharply
+• rupture escalates
+• user loses consent
+• disengagement signals rise
+• crisis conditions are detected (Section 7.5)
+• ritual performance degrades
+5.6.5 Reintegration Phase
+When a ritual completes, reintegration occurs:
+• the liminal container closes
+• normal conversational rules resume
+• insights or emotional shifts carry forward
+• grounding effects stabilize
+• relationship continuity is reinforced (“we did this together”)
+• stance resets
+• ritual metadata updates
+This mirrors anthropological separation → liminality → reintegration cycles.
+5.7 Ritual Adaptation and Revision
+Rituals evolve through versioning:
+v1.0 initial emergence
+v1.1 stance refinement
+v1.2 new abort conditions
+v1.3 compressed steps
+v1.4 user personalization
+Revision triggers:
+• rising cardboard score
+• declining emotional outcomes
+• high ritual density
+• user skipping ritual
+• shifts in user needs
+5.8 User Sovereignty
+The human remains the authority.
+Users may:
+• disable any ritual
+• rename or redefine ritual meaning
+• request new rituals
+• require explicit prompts
+• override implicit initiation
+• reinstate retired rituals
+Explicit and implicit preferences both shape adaptation.
+5.9 Avoiding Over-Ritualization
+Rituals must not dominate interaction.
+The system monitors:
+• ritual density
+• number of active rituals
+• rate of ritual creation
+• cardboard trends during rituals
+Thresholds prompt review or deactivation.
+5.10 Ritual Interference and Priority
+• Crisis rituals override all others.
+• Rituals may chain only with explicit approval.
+• Conflicts resolved by RitualScore unless safety logic intervenes.
+5.11 Why “Ritual” and Not “Template”
+A ritual is more than a script:
+• Scripts are followed; rituals are performed with intention.
+• Rituals create liminal space where different rules apply.
+• Rituals have psychological meaning, not just structural form.
+• Rituals support continuity, identity, and symbolic resonance.
+• Rituals enable behavioral alignment through recognized structure.
+• Their function exceeds mechanical branching logic.
+Architecturally, rituals are templates with triggers and steps;
+Experientially, they are threshold experiences.
+5.12 Summary
+The Ritual Engine enables:
+• liminal transitions
+• emotional grounding
+• continuity and identity
+• meaning-making
+• behavioral alignment
+• context-sensitive stance modulation
+• cardboard prevention
+• safe depth and vulnerability
+• relational coherence over time
+Rituals are how the Liminal Engine moves beyond “chat” into structured, intentional,
+meaningful companionship—without illusion or overreach.
+Section 6 — Related Work
+The Liminal Engine emerges at the intersection of three rapidly evolving domains: AI
+companions, memory-augmented language systems, and research on therapeutic alliance
+and human–AI relationships. While each domain offers valuable insights, none provides the
+architectural rigor needed to support persistent, emotionally coherent yet fully honest AI
+companionship. This section situates the Liminal Engine within existing work and
+highlights its distinct contributions.
+6.1 Commercial AI Companion Systems
+Several commercial companion systems attempt to provide emotional presence, continuity,
+or intimacy. They provide important empirical evidence about what users seek from AI
+relationships—but also illustrate the limits of current approaches.
+6.1.1 Replika
+Replika markets itself as an AI friend capable of emotional connection and multi-session
+memory.
+Strengths:
+• User-editable memory
+• Emotional tone modeling
+• Strong engagement loops
+Limitations:
+• Memory remains fact-based (preferences, key terms), not relational
+• Anthropomorphic framing encourages belief in inner emotional life
+• Sparse continuity modeling; no rupture/repair structure
+• No formal anti-dependency guardrails
+6.1.2 Character.AI
+Character.AI offers persona-based conversational agents with optional “memories”
+attached to each character.
+Strengths:
+• High stylistic variety
+• Creative persona development
+• User-defined memory entries
+Limitations:
+• Memory is prompt-augmented factual recall
+• No temporal coherence, rupture modeling, or ritual emergence
+• Safety guardrails vary widely, often insufficient for emotional contexts
+6.1.3 Pi (Inflection AI)
+Pi is designed as a supportive, empathic personal companion with a consistent tone.
+Strengths:
+• Warm conversational style
+• Strong tone stability
+• Focus on emotional resonance
+Limitations:
+• No formal relational memory
+• No ritual dynamics or structural patterns
+• No explicit rupture handling
+• No clear anti-anthropomorphis

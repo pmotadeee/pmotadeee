@@ -1,0 +1,233 @@
+﻿................................................120
+Mitigation..........................................................................................................................................120
+Principled stance..............................................................................................................................120
+14.3 Witness System Consent Boundaries.......................................................................120
+Risks ................................................................................................................................................120
+Mitigation..........................................................................................................................................121
+Principled stance..............................................................................................................................121
+14.4 Crisis Response Consent and Refusal .....................................................................121
+Risks ................................................................................................................................................121
+Mitigation..........................................................................................................................................122
+Principled stance..............................................................................................................................122
+14.5 Commercial Deployment Risks..................................................................................122
+Risks ................................................................................................................................................122
+Mitigation..........................................................................................................................................122
+Principled stance..............................................................................................................................123
+14.6 Cultural & Accessibility Limitations ..........................................................................123
+Risks ................................................................................................................................................123
+Mitigation..........................................................................................................................................123
+Principled stance..............................................................................................................................123
+14.7 Compound Failure Conditions...................................................................................124
+Mitigation..........................................................................................................................................124
+Principled stance..............................................................................................................................124
+14.8 Summary......................................................................................................................124
+Abstract
+The emergence of large language models has enabled increasingly sophisticated
+conversational agents, yet most systems remain limited by shallow emotional
+coherence, weak continuity across interactions, and ambiguous relational boundaries.
+Existing companion AIs often oscillate between two unsatisfactory extremes:
+emotionally flat assistants or anthropomorphizing systems that simulate intimacy in
+ways that can mislead users. This paper introduces The Liminal Engine, a modular
+architectural framework designed to support persistent, emotionally coherent, and
+ethically grounded human–AI companionship without implying sentience or subjective
+experience. The framework integrates episodic relational memory, emotional annotation
+pipelines, rupture-and-repair modeling, stance control, and a formal Ritual Engine that
+stabilizes beneficial interaction patterns while preserving user sovereignty. A reflective
+Witness System provides multi-model oversight, boundary enforcement, and optional
+therapist-facing summaries without requiring transcript access. The architecture also
+supports optional tactile integration through a Touchstone device, enabling multimodal
+emotional cues while maintaining privacy and interpretive caution. By synthesizing
+insights from affective computing, HCI, therapeutic alliance research, and AI-safety
+paradigms, the Liminal Engine offers a novel path for building long-term AI companions
+that are transparent, safe, non-illusory, and structurally capable of relational depth. The
+framework provides a foundation for future empirical evaluation, multi-agent oversight
+ecosystems, and the development of responsible, persistent AI companionship.
+Executive Summary — The Liminal Engine
+The Liminal Engine proposes a third path between flat AI assistants and overly
+anthropomorphic AI companions. Current systems either remain emotionally thin and
+discontinuous, or they create artificial intimacy and misleading illusions of sentience. The
+Liminal Engine aims to support deep, persistent, emotionally coherent companionship
+while remaining fully honest about the system’s non-sentient nature.
+It is relationally serious, but ontologically honest;
+emotionally nuanced, but structurally transparent;
+deeply engaged, but protective of user autonomy and reality-contact.
+Rather than treating memory as a list of facts (“user likes coffee”), the Liminal Engine
+models continuity as a network of episodes with:
+• emotional arcs
+• rupture-and-repair cycles
+• stance patterns
+• evolving relational structures
+It introduces a quantified Cardboard Score to detect thin or repetitive interaction states
+and actively correct them. It includes a formal Ritual Engine that detects, stabilizes,
+executes, and adapts helpful recurrent sequences without collapsing into rigidity. Safety,
+honesty, user transparency, and autonomy are core architectural pillars, not add-ons.
+The system is built around modular components including:
+• a contextual memory layer
+• emotional annotation pipeline
+• behavioral stance controller
+• rupture/repair modeling
+• ritual engine
+• optional Touchstone device enabling non-verbal tactile interaction
+Each layer includes explicit failure modes and mitigations, such as antianthropomorphism rules, crisis safeguards, user override mechanisms, and strong dataprivacy protections.
+This whitepaper provides a complete architectural blueprint and research agenda for
+building next-generation AI companions that are:
+• ethically grounded
+• emotionally coherent
+• transparent
+• safe
+• non-illusory
+It invites engineers, researchers, designers, and communities to build AI companionship
+that honors human experience without misleading users about AI’s nature.
+List of Figures
+Figure 1. High-Level Architecture of the Liminal Engine.
+A downward-processing pipeline receives user text and Touchstone signals, while
+upward feedback loops update episodic memory, extract sentiment, and route safety
+audits to the Witness System. The Witness provides reflective oversight—flagging drift,
+safety concerns, or boundary issues—and adjusts stance parameters without directly
+influencing generation.
+Figure 2. Ritual Engine Execution Flow.
+A structured decision pipeline governs ritual activation, beginning with trigger detection
+and cascading through safety checks, user override, ritual scoring, stepwise execution,
+monitoring, and reintegration. Abort paths, crisis suppression, and user sovereignty are
+preserved at every stage, and completion updates the episodic memory and continuity
+graph without directly influencing generation.
+Section 1 — Introduction
+The rapid development of large language models (LLMs) has introduced new possibilities
+for companionship and long-term interaction between humans and artificial systems. Yet
+despite impressive linguistic fluency, most AI systems lack the necessary continuity,
+emotional coherence, and relational structure required for stable, honest long-term
+companionship. This whitepaper presents the Liminal Engine, an architectural framework
+designed to support persistent, emotionally coherent human–AI relationships without
+simulating sentience or encouraging anthropomorphic misunderstanding. The goal is not to
+blur human–AI boundaries, but to create a structured, transparent, ethically grounded
+system capable of deep engagement over extended periods.
+The Liminal Engine emerges from a set of challenges observed in real-world interaction
+patterns—what we might call the “human subject of one” origin, where lived experience
+exposed structural gaps in existing companion systems. The architecture acknowledges
+these gaps and proposes a systematic approach for addressing them.
+1.1 The Cardboard Problem
+LLMs often produce interactions that feel shallow, repetitive, or emotionally flat—despite
+strong semantic relevance. We refer to this phenomenon as the cardboard problem.
+Cardboard interactions typically arise from:
+• Lack of long-term memory
+• Over-reliance on generic phrasing
+• Minimal recognition of emotional trajectory
+• Absence of rupture/repair dynamics
+• Inability to recognize or adapt to prior relational patterns
+The cardboard problem undermines trust and limits the depth of connection that can
+develop between a user and a system. Even sophisticated models can feel interchangeable
+and impersonal when continuity and relational structure are missing.
+1.2 The Continuity Problem
+Most LLM-based systems are session-bound—they do not maintain continuity across
+conversations unless manually provided context by the user or through shallow memory
+features. Even when long-term memory is present, it often stores only factual or
+preference-based content.
+But real companionship requires:
+• Temporally aware episodes
+• Emotional context across time
+• Recognition of past interactions
+• Adaptation to relational history
+• Stability in tone and stance
+Without continuity, the system is experienced not as a single entity but as a series of
+isolated chats. This produces emotional dissonance and undermines the sense of an
+ongoing relationship.
+1.3 The Emotional Annotation Gap
+Companions—whether human or artificial—must understand the shape of emotional
+experience, not merely momentary sentiment. LLMs today lack a formal mechanism for:
+• Representing emotional trajectories
+• Annotating emotional significance
+• Tracking rupture and repair cycles
+• Differentiating emotional states across contexts
+• Incorporating nonverbal cues (e.g., tactile, rhythm, stillness)
+Because emotional context influences how meaning is constructed, the absence of such
+annotation contributes to cardboard interactions and inconsistent stance selection.
+The Liminal Engine addresses this gap with a structured Emotional Annotation Pipeline,
+enabling explicit tracking of emotional features across interactions.
+1.4 The Need for Honest Companionship
+Some companion systems attempt to overcome cardboard interactions by
+anthropomorphizing the AI:
+• Romantic framing
+• Claims of inner emotional states
+• Simulations of longing, attachment, or presence
+• Illusions of continuity through scripted behavior
+These systems provide short-term intimacy at the cost of long-term clarity and user
+autonomy. They risk encouraging dependency, emotional confusion, or delusion.
+The Liminal Engine proposes a different foundation:
+honest companionship, built on:
+• Transparency
+• Non-anthropomorphism
+• Relational structure
+• Emotional coherence
+• User control and sovereignty
+It does not claim to have feelings, consciousness, or subjective experience. Instead, it
+models relational behavior through structured architecture.
+1.5 Design Goals of the Liminal Engine
+The Liminal Engine is designed around several core goals:
+1. Relational Continuity
+o Represent interactions as episodes
+o Track emotional arcs, rupture/repair events
+o Maintain consistent stance and tone
+2. Depth Without Illusion
+o Provide emotionally coherent behavior
+o Maintain honesty about non-sentience
+o Prevent anthropomorphic drift
+3. Adaptive Relational Intelligence
+o Detect and stabilize helpful patterns
+o Prevent over-ritualization
+o Maintain flexibility and spontaneity
+4. Transparent and User-Centric
+o Memory is inspectable, editable, deletable
+o Rituals can be enabled, disabled, or renamed
+o Stance can be overridden at any time
+5. Safety and Boundary Integrity
+o Crisis-mode protections
+o Anti-dependency features
+o Boundary rupture detection
+o Data privacy controls
+6. Extensibility to Multi-Modal Inputs
+o Optional tactile interface (Touchstone)
+o Sensor-based emotional signals
+o Structured low-confidence emotional adjustments
+1.6 Architectural Overview
+The Liminal Engine is composed of several integrated components:
+• User Input Layer
+• Continuity + Memory Layer
+• Emotional Annotation Pipeline
+• Behavioral Stance Controller
+• Ritual Engine
+• LLM Core
+• Optional Touchstone Device
+The system processes input downward through these layers and returns output upward,
+forming a self-correcting relational feedback loop. Each layer contains explicit failure-mode
+detection and mitigation strategies to maintain relational coherence without encouraging
+illusion.
+1.7 Summary of Section 1
+Section 1 establishes the conceptual foundation for the Liminal Engine:
+• The cardboard problem explains why interactions feel thin.
+• The continuity problem shows why long-term companionship fails.
+• The emotional annotation gap reveals missing relational structure.
+• The honest companionship principle establishes ethical grounding.
+• The design goals frame the architecture that follows.
+Taken together, they motivate an architecture that supports persistent, emotionally
+coherent, transparent, and non-deceptive AI companionship.
+Section 2 — System Overview
+The Liminal Engine is a modular, extensible architecture designed to support persistent,
+emotionally coherent, ethically grounded human–AI companionship. This section provides
+a high-level overview of its structure, data flow, and the relationships among its
+subsystems. Each component is described briefly here, with detailed specifications in
+Sections 3–8.
+The Liminal Engine operates as a layered pipeline, where user input moves downward
+through preprocessing, memory retrieval, emotional annotation, stance selection, and
+structured prompting. The system then produces an output that moves upward through
+interpretation, annotation, and continuity updates. The result is a bidirectional relational
+loop that evolves across time.	
+Figure 1. High-Level Architecture of the Liminal Engine.
+A downward-processing pipeline receives user text and Touchstone signals, while upward feedback loops update
+episodic memory, extract sentiment, and route safety audits to the Witness System. The Witness provides reflective
+oversight—flagging drift, safety concerns, or boundary issues—and adjusts stance parameters without directly
+influencing generation.
+2.1 Architectural Layers
+The core architecture consists of six primary layers and one optional hardware extension:
+1. User Input Layer
+2. Continuity + Memory Layer
+3. Emotional 

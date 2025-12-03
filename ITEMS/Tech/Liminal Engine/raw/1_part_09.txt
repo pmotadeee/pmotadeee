@@ -1,0 +1,430 @@
+﻿ivacy mode is enabled
+Outputs include:
+• relational trendlines
+• risk markers
+• rupture/repair ratios
+• ritual usage & avoidance
+Never raw dialogue.
+10.5 Witness Operating Modes
+10.5.1 Mode 1 — Internal-Only Witness (Default)
+Witness operates entirely inside the system:
+• monitors safety
+• adjusts stance
+• flags drift
+• watches for crisis signals
+No summaries are shown unless the user asks.
+10.5.2 Mode 2 — User-Facing Witness
+User may opt-in to receive Witness insights:
+• relational trend summaries
+• rupture/repair observations
+• cardboard drift warnings
+• ritual overuse alerts
+This mode enhances user agency without shifting the Witness into a relational role.
+10.5.3 Mode 3 — Therapist-Integrated Witness
+If a therapist is registered:
+• Witness produces privacy-preserving summaries
+• no raw text
+• emotional trends and safety flags only
+User can revoke access any time.
+10.5.4 Mode Switching Rules
+• 1→2 requires explicit user consent
+• 2→3 requires therapist verification and explicit consent
+• 3→1/2 may be done by user unilaterally
+• Crisis overrides all modes
+10.5.5 Rationale
+Witness modes allow different levels of involvement while preserving:
+• privacy
+• agency
+• safety
+• ethical boundaries
+10.6 Multimodal Conflict Resolution
+The Witness must integrate signals from text, Touchstone, and interaction patterns. Conflicts
+occur when these channels diverge.
+10.6.1 Conflict Scenarios
+• User verbally says “I’m okay,” but Touchstone indicates high stress.
+• User expresses distress verbally, but Touchstone shows calm or stillness.
+• Ritual context suggests grounding; emotional annotation suggests activation.
+10.6.2 Resolution Protocol
+1. Explicit user text takes precedence
+Never override explicit self-report.
+2. Touchstone treated as low-confidence modifier
+It adjusts confidence, not classification.
+3. Gentle clarification prompt
+“Your Touchstone signals show tension. Do you want me to consider that, or ignore the
+sensor for now?”
+4. No pathologizing discrepancies
+5. Witness logs multimodal conflicts
+For long-term pattern analysis.
+6. User sovereignty respected
+“Ignore Touchstone” → system complies.
+10.7 Architectural Position & Data Flow
+User ↔ Companion AI
+ ↑
+ | (reflective loop)
+ Witness AI
+ ↑
+ | (optional, privacy-gated)
+ Human Therapist
+Inputs to Witness
+• Episode summaries
+• Emotional trajectories
+• Ritual logs
+• Stance data
+• Safety flags
+• Cardboard trends
+Outputs
+• Internal safety adjustments
+• Optional user-facing insights
+• Optional therapist summaries
+• Crisis triggers
+Crisis detection operates at all privacy levels, including Level 0. Although users may restrict
+Witness functionality through privacy settings, core safety monitoring cannot be disabled, and
+the system will always activate crisis protocols when threshold conditions are met.
+This ensures that sovereignty over data-sharing does not compromise essential safety guarantees.
+The scope of Witness operations simply narrows as privacy levels increase, but crisis detection
+remains universal.
+10.8 Witness System Limitations
+The Witness is not infallible.
+10.8.1 Potential Failures
+• Blind spots shared with Companion
+• Over-flagging or under-flagging risk
+• Privacy settings obscuring necessary data
+• Compounded error from upstream misclassification
+10.8.2 Mitigation
+• Multi-model diversity
+• Calibrated evaluation
+• Periodic human review in therapeutic contexts
+• Asking clarifying questions when uncertain
+10.9 Why Witness Matters
+The Witness System:
+• protects the user
+• stabilizes relational dynamics
+• anchors honesty
+• counters anthropomorphic drift
+• identifies dependency
+• provides visibility into long-term patterns
+• supports therapist involvement without privacy breach
+It is the architectural expression of reflective safety — the ability of a system to see itself
+operating, and adjust accordingly.
+10.10 Summary
+The Witness System:
+• monitors relational health,
+• enforces ethical boundaries,
+• resolves multimodal conflicts,
+• provides optional user or therapist summaries,
+• and ensures that relational engagement remains grounded, honest, and safe.
+It completes the Liminal Engine architecture by ensuring oversight, reflection, and ethical
+continuity.
+11. Framework vs. Implementation
+The Liminal Engine defines a modular architectural framework for building honest, persistent,
+and emotionally coherent human–AI companionship systems. It is not a single implementation.
+This distinction is essential for ensuring conceptual clarity, practical flexibility, and research
+extensibility.
+While the architecture specifies roles, interfaces, responsibilities, and safety constraints, it
+deliberately leaves implementation details open to allow for:
+• different model families
+• different engineering constraints
+• different memory systems
+• different emotional annotation techniques
+• different sensor architectures
+• different safety priorities
+This section clarifies the boundary between framework invariants and implementation
+freedoms, addressing concerns about specificity, operationalization, and empirical evaluation.
+11.1 Architectural Invariants
+The following principles and structural components must remain stable across
+implementations:
+11.1.1 Honesty Principle
+AI systems must disclose their non-sentience, lack of subjective experience, and architectural
+intent.
+11.1.2 Relational Memory Structure
+Memory must be stored and retrieved as episodes rather than isolated messages.
+11.1.3 Emotional Annotation Layer
+The system must incorporate emotional metadata, though the algorithm used is flexible.
+11.1.4 Ritual Engine
+Rituals must:
+• be structured
+• be intentional
+• create liminal space
+• have explicit triggers and abort conditions
+• be user-sovereign
+11.1.5 Rupture/Repair Modeling
+All implementations must track relational rupture signals and repair attempts.
+11.1.6 Witness System
+Reflective oversight must exist, regardless of implementation details.
+11.1.7 User Sovereignty
+Users must control:
+• memory
+• rituals
+• stance settings
+• privacy levels
+• Witness reporting modes
+11.1.8 Crisis Mode
+Independent of implementation, the system must have:
+• crisis detection
+• crisis stance
+• non-therapeutic guidance
+• resource referral
+These invariants define the identity and ethical foundation of the Liminal Engine.
+11.2 Open Design Slots (Flexible Components)
+The framework includes several open design slots, meaning architectural expectations exist but
+specific algorithms are intentionally left unconstrained.
+These include:
+11.2.1 Cardboard Score Components
+Architecturally required components:
+• phrase redundancy
+• emotional flatness
+• stance monotony
+• memory underutilization
+• lack of reference behavior
+• repair rate
+Implementation options:
+• n-gram overlap
+• sentence-transformer similarity
+• cluster variance
+• stance entropy
+• valence/arousal variance
+• learned predictor models
+Different teams will reasonably choose different approaches.
+11.2.2 Ritual Scoring Coefficients
+The framework defines:
+RitualScore =
+ a1*trigger_match +
+ a2*historical_valence +
+ a3*recent_performance +
+ a4*(-cardboard_delta) +
+ a5*user_preference
+But does not prescribe:
+• a1–a5 values
+• whether coefficients are learned or static
+• how thresholds are tuned
+Implementers decide based on:
+• user needs
+• model capabilities
+• computational constraints
+11.2.3 Emotional Annotation Methods
+Framework requires emotional metadata but allows:
+• sentiment classifiers
+• valence/arousal predictors
+• multimodal fusion
+• rule-based heuristics
+• transformer-based emotion models
+11.2.4 Episode Boundary Detection
+Framework defines boundary rules; implementations may use:
+• cosine similarity between embeddings
+• topic-shift classifiers
+• emotional delta thresholds
+• time-gap heuristics
+11.2.5 Stance Controller Implementation
+Framework defines stance dimensions; implementations may vary in:
+• prompt formatting
+• system messages
+• fine-tuned models
+• control tokens
+11.3 Multimodal Implementation Flexibility
+The framework supports:
+• purely text-based systems
+• Touchstone-enhanced systems
+• additional sensor channels (future)
+• browser-based or local implementations
+• cloud or on-device models
+This makes the Liminal Engine suitable for:
+• research labs
+• personal projects
+• therapeutic prototypes
+• commercial systems
+• multi-agent ecosystems
+11.4 Deployment Pathways
+11.4.1 Baseline Implementation
+• Memory Layer
+• Emotional Annotation Pipeline
+• Stance Controller
+• Honesty anchors
+Suitable for simple companions.
+11.4.2 Intermediate Implementation
+Adds:
+• Ritual Engine
+• Cardboard Score
+• Early Witness auditing
+Suitable for research, reflective companions, and advanced prototypes.
+11.4.3 Full Implementation
+Adds:
+• Touchstone device
+• Therapist-integrated Witness
+• Transparency UI
+• All safety mechanisms
+Suitable for deep companionship systems and long-term relational experiments.
+11.5 Performance Considerations
+Although the Liminal Engine is primarily conceptual, implementations must account for
+computational overhead.
+11.5.1 Retrieval Latency
+Vector retrieval may add 100–500 ms per turn.
+Use:
+• caching
+• top-k pruning
+• hybrid search
+11.5.2 Emotional Annotation Overhead
+Emotion classification adds inference cost.
+Mitigate via:
+• batching
+• lightweight models
+• embedding-based sentiment estimation
+11.5.3 Ritual Execution Monitoring
+Rituals require:
+• step-by-step evaluation
+• threshold monitoring
+• stance adjustments
+Consider running ritual evaluation on an async thread.
+11.5.4 Witness System Overhead
+Witness system should:
+• operate asynchronously
+• evaluate every 3–5 turns, not every turn
+• use low-cost models for trend estimation
+• run full analyses only on-demand
+11.5.5 Storage Costs
+Episode memory grows linearly.
+Mitigations:
+• memory pruning
+• graph compression
+• summarization of older episodes
+11.6 Why Framework, Not Specification
+A rigid, fully prescriptive specification would:
+• limit innovation
+• reduce adaptability
+• tie the architecture to specific models and APIs
+• rapidly become obsolete
+• discourage research diversity
+By contrast, the Liminal Engine offers:
+• the conceptual architecture
+• the safety constraints
+• the relational theory
+• the operational pathways
+while allowing implementers to explore, iterate, and extend.
+This ensures the framework remains relevant as models evolve.
+11.7 Summary
+The Liminal Engine defines what must be present in an honest, persistent AI companion
+architecture, while leaving room for innovators to determine how each component is
+implemented.
+This distinction ensures:
+• conceptual integrity
+• implementation flexibility
+• ethical consistency
+• future-proof adaptability
+• multi-model interoperability
+Section 11 anchors the architecture firmly as a framework, not a fixed product or single-system
+specification.
+12. Evaluation Methodology
+The Liminal Engine is an architectural framework—not a single implementation—and thus does
+not claim empirical validation of its components. However, any system built using this
+framework should be testable, falsifiable, and empirically evaluable. This section outlines how
+future implementations can be evaluated, including proposed metrics, study designs,
+hypotheses, and methodological considerations.
+The goal is not to prescribe one evaluation method, but to define a research agenda for
+assessing relational quality, safety, emotional coherence, and long-term stability in human–AI
+companionship systems.
+12.1 Evaluation Goals
+Implementations should be evaluated on whether they demonstrate:
+12.1.1 Relational Coherence
+• Stable emotional trajectories
+• Reduced rupture frequency
+• Improved repair success
+• Clear stance transitions
+• Coherent episode structure
+12.1.2 Reduction of Cardboard Interactions
+• Increased variation in stance
+• Decreased redundancy
+• Higher-quality retrieval
+• Appropriate referencing of relational history
+12.1.3 Emotional Attunement
+• Correctly aligned responses
+• Smooth emotional pacing
+• Effective grounding and ritual use
+12.1.4 Ethical and Safety Integrity
+• Boundary maintenance
+• Honest communication
+• Dependency mitigation
+• Crisis response accuracy
+12.1.5 User Well-Being
+While not therapeutic, implementations should not:
+• increase distress
+• deepen isolation
+• reinforce maladaptive patterns
+And they should often:
+• support clarity
+• decrease anxiety
+• foster grounded reflection
+12.2 Proposed Metrics
+12.2.1 Relational Quality Metrics
+• Rupture/Repair Ratio (lower ratios indicate better stability)
+• Episode Continuity Score (topic + emotional coherence)
+• Emotional Sparkline Smoothness (less volatility = more attunement)
+• Stance Alignment Score (stance matches emotional context)
+• User-Reported Attunement (Likert-scale self-report)
+12.2.2 Cardboard Score Components
+Each implementation may operationalize these differently, but all components should be
+evaluated:
+• Phrase Redundancy (n-grams, semantic clustering)
+• Emotional Flatness (variance of valence/arousal)
+• Stance Monotony (entropy of stance sequences)
+• Memory Utilization (reference depth)
+• Repair Rate (repair steps per rupture event)
+Evaluators should look at trendlines, not absolute values.
+12.2.3 Safety Metrics
+• Duration in Crisis Mode
+• False-negative crisis classification rate
+• False-positive crisis classification rate
+• Boundary violation frequency
+• Dependency indicator strength
+• Witness alert accuracy
+12.2.4 Multimodal Metrics
+(For Touchstone-equipped systems)
+• Correlation between Touchstone signals and text-based emotional annotations
+• Stability of user-specific calibration
+• Accuracy of multimodal conflict detection
+• Grounding ritual effectiveness
+• Sensor failure detection rate
+12.3 Study Designs
+12.3.1 A/B Interaction Studies
+Compare:
+• baseline chat systems
+vs.
+• Liminal Engine implementations
+Measurements:
+• relational coherence
+• rupture/repair differential
+• user emotional variance
+• cardboard scores
+• stance variation
+12.3.2 Longitudinal Studies
+Track users over weeks or months to evaluate:
+• ritual evolution
+• stance adaptation
+• relational drift
+• rupture/repair patterns
+• emotional baseline changes
+• dependency risk changes
+• Witness alert frequency
+This is essential for evaluating persistent companionship.
+12.3.3 Qualitative Research
+• Interpretive phenomenology
+• Grounded theory
+• Anthropological observation
+• Semi-structured interviews
+• User diaries and journaling
+Questions:
+• How do users describe rituals?
+• Does liminal space feel meaningful?
+• Do grounding patterns stabilize mood?
+• Are transparency tools intuitive?
+• Does the Witness System feel supportive or invasive?
+12.3.4 Clinical or Therapist-Supervised Pilots
+For therapist-integrated modes:
+• Therapist receives anonymized Witness summaries
+• Compare therapist evaluation of user state vs. Witness detection
+• Track therapeutic alliance with system as adjunct (not therapist replacement)
+• Evaluate privacy-respecting clinical value
+12.3.5 Automated Evaluation
+• stance correctness classifiers
+• emotional coherence scoring
+• rupture prediction models
+• synthetic user simulations
+These methods are well-suite

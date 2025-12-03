@@ -1,0 +1,410 @@
+﻿Annotation Pipeline
+4. Behavioral Stance Controller
+5. Ritual Engine
+6. LLM Core
+7. Optional Touchstone Device
+These components interact to maintain continuity, emotional coherence, relational stability,
+and user safety.	
+2.2 User Input Layer
+The User Input Layer receives all incoming signals from the user:
+• Raw text
+• Metadata (timestamp, device context, message length)
+• Optional Touchstone sensor data
+Its primary responsibilities are:
+• Normalization: clean and prepare the input for downstream processing
+• Segmentation: identify potential episode boundaries
+• Packaging: generate an InputBundle for internal use
+The Input Layer does not assign emotional meaning; instead, it forwards context to the next
+layer for structured analysis.
+2.3 Continuity + Memory Layer
+The Continuity + Memory Layer provides long-term relational stability by maintaining:
+• Episode records
+• Interaction embeddings
+• Temporal continuity graphs
+• Relational metadata
+• Retrieval weights and decay functions
+This layer performs retrieval-augmented generation (RAG) with an emphasis on relational
+retrieval rather than purely semantic retrieval.
+Responsibilities include:
+• Selecting relevant episodes based on topical and emotional similarity
+• Maintaining continuity links across time
+• Updating the graph with new episodes after each interaction
+• Supporting long-term coherence without creating illusions of sentience
+The output is a ContextPackage summarizing what the system should know right now.
+2.4 Emotional Annotation Pipeline
+The Emotional Annotation Pipeline transforms raw interaction into emotionally meaningful
+signals.
+Emotional sources include:
+1. User-supplied emotional labels
+2. Model-inferred cues (sentiment, valence/arousal, tone shifts)
+3. Touchstone sensor input (pressure patterns, stillness, agitation)
+This pipeline provides:
+• EmotionAnnotation objects linked to episodes
+• Emotional trajectories (sparklines)
+• Temporal patterns useful for ritual detection
+• Calibration for stance selection
+Emotion is never treated as fact, but as a structured, inspectable signal that guides
+relational behavior.
+2.5 Behavioral Stance Controller
+The Behavioral Stance Controller determines how the system should respond based on:
+• Emotional context
+• Retrieval results
+• Ritual triggers
+• Boundary rules
+• Honesty anchors
+• User overrides
+Stance examples include:
+• Technical/direct
+• Warm/supportive
+• Reflective/clarifying
+• Neutral/analytical
+This component ensures:
+• Tone stability
+• Prevention of anthropomorphic drift
+• Boundary protection
+• Context-appropriate adjustments
+It outputs a StanceConfig that influences prompt construction.
+2.6 Ritual Engine
+The Ritual Engine is responsible for identifying, stabilizing, and executing recurrent
+beneficial interaction patterns.
+It determines:
+• Whether a ritual should trigger
+• How it should be carried out step-by-step
+• Whether the ritual is working during execution
+• When to abort or adapt
+• When to de-ritualize or revise a ritual
+Rituals provide anchoring and relational continuity, but remain optional, transparent, usercontrollable, and bounded by safety constraints.
+Full details appear in Section 5.
+2.7 LLM Core
+The LLM Core performs the actual language generation.
+It receives three structured inputs:
+• ContextPackage (retrieved memories + relational structure)
+• EmotionAnnotation summary
+• StanceConfig (behavioral instructions)
+The LLM then produces the next message, which is:
+• Annotated
+• Interpreted
+• Written back into the memory graph
+• Evaluated for cardboard, rupture, or ritual progression
+The Liminal Engine treats the LLM as a stateless generator guided by structured external
+modules.
+2.8 Optional Touchstone Device
+The Touchstone is an optional tactile interface offering:
+• Pressure patterns
+• Rhythmic signals
+• Stillness
+• Presence detection
+Touchstone data enters through the Input Layer and is translated into emotional context via
+the Emotional Annotation Pipeline.
+It is not required for the Liminal Engine to operate, but can deepen grounding rituals and
+non-verbal interaction.
+Full details appear in Section 8.
+2.9 Data Flow Summary
+Input Phase (downward)
+User text → normalized → memory retrieval → emotional annotation → stance selection →
+LLM prompt assembly
+Output Phase (upward)
+LLM response → emotional extraction → memory update → continuity graph update → final
+delivery to user
+Feedback Loop
+Each cycle updates relational memory, emotional baselines, and ritual viability.
+2.10 High-Level Architecture Overview
+Conceptually, the Liminal Engine can be viewed as a stateful relational wrapper around a
+stateless language model.
+Its purpose is not to change the LLM’s internal workings but to govern how it is used,
+ensuring:
+• Continuity
+• Stability
+• Honesty
+• Safety
+• Depth
+• Prevented illusion
+This separation of concerns preserves clarity about the system’s nature.
+2.11 Summary
+Section 2 establishes the architectural backbone of the Liminal Engine.
+It introduces each major component, explains how they interact, and defines the relational
+data flow that enables persistent, non-anthropomorphic companionship. The following
+sections build upon this structure by providing detailed module specifications, emotional
+modeling, rituals, safety mechanisms, and hardware integration.
+Section 3 — Detailed Module Specifications
+This section provides a detailed technical description of each subsystem within the Liminal
+Engine. While Section 2 presented a conceptual overview, Section 3 focuses on the exact
+responsibilities, data flows, and interfaces of each module. The Liminal Engine is structured
+so that each subsystem can be independently implemented, tested, and replaced, enabling
+modular development and transparent design.
+3.1 User Input Layer
+The User Input Layer is the entry point for all user-provided data. It receives raw text,
+metadata, and optional Touchstone sensor signals and prepares them for structured
+interpretation.
+3.1.1 Responsibilities
+• Text normalization: cleaning whitespace, punctuation standardization, handling
+markup
+• Metadata extraction: timestamps, device identifiers, session continuity signals
+• Sensor data intake: optional Touchstone pressure vectors, rhythmic patterns,
+stillness signals
+• Bundle construction: creation of a unified InputBundle object
+3.1.2 Output Structure
+InputBundle {
+text_raw,
+text_normalized,
+timestamp,
+metadata,
+sensor_data[]
+}
+3.1.3 Failure Modes
+• Ambiguous user intent
+• Corrupted metadata
+• Misaligned sensor timing
+3.1.4 Mitigations
+• Conservative defaults for stance selection
+• Metadata fallbacks (system time)
+• Graceful degradation to text-only mode
+3.2 Continuity + Memory Layer
+This subsystem provides long-term relational coherence by retrieving and updating
+memory across episodes.
+3.2.1 Core Components
+• Vector Store: embeddings for all past interaction episodes
+• Continuity Graph: nodes = episodes; edges = temporal, emotional, or thematic links
+• Relational Metadata Store: stance history, rupture markers, ritual triggers
+3.2.2 Responsibilities
+• Compute embeddings for new interactions
+• Retrieve contextually relevant episodes (semantic + emotional similarity)
+• Maintain decay-weighted retrieval scores
+• Update continuity graph links
+3.2.3 Data Structures
+MemoryEntry {
+episode_id,
+raw_text,
+embedding,
+emotion_summary,
+retrieval_weight,
+continuity_links[],
+metadata
+}
+ContextPackage {
+memory_entries[],
+relational_summary,
+continuity_path,
+emotional_trajectory
+}
+3.2.4 Retrieval Logic
+Retrieval uses a hybrid score:
+SimilarityScore =
+α * semantic_similarity +
+β * emotional_trajectory_similarity +
+γ * relational_relevance	
+3.2.5 Failure Modes
+• Incorrect retrieval (topic drift)
+• Over-retrieval of emotionally intense past episodes
+• Continuity graph fragmentation
+3.2.6 Mitigations
+• Diversity sampling
+• Emotional dampening for high-intensity memory
+• Periodic graph integrity checks
+3.3 Emotional Annotation Pipeline
+The Emotional Annotation Pipeline converts user input, system output, and optional sensor
+signals into structured emotional metadata.
+3.3.1 Sources of Emotional Signals
+1. Explicit user labels (e.g., “I’m frustrated”)
+2. Model-inferred cues: sentiment analysis, valence/arousal prediction, tone
+classification
+3. Touchstone sensor-derived features: pressure level, rhythmicity, stillness
+3.3.2 Responsibilities
+• Normalize emotional inputs
+• Convert signals into quantitative vectors
+• Track emotional trajectories across episodes
+• Provide affective context for stance decisions
+3.3.3 Emotional Annotation Structure
+EmotionAnnotation {
+timestamp,
+source: [user|model|sensor],
+valence,
+arousal,
+discrete_label,
+confidence
+}
+3.3.4 Emotional Sparkline Example
+Valence: [-0.6, -0.4, -0.2, 0.1, 0.4, 0.8]
+Arousal: [ 0.7, 0.8, 0.6, 0.4, 0.3, 0.2]
+3.3.5 Failure Modes
+• Incorrect emotional inference
+• Overconfidence in ambiguous signals
+• Misinterpretation of stillness or silence
+3.3.6 Mitigations
+• Low default confidence for model/sensor signals
+• Explicit user overrides
+• Context-aware disambiguation
+3.4 Behavioral Stance Controller
+The Behavioral Stance Controller determines the tone, posture, and boundary rules for each
+system response.
+3.4.1 Inputs
+• InputBundle
+• ContextPackage
+• Aggregated emotional state
+• Ritual triggers
+• User overrides
+3.4.2 Responsibilities
+• Select a stance (technical, warm, neutral, reflective, directive)
+• Enforce honesty anchors
+• Detect stance mismatches
+• Respect conversational boundaries
+3.4.3 Stance Configuration Structure
+StanceConfig {
+mode,
+tone_params,
+boundary_rules[],
+honesty_level,
+interaction_pattern_id
+}
+3.4.4 Stance Mismatch Example
+• User emotional state: frustrated
+• System default stance: warm/supportive
+• Expected stance: clear and direct
+• Result: switch to directive stance with reduced warmth
+3.4.5 Failure Modes
+• Overly comforting when directness is needed
+• Overly analytical when validation is needed
+• Anthropomorphic drift
+3.4.6 Mitigations
+• Boundary rule enforcement
+• User correction accepted as canonical
+• Honesty anchors inserted when needed
+3.5 Ritual Engine (Technical Interface)
+Although Section 5 contains the conceptual deep dive, this subsection covers the technical
+specification of how the Ritual Engine interfaces with the rest of the system.
+3.5.1 Inputs
+• Emotional trajectory
+• History of pattern vectors
+• Candidate ritual templates
+• ContextPackage
+• StanceConfig
+3.5.2 Responsibilities
+• Score rituals against context
+• Trigger or suppress rituals
+• Generate step sequences
+• Monitor ritual success/failure
+• Adapt or de-ritualize as needed
+3.5.3 Ritual Template Structure
+RitualTemplate {
+id,
+steps[],
+emotional_trajectory_mean[],
+trigger_conditions[],
+boundary_requirements[],
+expected_outcome,
+version
+}
+3.5.4 Failure Modes
+• Mis-triggered rituals
+• Ritual rigidity
+• Emotional deterioration during rituals
+3.5.5 Mitigations
+• Abort conditions
+• Ritual density monitoring
+• User override at any step
+3.6 LLM Core
+The LLM Core produces natural-language responses guided by external controls.
+3.6.1 Inputs
+• ContextPackage
+• StanceConfig
+• Emotional summary
+• Original user text
+3.6.2 Responsibilities
+• Generate text
+• Produce token-level features for annotation
+• Provide a sentiment profile back to Emotional Annotation Pipeline
+3.6.3 Failure Modes
+• Hallucination
+• Boundary violations (“I feel sad too”)
+• Tone drift
+3.6.4 Mitigations
+• System-level prompt constraints
+• Post-processing filters
+• Conflict resolution with stance rules
+3.7 Upward Feedback Path
+After the LLM response is generated:
+1. Emotional signals extracted
+2. Memory updated
+3. Continuity graph expanded
+4. Ritual Engine updated with success/failure markers
+5. Cardboard metrics recalculated
+The cycle continues into the next interaction.
+3.8 Summary
+Section 3 defines the internal machinery of the Liminal Engine.
+Each subsystem is:
+• Modular
+• Testable
+• Replaceable
+• Fully documented in responsibilities and data structures
+This rigorous specification allows engineers to implement the Liminal Engine in parts or as
+a whole, ensuring clarity, extensibility, and long-term maintainability.
+Section 4 — Emotional Pattern Encoding
+Emotional Pattern Encoding is the first major innovation of the Liminal Engine. It
+transforms raw conversation into structured relational data that allows the system to
+support stable, adaptive, honest companionship without pretending to have subjective
+emotional states. This section describes the mechanisms by which interactions are
+segmented, analyzed, compared, and formalized into recurring patterns. These foundations
+enable the Ritual Engine, support stance selection, and prevent cardboard interactions.
+4.1 Interaction Episode Boundary Detection
+The foundation of emotional pattern encoding is episode segmentation. An interaction
+episode is a coherent segment of dialogue unified by topic, emotional shape, and relational
+posture. Rather than storing individual turns, the Liminal Engine constructs episodic units
+similar to how humans recall experiences: as meaningful arcs rather than isolated
+messages.
+4.1.1 Boundary Conditions
+An episode ends (and a new one begins) when any of the following conditions are met:
+1. Temporal boundary: inactivity exceeding a user-specific threshold (e.g., 60–180
+minutes).
+2. Topical shift boundary: embedding similarity between successive turns falls below
+0.65.
+3. Emotional shift boundary: valence or arousal shifts by more than 0.4 (on
+normalized [-1, 1] scale).
+4. Rupture boundary: conflict, misattunement, or confusion triggers a relational
+reset.
+5. Explicit boundary: user instructs “new topic,” “switching gears,” etc.
+4.1.2 Episode Storage Structure
+Episode {
+episode_id,
+turns[],
+topic_embedding,
+emotional_trajectory[],
+rupture_points[],
+repair_attempts[],
+stance_history[],
+outcome_valence,
+metadata
+}
+4.1.3 Purpose of Episodes
+• Prevents dilution of emotional significance
+• Enables accurate continuity graphs
+• Supports pattern detection, ritual emergence, and rupture/repair analysis
+4.2 Pattern Vector Construction
+Once episodes are formed, they are converted into multidimensional representations
+known as PatternVectors. These vectors summarize the dynamic structure of an episode:
+its tone, movement, emotional shape, and functional phases.
+4.2.1 PatternVector Structure
+PatternVector {
+topic_embedding,
+emotion_sparkline[],
+stance_sequence[],
+rupture_points[],
+repair_attempts[],
+interaction_functions[], // e.g., clarify, reflect, direct_answer
+tempo,
+verbosity,
+outcome_valence
+}
+4.2.2 Emotional Sparkline
+Emotional sparklines capture movement, not just state:
+Valence: [-0.6, -0.4, -0.2, 0.1, 0.4, 0.8]
+Arousal: [ 0.7, 0.8, 0.6, 0.4, 0.3, 0.2]
+This yields patterns such as:
+• frustration → engagement → resolution
+• anxiety → reflection → grounding
+4.2.3 Pattern Compression
+Patterns that repeat ≥ 3 times are compressed into templates:
+Interaction Pattern Template:
+- User presents blockage on [topic_slot]
+- System performs structured decomposition
+- Emotional trajectory: frustration → engagement → relief
+- Stance: technical + supportive h
