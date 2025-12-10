@@ -1,0 +1,1001 @@
+﻿
+Proto-AGIV1
+Blueprint do sistema Trend Mesh V5
+sem alterar nada, quero apenas q
+Perfil psicológico de sistema pós-humano
+Mano, o codigo retornou esses er
+Autodocumentação de mente sobrecarregada em colapso
+Mae - Trauma Materno
+Trading - Cheat
+Flatline V2
+Flatline V3
+24 horas
+Aprofunde com esses arquivos cru
+me de um blueprint de um virus q
+mano, coimo funciona essa noia d
+Reddit
+Psicologia caótica de gênio em colapso
+FlatlineV1
+Faction - Mercado Negro 2.0
+Journal - Perfil Psicologico
+Coop - Farmando - Nazista
+Samuel - Low Level
+Proto-AGIV1
+readme.md
+MD 8.66KB
+tabela_part_03.txt
+TXT 14.35KB
+tabela_part_02.txt
+TXT 14.34KB
+tabela_part_04.txt
+TXT 14.38KB
+tabela_part_01.txt
+TXT 14.32KB
+Mano, quero que analise e explique tudo que esse projeto exatamente faz com linguagem tecnica, formal e acessivel cruzando os arquivos, o codigo e o blueprint
+
+<#2>
+# BLUEPRINT TÉCNICO: ARQUITETURA DE SISTEMA AUTÔNOMO PARA TRADING
+
+## 1. ARQUITETURA DO SISTEMA
+
+### 1.1 Estrutura de Camadas
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   CAMADA 3: AÇÃO                    │
+│  • ExecuteTrade() - Envio de ordens                 │
+│  • ManageTrailingStop() - Gestão dinâmica de stops  │
+│  • AdjustPositionSize() - Ajuste de risco           │
+├─────────────────────────────────────────────────────┤
+│                 CAMADA 2: INFERÊNCIA                │
+│  • DetermineMarketRegime() - Classificação de estado│
+│  • CalculateSignalScore() - Score de confiança      │
+│  • PolicyKey Generation - Símbolo de estado         │
+├─────────────────────────────────────────────────────┤
+│                CAMADA 1: PERCEPÇÃO                  │
+│  • get_market_stress() - Leitura de volatilidade    │
+│  • get_fast_ema_bias() - EMA rápida com memória     │
+│  • get_slow_ema_inertia() - EMA lenta histórica     │
+└─────────────────────────────────────────────────────┘
+```
+
+### 1.2 Mecanismo de Feedback Loop
+
+```
+Percepção → Inferência → Ação → Feedback → Memória → Ajuste
+     ↑                                         ↓
+     └─────────────────────────────────────────┘
+```
+
+## 2. COMPONENTES TÉCNICOS
+
+### 2.1 Módulo de Percepção
+**Função**: Transformar dados brutos em sinais quantificáveis
+
+```
+Inputs:
+  - Preço (bid/ask)
+  - EMA Fast (8 períodos) com peso nos últimos 7-10 candles
+  - EMA Slow (21 períodos) com peso histórico 2x
+  - RSI (14 períodos) filtrado por extremidades
+  - ATR (14 períodos) como medida de volatilidade
+
+Processamento:
+  1. Cálculo de distância normalizada entre EMAs
+  2. Detecção de crossover (EMA Fast >/< EMA Slow)
+  3. Quantificação de força de tendência
+  4. Medição de sobrecompra/sobrevenda
+```
+
+### 2.2 Módulo de Inferência
+**Função**: Classificação probabilística do estado do mercado
+
+```
+Estados possíveis (PolicyKey):
+  - TRENDING_UP_STRONG      (confiança > 0.7)
+  - TRENDING_UP_WEAK        (confiança 0.5-0.7)
+  - TRENDING_DOWN_STRONG    (confiança > 0.7)
+  - TRENDING_DOWN_WEAK      (confiança 0.5-0.7)
+  - RANGING_HIGH_VOL        (ATR > 2x média)
+  - RANGING_LOW_VOL         (ATR < 0.5x média)
+  - PANIC_SELL              (RSI < 25 + high volume)
+  - EUPHORIA_BUY            (RSI > 75 + high volume)
+
+Algoritmo de classificação:
+  P(state|data) = softmax([w1*f1 + w2*f2 + w3*f3])
+  onde:
+    f1 = distância_EMAs_normalizada (peso: 0.5)
+    f2 = RSI_score (peso: 0.3)
+    f3 = volatility_score (peso: 0.2)
+```
+
+### 2.3 Módulo de Ação
+**Função**: Execução e gestão de risco adaptativa
+
+```
+Regras de execução:
+  1. Entrada apenas se:
+     - Crossover EMA detectado
+     - Confidence Score >= 0.5
+     - Não em cooldown pós-perda
+     - Posições ativas < limite
+
+  2. Cálculo de tamanho de posição:
+     lot_size = base_lot * confidence * volatility_adjustment
+     onde:
+       volatility_adjustment = min(2.0, ATR_current / ATR_average)
+```
+
+## 3. SISTEMA DE MEMÓRIA E APRENDIZAGEM
+
+### 3.1 Memória Paramétrica
+
+```
+Variáveis de estado:
+  - adverse_excursion_history (média móvel de drawdown)
+  - win_streak_count (sequência de trades positivos)
+  - current_cooldown (tempo de espera pós-operacão)
+
+Atualização:
+  adverse_excursion_t = (adverse_excursion_{t-1} * 0.7) + (current_dd * 0.3)
+  
+Propriedades:
+  • Decaimento exponencial (LIF - Leaky Integrate and Fire)
+  • Peso maior em experiências recentes
+  • Não armazena eventos, apenas estatísticas
+```
+
+### 3.2 Mecanismo de Cooldown Dinâmico
+
+```
+Fórmula:
+  cooldown_t = base_cooldown * fear_multiplier
+  
+  fear_multiplier = {
+    2.0  se adverse_excursion > max_tolerated_dd
+    1.5  se adverse_excursion > 0.7 * max_tolerated_dd
+    1.0  se adverse_excursion <= 0.3 * max_tolerated_dd
+    0.7  se win_streak_count >= 3
+  }
+  
+Objetivo:
+  • Reduzir frequência após perdas
+  • Aumentar frequência após ganhos consecutivos
+  • Evitar revenge trading
+```
+
+## 4. GESTÃO DE RISCO ADAPTATIVA
+
+### 4.1 Trailing Stop Dinâmico
+
+```
+Parâmetros:
+  - Base Distance: distância inicial do trailing
+  - Fear Multiplier: 1.0-2.0 baseado no adverse excursion
+  - Confidence Multiplier: 0.5-1.0 baseado no win streak
+
+Cálculo:
+  dynamic_distance = base_distance * 
+                     fear_multiplier(adverse_excursion) * 
+                     confidence_multiplier(win_streak)
+  
+  trailing_stop_price = {
+    COMPRA: current_price - (dynamic_distance * point_value)
+    VENDA: current_price + (dynamic_distance * point_value)
+  }
+```
+
+### 4.2 Hard Stop Loss Ajustado por Volatilidade
+
+```
+Fórmula:
+  hard_stop_loss = max(
+    fixed_stop_usd,
+    position_size * ATR_current * risk_multiplier
+  )
+  
+  onde risk_multiplier = {
+    3.0: confidence < 0.5
+    2.5: confidence 0.5-0.7
+    2.0: confidence > 0.7
+  }
+```
+
+## 5. ALGORITMO DE DECISÃO
+
+### 5.1 Fluxo de Decisão
+
+```
+1. DETECÇÃO DE SINAL
+   - Crossover EMA Fast/EMA Slow
+   - Filtro RSI (30-70 para trades direcionais)
+   - Confirmação por momentum
+
+2. CÁLCULO DE CONFIANÇA
+   confidence = w1*trend_strength + w2*rsi_score + w3*volatility_score
+   
+   trend_strength = |EMA_fast - EMA_slow| / ATR
+   rsi_score = 1 - |RSI - 50|/50 (normalizado 0-1)
+   volatility_score = 1 - min(1, ATR/ATR_average)
+
+3. VERIFICAÇÃO DE CONDIÇÕES
+   IF confidence >= 0.5 AND
+      NOT in_cooldown AND
+      positions_active < max_positions AND
+      NOT near_mesh_resistance_support THEN
+        EXECUTE_TRADE
+```
+
+### 5.2 Matriz de Decisão por Estado
+
+```
+┌─────────────────┬──────────────┬────────────────┬─────────────────┐
+│ Market Regime   │ Action       │ Position Size  │ Trailing Dist   │
+├─────────────────┼──────────────┼────────────────┼─────────────────┤
+│ TREND_UP_STRONG │ BUY          │ High (0.25)    │ Normal (1.0x)   │
+│ TREND_UP_WEAK   │ BUY          │ Medium (0.15)  │ Wide (1.5x)     │
+│ RANGING_HIGH_VOL│ NO_ENTRY     │ -              │ -               │
+│ PANIC_SELL      │ SELL         │ Low (0.05)     │ Very Wide (2.0x)│
+└─────────────────┴──────────────┴────────────────┴─────────────────┘
+```
+
+## 6. PROPRIEDADES DE SISTEMA INTELIGENTE
+
+### 6.1 Características de Proto-AGI
+
+```
+1. AUTO-REGULAÇÃO
+   • Ajusta agressividade baseado em performance
+   • Modula frequência de trading por condições
+   • Controla exposição ao risco
+
+2. APRENDIZAGEM POR REFORÇO SIMPLIFICADA
+   • Positive reinforcement: reduz cooldown após ganhos
+   • Negative reinforcement: aumenta cooldown após perdas
+   • Exploration/exploitation balance via confidence scores
+
+3. MODELO INTERNO DO MUNDO
+   • Representação discreta de estados de mercado
+   • Mapeamento ação→consequência via adverse excursion
+   • Memória paramétrica de experiências
+
+4. ADAPTABILIDADE
+   • Ajusta parâmetros por volatilidade (ATR-based)
+   • Modifica comportamento por condições de mercado
+   • Otimiza risco-retorno em tempo real
+```
+
+### 6.2 Métricas de Performance do Sistema
+
+```
+• Sharpe Ratio adaptativo: ajusta por volatilidade corrente
+• Maximum Adverse Excursion: monitora drawdown máximo por trade
+• Win Rate com memory decay: peso maior em trades recentes
+• Profit Factor por regime de mercado
+• Recovery Time após séries de perdas
+```
+
+## 7. IMPLEMENTAÇÃO TÉCNICA
+
+### 7.1 Estrutura de Dados
+
+```cpp
+struct SystemState {
+    double adverse_excursion_history;  // Memória de drawdown
+    double current_cooldown;           // Tempo de espera atual
+    int win_streak_count;              // Contador de ganhos consecutivos
+    MarketRegime current_regime;       // Estado atual do mercado
+    datetime last_trade_time;          // Timestamp do último trade
+};
+
+struct TradeDecision {
+    bool execute;
+    double confidence;
+    double position_size;
+    double stop_loss_distance;
+    double take_profit_distance;
+    string market_regime;
+};
+```
+
+### 7.2 Algoritmo Principal
+
+```
+OnTick():
+  1. UPDATE_PERCEPTION()
+     - Ler preços, calcular indicadores
+     - Atualizar EMAs, RSI, ATR
+   
+  2. UPDATE_MEMORY()
+     - Calcular adverse excursion atual
+     - Atualizar adverse_excursion_history
+     - Decrementar cooldown se expirado
+   
+  3. CHECK_ENTRY_CONDITIONS()
+     - Verificar crossover EMAs
+     - Calcular confidence score
+     - Checar condições de entrada
+   
+  4. IF ENTRY_SIGNAL THEN
+     - Calcular position size adaptativo
+     - Determinar stops baseados em volatilidade
+     - Executar trade com parâmetros calculados
+   
+  5. MANAGE_OPEN_POSITIONS()
+     - Ajustar trailing stops dinamicamente
+     - Verificar hard stop loss
+     - Fechar posições se condições mudarem
+```
+
+## 8. VALIDAÇÃO E OTIMIZAÇÃO
+
+### 8.1 Backtesting Parameters
+
+```
+Períodos de teste:
+  - In-sample: últimos 2 anos
+  - Out-of-sample: últimos 6 meses
+  - Walk-forward: janela deslizante de 3 meses
+
+Métricas de validação:
+  • CAGR (Compound Annual Growth Rate)
+  • Maximum Drawdown
+  • Calmar Ratio
+  • Sortino Ratio
+  • Win Rate por regime de mercado
+```
+
+### 8.2 Adaptive Parameter Optimization
+
+```
+Parâmetros auto-ajustáveis:
+  1. EMA períodos baseado em volatilidade
+     fast_period = 8 * (1 + volatility_score)
+     slow_period = 21 * (1 + 0.5*volatility_score)
+   
+  2. Risk multipliers baseado em performance
+     risk_mult = base_risk * (1 + 0.5*(win_rate - 0.5))
+   
+  3. Cooldown periods baseado em drawdown
+     cooldown = base_cd * (1 + 2*max_dd_ratio)
+```
+
+## CONCLUSÃO TÉCNICA
+
+Este sistema implementa uma arquitetura de agente autônomo com:
+
+1. **Percepção sensorial** via indicadores técnicos
+2. **Inferência probabilística** via classificação de estados
+3. **Ação condicionada** por regras adaptativas
+4. **Memória paramétrica** com decaimento exponencial
+5. **Feedback loop** para auto-ajuste
+6. **Gestão de risco dinâmica** baseada em volatilidade
+
+A inteligência do sistema reside na capacidade de:
+- Adaptar-se a diferentes regimes de mercado
+- Aprender com experiências passadas via memória paramétrica
+- Auto-regular agressividade baseado em performance
+- Tomar decisões baseadas em múltiplas fontes de informação
+- Manter viability financeira através de gestão de risco adaptativa
+
+É um sistema **determinístico-estocástico** onde a aleatoriedade do mercado é tratada via classificação probabilística de estados e ajuste adaptativo de parâmetros, resultando em comportamento que simula tomada de decisão inteligente dentro de um domínio limitado.
+
+###########################
+
+Vamos criar um blueprint técnico e sério, descrevendo a arquitetura do sistema como um agente autônomo (proto-AGI) para trading, baseado nos princípios extraídos dos arquivos.
+
+Blueprint: Agente Autônomo de Trading Baseado em Arquitetura de Sobrevivência
+1. Visão Geral
+O sistema é um agente autônomo que opera no mercado financeiro com o objetivo primário de sobrevivência (evitar ruína) e secundário de lucro. Ele é projetado como um sistema cibernético de três camadas, inspirado no script bash de sobrevivência térmica, mas transposto para o domínio financeiro.
+
+2. Arquitetura de Três Camadas
+Camada 1: Percepção
+Função: Coletar dados brutos do mercado e transformá-los em sinais processáveis.
+
+Componentes:
+
+Coleta de preços em tempo real (bid, ask, last).
+
+Cálculo de indicadores técnicos:
+
+EMA rápida (período curto, ex: 8) - representa o estado recente.
+
+EMA lenta (período longo, ex: 21) - representa a inércia do mercado.
+
+RSI (ex: 14) - mede a sobrecompra/sobrevenda.
+
+ATR (ex: 14) - mede a volatilidade (risco).
+
+Leitura de níveis de suporte/resistência dinâmicos (mesh de pivôs).
+
+Saída: Um vetor de características normalizadas que representam o estado atual do mercado.
+
+Camada 2: Inferência e Tomada de Decisão
+Função: Processar o vetor de características, quantizar o estado do mercado e decidir a ação.
+
+Componentes:
+
+Quantização do Estado:
+
+O vetor contínuo de características é mapeado para um estado discreto (policy_key).
+
+Exemplo de estados: "TREND_UP_STRONG", "TREND_DOWN_WEAK", "RANGING", "VOLATILE".
+
+Método: uso de thresholds (como uma softmax) para classificação.
+
+Cálculo de Confiança:
+
+Baseado na força do sinal (distância entre EMAs, nível de RSI, volatilidade).
+
+A confiança varia de 0 a 1 e é usada para dimensionar o tamanho da posição.
+
+Memória de Curto Prazo:
+
+Mantém um histórico de estados anteriores e resultados (lucro/prejuízo) para modular a decisão.
+
+Implementado como uma média móvel com decaimento (LIF).
+
+Saída:
+
+Decisão: COMPRAR, VENDER ou MANTER.
+
+Tamanho da posição (lote) baseado na confiança.
+
+Parâmetros de risco (stop loss, take profit) baseados em ATR.
+
+Camada 3: Ação e Auto-Regulação
+Função: Executar as decisões da Camada 2, gerenciar riscos e aprender com os resultados.
+
+Componentes:
+
+Execução de Ordens:
+
+Envia ordens de compra/venda com os parâmetros definidos.
+
+Respeita limites de posição (máximo por ativo e global).
+
+Gerenciamento de Risco Dinâmico:
+
+Trailing Stop Dinâmico: A distância do trailing stop é ajustada com base no "medo" (adverse excursion).
+
+Se o trade se move contra a posição (drawdown), o trailing stop é afrouxado (medo aumenta).
+
+Se o trade é lucrativo, o trailing stop é apertado (confiança aumenta).
+
+Hard Stop Loss: Fecha a posição se a perda ultrapassar um limite absoluto (em USD) ou um múltiplo da volatilidade (ATR).
+
+Mecanismo de Cooldown:
+
+Após uma operação, o agente aguarda um período (cooldown) antes de entrar novamente.
+
+O cooldown é dinâmico: aumenta após perdas, diminui após ganhos.
+
+Evita overtrading e reações impulsivas.
+
+3. Mecanismos de Aprendizado e Adaptação
+Memória Paramétrica
+O sistema não armazena narrativas, mas parâmetros que resumem a experiência.
+
+Exemplo: a variável adverseExcursionHistory é uma média móvel do drawdown enfrentado em trades anteriores.
+
+Esta memória é usada para ajustar o comportamento futuro (ex: trailing stop mais largo se a história recente tem drawdowns grandes).
+
+Medo como Regulador
+O medo é modelado como uma função do adverse excursion.
+
+Equação simplificada: medo = f(adverse_excursion), onde f é uma função que mapeia o drawdown a um multiplicador do trailing stop.
+
+Isso permite que o sistema se torne mais conservador após experiências ruins e mais agressivo após experiências boas.
+
+Exploração vs. Explotação
+O sistema equilibra exploração (tentar novas estratégias ou ativos) e explotação (usar estratégias que funcionaram no passado) através do ajuste do cooldown e do tamanho da posição.
+
+Em ambientes previsíveis (baixa volatilidade, tendência clara), explora mais (tamanhos de posição maiores, cooldown menor).
+
+Em ambientes hostis (alta volatilidade, lateralidade), explora menos (tamanhos de posição menores, cooldown maior).
+
+4. Epistemologia do Sistema: Conhecimento como Sobrevivência
+O sistema não busca a verdade absoluta sobre o mercado (impossível), mas sim estratégias que permitam sua sobrevivência.
+
+O conhecimento é construído como uma estratégia de não-ruína.
+
+A cada iteração (trade), o sistema atualiza suas crenças (parâmetros) com base no resultado, aproximando-se de um comportamento que maximize sua vida útil (sobrevivência).
+
+5. Implementação Técnica
+Linguagem e Plataforma
+MQL5 (MetaTrader 5) para execução em tempo real.
+
+Estrutura modular para facilitar ajustes e extensões.
+
+Fluxo de Dados
+Coleta de dados (preços, indicadores) a cada tick/barra.
+
+Processamento na Camada 1 para gerar o vetor de características.
+
+Classificação e decisão na Camada 2.
+
+Execução e gerenciamento na Camada 3.
+
+Atualização da memória e parâmetros com base no resultado.
+
+Controle de Risco
+Limites rígidos: máximo de posições por ativo e por conta.
+
+Hard stop loss em USD e baseado em volatilidade.
+
+Trailing stop dinâmico que se ajusta ao comportamento do mercado e ao histórico recente.
+
+6. Conclusão
+Este blueprint descreve um agente autônomo de trading que prioriza a sobrevivência através de uma arquitetura de três camadas (percepção, inferência, ação) e mecanismos de auto-regulação baseados em memória paramétrica e medo. Ele não é uma IA no sentido de redes neurais profundas, mas uma proto-AGI que demonstra comportamento adaptativo, tomada de decisão autônoma e aprendizado a partir das consequências de suas ações. Sua inteligência é medida pela capacidade de adaptar-se a um ambiente variável (mercado) com recursos limitados (capital), utilizando uma epistemologia prática onde o conhecimento é aquilo que permite a continuidade da operação.
+
+
+
+---
+
+//+------------------------------------------------------------------+
+//|                                     Trend_Mesh_V3_FinalFix.mq5   |
+//|                        Copyright 2025, Atous Technology Systems  |
+//|               Fix: Single Position per Asset + Max 5 Global      |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2025, Atous Technology Systems"
+#property version   "3.30"
+#property description "Trend Mesh V3: Hard Limit Fix + Race Condition Protection"
+
+//--- Includes
+#include <Trade\Trade.mqh>
+#include <Trade\AccountInfo.mqh>
+#include <Trade\SymbolInfo.mqh>
+#include <Trade\PositionInfo.mqh>
+
+//--- INPUTS ---
+input group "=== CONFIGURAÇÃO MACRO (MESH / FIBO) ==="
+input int InpLookBack = 500; // Histórico de Velas para Mesh
+input int InpConnectPast = 3; // Conexões por Pivô
+input int InpMinBarsDist = 5; // Distância Mínima entre Pivôs
+input bool InpShowFibo = true; // Mostrar Zona Fibo?
+
+input group "=== SENSIBILIDADE (ZIGZAG) ==="
+input int InpZigDepth = 12; // Depth
+input int InpZigDev = 5; // Deviation
+input int InpZigBack = 3; // Backstep
+
+input group "=== CONFIGURAÇÃO MICRO (SCALPING) ==="
+input int InpEmaFast = 8; // EMA Rápida
+input int InpEmaSlow = 21; // EMA Lenta
+input int InpRsiPeriod = 14; // Período RSI
+
+input group "=== GESTÃO DE RISCO E POSIÇÕES ==="
+input bool InpEnableTrading = true; // Ativar Negociação Real?
+input int MaxOpenPositions = 5; // Máximo GLOBAL de Posições (Conta)
+input double HardStopLoss = 25.0; // Hard Stop Loss em USD
+input double LowConfidenceLot = 0.15; // Lote para Baixa Confiança
+input double MediumConfidenceLot = 0.25; // Lote para Média Confiança
+input double HighConfidenceLot = 0.05; // Lote para Alta Confiança (Ajustado conforme pedido anterior)
+
+input group "=== TRAILING STOP ==="
+input double TrailingActivation = 5.0; // Ativação do trailing em $
+input double TrailingDistance = 3.0; // Distância do trailing em $
+input double InitialStopLoss = 10.0; // Stop loss inicial em pontos (*10)
+input double InitialTakeProfit = 20.0; // Take profit inicial em pontos (*10)
+input double TpExpansion = 2.5; // Expansão do TP (multiplicador)
+
+input group "=== VISUAL ==="
+input color InpColorRes = clrSlateGray; // Resistência Mesh
+input color InpColorSup = clrTeal; // Suporte Mesh
+input color InpColorZoneBuy = C'220, 240, 220'; // Zona Compra
+input color InpColorZoneSell = C'240, 220, 220'; // Zona Venda
+input ENUM_LINE_STYLE InpLineStyle = STYLE_DOT; // Estilo da linha Mesh
+
+//--- ESTRUTURAS ---
+struct PivotPoint {
+    double price;
+    datetime time;
+    int barIndex;
+    bool isHigh;
+};
+
+struct SignalScore {
+    bool isValid;
+    bool isBuy;
+    double confidence;
+    double price;
+    datetime time;
+    string reason;
+};
+
+//--- GLOBAIS ---
+int handleZigZag;
+int handleEmaFast;
+int handleEmaSlow;
+int handleRsi;
+string objPrefix;
+datetime lastBarTime = 0;
+ulong currentMagicNumber = 777888; // Magic Number FIXO para controle global correto
+
+//--- Classes MQL5
+CTrade trade;
+CSymbolInfo symbolInfo;
+CAccountInfo accountInfo;
+CPositionInfo positionInfo;
+
+//--- Estados
+datetime lastTradeTime = 0;
+
+//--- Forward Declarations
+void UpdateMacroAnalysis();
+void CheckHardStopLoss();
+void ManageTrailingStop();
+void CheckEntrySignalsWithScore();
+int CountGlobalPositions();
+bool IsSymbolBusy();
+void ExecuteTrade(bool isBuy, double lotSize, double confidence);
+void DrawMesh(PivotPoint &pivots[], int total, color clr);
+void DrawPivots(PivotPoint &pivots[], int total, bool isHigh);
+void DrawAutoFibo(const double &high[], const double &low[], const datetime &time[]);
+void CreateHLine(string name, double price, color clr);
+void DrawSignalArrow(bool isBuy, double price, datetime time);
+
+//+------------------------------------------------------------------+
+//| OnInit                                                           |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+    Print("=== INICIALIZANDO TREND MESH V3 FINAL FIX ===");
+   
+    if(!symbolInfo.Name(_Symbol)) return INIT_FAILED;
+    symbolInfo.Refresh();
+   
+    objPrefix = "ATM_V3_" + Symbol + "";
+   
+    // Configuração do Magic Number FIXO para garantir controle global
+    currentMagicNumber = 777888; 
+    
+    trade.SetExpertMagicNumber(currentMagicNumber);
+    trade.SetDeviationInPoints(10);
+    trade.SetTypeFilling(ORDER_FILLING_FOK);
+    
+    // Inicializar Random para evitar conflito de execução simultânea
+    MathSrand(GetTickCount());
+   
+    //--- Inicializar Indicadores
+    handleZigZag = iCustom(_Symbol, _Period, "Examples\\ZigZag", InpZigDepth, InpZigDev, InpZigBack);
+    if(handleZigZag == INVALID_HANDLE) {
+        handleZigZag = iCustom(_Symbol, _Period, "ZigZag", InpZigDepth, InpZigDev, InpZigBack);
+        if(handleZigZag == INVALID_HANDLE) {
+            Print("ERRO CRÍTICO: ZigZag não encontrado.");
+            return INIT_FAILED;
+        }
+    }
+   
+    handleEmaFast = iMA(_Symbol, _Period, InpEmaFast, 0, MODE_EMA, PRICE_CLOSE);
+    handleEmaSlow = iMA(_Symbol, _Period, InpEmaSlow, 0, MODE_EMA, PRICE_CLOSE);
+    handleRsi = iRSI(_Symbol, _Period, InpRsiPeriod, PRICE_CLOSE);
+   
+    if(handleEmaFast == INVALID_HANDLE || handleEmaSlow == INVALID_HANDLE || handleRsi == INVALID_HANDLE) {
+        Print("ERRO CRÍTICO: Falha ao criar handles de indicadores.");
+        return INIT_FAILED;
+    }
+   
+    return INIT_SUCCEEDED;
+}
+
+//+------------------------------------------------------------------+
+//| OnDeinit                                                         |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+    ObjectsDeleteAll(0, objPrefix);
+    IndicatorRelease(handleZigZag);
+    IndicatorRelease(handleEmaFast);
+    IndicatorRelease(handleEmaSlow);
+    IndicatorRelease(handleRsi);
+}
+
+//+------------------------------------------------------------------+
+//| OnTick                                                           |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+    // 1. Atualizar Dados
+    if(!symbolInfo.RefreshRates()) return;
+   
+    // 2. Análise Macro (Mesh + Fibo)
+    datetime currentTime[1];
+    if(CopyTime(_Symbol, _Period, 0, 1, currentTime) > 0) {
+        if(currentTime[0] != lastBarTime) {
+            lastBarTime = currentTime[0];
+            UpdateMacroAnalysis();
+        }
+    }
+   
+    // 3. Verificar Hard Stop Loss
+    CheckHardStopLoss();
+   
+    // 4. Gerenciar Trailing Stop
+    ManageTrailingStop();
+   
+    // 5. Verificar Sinais de Entrada
+    
+    // REGRA 1: Verificar se este símbolo já tem posição (Limite: 1 por ativo)
+    // Se tiver, retorna imediatamente e não processa sinais.
+    if(IsSymbolBusy()) return;
+
+    // REGRA 2: Verificar Limite Global (Limite: 5 por conta)
+    if(CountGlobalPositions() >= MaxOpenPositions) return;
+
+    // Atraso aleatório pequeno para evitar conflito de execução
+    Sleep(MathRand() % 100); 
+    
+    CheckEntrySignalsWithScore();
+}
+
+//+------------------------------------------------------------------+
+//| Verifica se JÁ existe ordem neste símbolo (CORREÇÃO FUNDAMENTAL)|
+//+------------------------------------------------------------------+
+bool IsSymbolBusy()
+{
+    // Verifica Posições Abertas
+    for(int i = PositionsTotal() - 1; i >= 0; i--) {
+        if(PositionGetTicket(i) > 0) {
+            // Verifica se é nossa (MagicNumber) E se é deste símbolo
+            if(PositionGetInteger(POSITION_MAGIC) == currentMagicNumber && 
+               PositionGetString(POSITION_SYMBOL) == _Symbol) {
+                return true; // Já tem posição, bloqueia nova entrada
+            }
+        }
+    }
+    
+    // Verifica Ordens Pendentes (para não duplicar na execução)
+    for(int i = OrdersTotal() - 1; i >= 0; i--) {
+        if(OrderGetTicket(i) > 0) {
+            if(OrderGetInteger(ORDER_MAGIC) == currentMagicNumber && 
+               OrderGetString(ORDER_SYMBOL) == _Symbol) {
+                return true; // Já tem ordem pendente
+            }
+        }
+    }
+    
+    return false;
+}
+
+//+------------------------------------------------------------------+
+//| Contar TODAS as posições do robô na conta (Limite Global)        |
+//+------------------------------------------------------------------+
+int CountGlobalPositions()
+{
+    int count = 0;
+    
+    // Contar Posições
+    for(int i = PositionsTotal() - 1; i >= 0; i--) {
+        if(PositionGetTicket(i) > 0) {
+            // Conta qualquer posição com nosso Magic Number, independente do símbolo
+            if(PositionGetInteger(POSITION_MAGIC) == currentMagicNumber) {
+                count++;
+            }
+        }
+    }
+
+    // Contar Ordens
+    for(int i = OrdersTotal() - 1; i >= 0; i--) {
+        if(OrderGetTicket(i) > 0) {
+            if(OrderGetInteger(ORDER_MAGIC) == currentMagicNumber) {
+                count++;
+            }
+        }
+    }
+    
+    return count;
+}
+
+//+------------------------------------------------------------------+
+//| Verificar Hard Stop Loss                                         |
+//+------------------------------------------------------------------+
+void CheckHardStopLoss()
+{
+    for(int i = PositionsTotal() - 1; i >= 0; i--) {
+        ulong ticket = PositionGetTicket(i);
+        if(ticket > 0 && PositionSelectByTicket(ticket)) {
+            
+            // Gerencia apenas as posições deste Magic Number
+            if(PositionGetInteger(POSITION_MAGIC) == currentMagicNumber) {
+                
+                double profit = PositionGetDouble(POSITION_PROFIT);
+                double swap = PositionGetDouble(POSITION_SWAP);
+                double commission = PositionGetDouble(POSITION_COMMISSION);
+                double totalPL = profit + swap + commission;
+                
+                if(totalPL <= -MathAbs(HardStopLoss)) {
+                    Print("HARD STOP LOSS! Ticket: ", ticket, " P/L: ", totalPL);
+                    trade.PositionClose(ticket);
+                }
+            }
+        }
+    }
+}
+
+//+------------------------------------------------------------------+
+//| Score de Confiabilidade                                          |
+//+------------------------------------------------------------------+
+SignalScore CalculateSignalScore(bool isBuySignal, double signalPrice)
+{
+    SignalScore score;
+    score.isValid = false;
+    score.isBuy = isBuySignal;
+    score.confidence = 0.0;
+    score.price = signalPrice;
+    score.reason = "";
+   
+    double emaFast[], emaSlow[], rsi[];
+    ArraySetAsSeries(emaFast, true);
+    ArraySetAsSeries(emaSlow, true);
+    ArraySetAsSeries(rsi, true);
+   
+    if(CopyBuffer(handleEmaFast, 0, 0, 3, emaFast) < 3) return score;
+    if(CopyBuffer(handleEmaSlow, 0, 0, 3, emaSlow) < 3) return score;
+    if(CopyBuffer(handleRsi, 0, 0, 3, rsi) < 3) return score;
+   
+    double points = 0.0;
+    string reasons = "";
+   
+    // 1. EMAs (30%)
+    if(isBuySignal) { if(emaFast[0] > emaSlow[0]) { points += 0.30; reasons += "EMA+ "; } }
+    else { if(emaFast[0] < emaSlow[0]) { points += 0.30; reasons += "EMA+ "; } }
+   
+    // 2. RSI (25%)
+    if(isBuySignal) { if(rsi[0] < 30) { points += 0.25; reasons += "RSI_Over+ "; } else if(rsi[0] < 50) { points += 0.15; reasons += "RSI_Low+ "; } }
+    else { if(rsi[0] > 70) { points += 0.25; reasons += "RSI_Over+ "; } else if(rsi[0] > 50) { points += 0.15; reasons += "RSI_High+ "; } }
+   
+    // 3. Momentum (20%)
+    if(isBuySignal) { if(emaFast[0] > emaFast[1]) { points += 0.20; reasons += "Mom+ "; } }
+    else { if(emaFast[0] < emaFast[1]) { points += 0.20; reasons += "Mom+ "; } }
+   
+    // 4. Preço (15%)
+    double currentPrice = isBuySignal ? symbolInfo.Ask() : symbolInfo.Bid();
+    double distToFast = MathAbs(currentPrice - emaFast[0]) / currentPrice * 100;
+    if(distToFast < 0.5) { points += 0.15; reasons += "NearEMA+ "; }
+   
+    // 5. ZigZag (10%)
+    double zigZagBuffer[]; ArraySetAsSeries(zigZagBuffer, true);
+    if(CopyBuffer(handleZigZag, 0, 0, 5, zigZagBuffer) >= 5) {
+        if(zigZagBuffer[1] != 0.0 && zigZagBuffer[1] != EMPTY_VALUE) { points += 0.10; reasons += "Fresh+ "; }
+    }
+   
+    score.confidence = points;
+    score.reason = reasons;
+    score.isValid = (points >= 0.30);
+   
+    return score;
+}
+
+double GetLotSizeByConfidence(double confidence)
+{
+    if(confidence >= 0.70) return HighConfidenceLot;
+    else if(confidence >= 0.50) return MediumConfidenceLot;
+    else return LowConfidenceLot;
+}
+
+//+------------------------------------------------------------------+
+//| Verificar Sinais                                                 |
+//+------------------------------------------------------------------+
+void CheckEntrySignalsWithScore()
+{
+    double zigZagBuffer[], high[], low[];
+    datetime time[];
+    ArraySetAsSeries(zigZagBuffer, true);
+    ArraySetAsSeries(high, true);
+    ArraySetAsSeries(low, true);
+    ArraySetAsSeries(time, true);
+   
+    int checkRange = 10;
+    if(CopyBuffer(handleZigZag, 0, 0, checkRange, zigZagBuffer) < checkRange) return;
+    if(CopyHigh(_Symbol, _Period, 0, checkRange, high) < checkRange) return;
+    if(CopyLow(_Symbol, _Period, 0, checkRange, low) < checkRange) return;
+    if(CopyTime(_Symbol, _Period, 0, checkRange, time) < checkRange) return;
+   
+    for(int i = 1; i < checkRange; i++) {
+        double zVal = zigZagBuffer[i];
+        if(zVal != 0.0 && zVal != EMPTY_VALUE) {
+            if(time[i] <= lastTradeTime) continue;
+           
+            bool isHigh = (MathAbs(high[i] - zVal) < _Point);
+            bool isLow = (MathAbs(low[i] - zVal) < _Point);
+           
+            if(isHigh || isLow) {
+                bool isBuySignal = isLow;
+                SignalScore score = CalculateSignalScore(isBuySignal, zVal);
+                
+                if(score.isValid) {
+                    
+                    // --- VERIFICAÇÃO FINAL ANTES DE ENVIAR A ORDEM ---
+                    if(IsSymbolBusy()) return; // 1 por Ativo
+                    if(CountGlobalPositions() >= MaxOpenPositions) return; // 5 Global
+
+                    double lotSize = GetLotSizeByConfidence(score.confidence);
+                    
+                    Print("Sinal Detectado: ", _Symbol, " | Conf: ", score.confidence);
+                    DrawSignalArrow(isBuySignal, zVal, time[i]);
+                    
+                    if(InpEnableTrading) {
+                        ExecuteTrade(isBuySignal, lotSize, score.confidence);
+                    }
+                    
+                    lastTradeTime = time[i];
+                    break;
+                }
+            }
+        }
+    }
+}
+
+//+------------------------------------------------------------------+
+//| Executar Trade                                                   |
+//+------------------------------------------------------------------+
+void ExecuteTrade(bool isBuy, double lotSize, double confidence)
+{
+    double entry = isBuy ? symbolInfo.Ask() : symbolInfo.Bid();
+    double slPoints = InitialStopLoss * 10 * _Point;
+    double tpPoints = InitialTakeProfit * 10 * _Point;
+   
+    double sl = isBuy ? NormalizeDouble(entry - slPoints, _Digits) : NormalizeDouble(entry + slPoints, _Digits);
+    double tp = isBuy ? NormalizeDouble(entry + tpPoints, _Digits) : NormalizeDouble(entry - tpPoints, _Digits);
+    
+    string comment = StringFormat("V3_C%.0f", confidence * 100);
+   
+    bool res = false;
+    if(isBuy) res = trade.Buy(lotSize, _Symbol, entry, sl, tp, comment);
+    else res = trade.Sell(lotSize, _Symbol, entry, sl, tp, comment);
+    
+    if(res) Print("Ordem enviada com sucesso: ", _Symbol);
+    else Print("Erro ao enviar ordem: ", trade.ResultRetcodeDescription());
+}
+
+//+------------------------------------------------------------------+
+//| Gerenciar Trailing Stop                                          |
+//+------------------------------------------------------------------+
+void ManageTrailingStop()
+{
+    for(int i = PositionsTotal() - 1; i >= 0; i--) {
+        ulong ticket = PositionGetTicket(i);
+        if(ticket > 0 && PositionSelectByTicket(ticket)) {
+            
+            // Só gerencia o que é nosso
+            if(PositionGetInteger(POSITION_MAGIC) == currentMagicNumber) {
+                
+                // Trailing também só deve atuar no símbolo atual do gráfico para evitar conflitos de cache
+                if(PositionGetString(POSITION_SYMBOL) == _Symbol) {
+                    
+                    double profit = PositionGetDouble(POSITION_PROFIT);
+                    if(profit >= TrailingActivation) {
+                        double currentPrice = PositionGetDouble(POSITION_PRICE_CURRENT);
+                        double stopLoss = PositionGetDouble(POSITION_SL);
+                        double takeProfit = PositionGetDouble(POSITION_TP);
+                        double trailPts = TrailingDistance * 10 * _Point;
+                        
+                        double newSL = 0;
+                        bool update = false;
+
+                        if(PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY) {
+                            newSL = NormalizeDouble(currentPrice - trailPts, _Digits);
+                            if(newSL > stopLoss || stopLoss == 0) update = true;
+                        } else {
+                            newSL = NormalizeDouble(currentPrice + trailPts, _Digits);
+                            if(newSL < stopLoss || stopLoss == 0) update = true;
+                        }
+                        
+                        if(update) trade.PositionModify(ticket, newSL, takeProfit);
+                    }
+                }
+            }
+        }
+    }
+}
+
+//+------------------------------------------------------------------+
+//| Visual e Auxiliares                                              |
+//+------------------------------------------------------------------+
+void UpdateMacroAnalysis() {
+    double zigZagBuffer[], high[], low[];
+    datetime time[];
+    ArraySetAsSeries(zigZagBuffer, true); ArraySetAsSeries(high, true); ArraySetAsSeries(low, true); ArraySetAsSeries(time, true);
+    if(CopyBuffer(handleZigZag, 0, 0, InpLookBack, zigZagBuffer) < 0) return;
+    if(CopyHigh(_Symbol, _Period, 0, 
