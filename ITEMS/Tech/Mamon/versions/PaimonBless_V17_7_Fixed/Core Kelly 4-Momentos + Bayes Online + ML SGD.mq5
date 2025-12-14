@@ -1,0 +1,597 @@
+//+------------------------------------------------------------------+
+//|                  PaimonBless_V17_7_Fixed.mq5                     |
+//|                  Copyright 2025, Universal Trader Pro Labs       |
+//| V17.7: FIXED EDITION                                             |
+//|  - Fix: Lógica de Venda (Prob < 1-MinProb)                       |
+//|  - Fix: Contagem de Posições por Magic Number                    |
+//|  - Core: Kelly 4-Momentos + Bayes Online + ML SGD                |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2025, PhD Mathematics Finance"
+#property link      "https://www.mql5.com"
+#property version   "17.70"
+#property description "Sistema Quantitativo V17.7 - Logic Fixed"
+#property strict
+
+//=== INCLUDES =======================================================
+#include <Trade\Trade.mqh>
+#include <Trade\SymbolInfo.mqh>
+#include <Trade\PositionInfo.mqh>
+#include <Trade\AccountInfo.mqh>
+#include <Math\Stat\Math.mqh>
+
+//=== CONSTANTES =====================================================
+#define M_PI        3.14159265358979323846
+#define MAX_FEATURES 6
+#define EPSILON     1e-9
+#define ML_FILE     "UTPro_V17_Weights.bin"
+
+//=== OBJETOS GLOBAIS ================================================
+CTrade        trade;
+CSymbolInfo   symbolInfo;
+CPositionInfo positionInfo;
+CAccountInfo  accountInfo;
+
+//=== HANDLES ========================================================
+int h_rsi, h_atr, h_adx, h_bb, h_ema_fast, h_ema_slow;
+
+//=== ESTRUTURAS =====================================================
+struct MarketFeatures {
+   double f0_rsi;    
+   double f1_adx;    
+   double f2_trend;  
+   double f3_vol;    
+   double f4_bb;     
+   double f5_spread; 
+};
+
+struct PredictionResult {
+   double probability;
+   double uncertainty;
+};
+
+//=== INPUTS =========================================================
+input group "=== 1. RISK MANAGEMENT ==="
+input double InpMaxRisk         = 0.05;  
+input double InpKellyFraction   = 0.25;  
+input double InpMaxDrawdown     = 0.15;  
+
+input group "=== 2. STRATEGY ==="
+input int    InpMagic           = 999176;
+input double InpMinProb         = 0.60;  // Acima de 0.52=Compra, Abaixo de 0.48=Venda
+input double InpMaxUncertainty  = 0.20; 
+input bool   InpUseML           = true;  
+input bool   InpUseBayes        = true;  
+
+input group "=== 3. DEBUG & LOGS ==="
+input bool   InpEnableLogs      = true;  // Ativar Logs na Aba Experts
+input int    InpLogInterval     = 15;    // Intervalo de Logs (segundos)
+
+input group "=== 4. ML SETTINGS ==="
+input double InpLearningRate    = 0.01;
+input double InpL2Reg           = 0.0001;
+input int    InpMCDropoutIters  = 30; 
+
+//=== VARIÁVEIS GLOBAIS DE ESTADO ====================================
+double   g_equityPeak = 0.0;
+double   g_dailyPnL = 0.0;
+datetime g_lastReset = 0;
+datetime g_lastTrade = 0;
+string   g_systemStatus = "BOOTING..."; 
+MarketFeatures g_lastFeatures;
+bool     g_hasOpenPos = false;
+datetime g_lastLogTime = 0;
+
+//=== FUNÇÕES AUXILIARES =============================================
+
+// NOVA FUNÇÃO: Conta apenas posições deste robô
+int CountMagicPositions() {
+   int count = 0;
+   for(int i=0; i<PositionsTotal(); i++) {
+      if(PositionSelectByTicket(PositionGetTicket(i))) {
+         if(PositionGetInteger(POSITION_MAGIC) == InpMagic) count++;
+      }
+   }
+   return count;
+}
+
+void FeaturesToArray(const MarketFeatures &f, double &arr[]) {
+   arr[0] = f.f0_rsi;
+   arr[1] = f.f1_adx;
+   arr[2] = f.f2_trend;
+   arr[3] = f.f3_vol;
+   arr[4] = f.f4_bb;
+   arr[5] = f.f5_spread;
+}
+
+double GetInd(int h, int buf=0, int idx=0) {
+   double v[1];
+   if(CopyBuffer(h, buf, idx, 1, v)<1) return 0.0;
+   return v[0];
+}
+
+double CalcDD() {
+   double eq = AccountInfoDouble(ACCOUNT_EQUITY);
+   if(g_equityPeak == 0) g_equityPeak = eq;
+   if(eq > g_equityPeak) g_equityPeak = eq;
+   if(g_equityPeak <= 0) return 0.0;
+   return (g_equityPeak - eq) / g_equityPeak;
+}
+
+//====================================================================
+// CLASSES MATEMÁTICAS (CORE)
+//====================================================================
+
+class CRollingStats {
+private:
+   double M1, M2, M3, M4;
+   long   n;
+public:
+   CRollingStats() { Reset(); }
+   void Reset() { M1=0; M2=0; M3=0; M4=0; n=0; }
+   
+   void Update(double x) {
+      long n1 = n; n++;
+      double delta = x - M1;
+      double delta_n = delta / n;
+      double term1 = delta * delta_n * n1;
+      
+      M4 += term1 * delta_n * delta_n * (n*n - 3*n + 3) + 6 * delta_n * delta_n * M2 - 4 * delta_n * M3;
+      M3 += term1 * delta_n * (n - 2) - 3 * delta_n * M2;
+      M2 += term1;
+      M1 += delta_n;
+   }
+   
+   double Mean() { return M1; }
+   double Variance() { return (n > 1) ? M2 / (n - 1) : 0.0; }
+   
+   double Skew() {
+      double var = Variance();
+      if (var <= EPSILON || n < 3) return 0.0;
+      return (MathSqrt(n) * M3) / MathPow(M2, 1.5);
+   }
+   
+   long Count() { return n; }
+};
+
+class CRiskEngine {
+private:
+   CRollingStats winStats;  
+   CRollingStats lossStats; 
+   int wins, losses;
+   
+public:
+   CRiskEngine() { wins=0; losses=0; }
+   
+   void AddTradeReturn(double pct) {
+      if (pct > 0) {
+         wins++;
+         winStats.Update(pct);
+      } else {
+         losses++;
+         lossStats.Update(MathAbs(pct));
+      }
+   }
+   
+   double GetKellyFraction(double currentDD) {
+      if ((wins + losses) < 20) return 0.01;
+      
+      double p = (double)wins / (wins + losses);
+      double q = 1.0 - p;
+      
+      double avgWin = winStats.Mean();
+      double avgLoss = lossStats.Mean();
+      if (avgLoss <= EPSILON) avgLoss = 0.01;
+      
+      double b = avgWin / avgLoss;
+      double f = (p * b - q) / b;
+      
+      double totalSkew = winStats.Skew() - lossStats.Skew(); 
+      if (totalSkew < 0) f *= (1.0 + totalSkew*0.1); 
+      
+      f *= InpKellyFraction;
+      
+      if (currentDD > 0.05) f *= 0.75;
+      if (currentDD > 0.10) f *= 0.50;
+      
+      return MathMax(0.001, MathMin(f, InpMaxRisk));
+   }
+   
+   string GetStats() {
+      return StringFormat("Wins:%d Loss:%d Skew:%.2f", wins, losses, winStats.Skew());
+   }
+};
+
+class CBayesGNB {
+private:
+   double mean_win[MAX_FEATURES];
+   double M2_win[MAX_FEATURES];
+   double n_win;
+   
+   double mean_loss[MAX_FEATURES];
+   double M2_loss[MAX_FEATURES];
+   double n_loss;
+   
+   double prior; 
+   
+public:
+   CBayesGNB() {
+      n_win=0; n_loss=0; prior=0.5;
+      for(int i=0; i<MAX_FEATURES; i++) {
+         mean_win[i]=0.5; M2_win[i]=0.1;
+         mean_loss[i]=0.5; M2_loss[i]=0.1;
+      }
+   }
+   
+   void Update(double &f[], bool win) {
+      if (win) {
+         n_win++;
+         for(int i=0; i<MAX_FEATURES; i++) {
+            double delta = f[i] - mean_win[i];
+            mean_win[i] += delta / n_win;
+            M2_win[i] += delta * (f[i] - mean_win[i]);
+         }
+         prior = 0.99*prior + 0.01*1.0;
+      } else {
+         n_loss++;
+         for(int i=0; i<MAX_FEATURES; i++) {
+            double delta = f[i] - mean_loss[i];
+            mean_loss[i] += delta / n_loss;
+            M2_loss[i] += delta * (f[i] - mean_loss[i]);
+         }
+         prior = 0.99*prior + 0.01*0.0;
+      }
+   }
+   
+   double Predict(double &f[]) {
+      double log_p_win = MathLog(prior + EPSILON);
+      double log_p_loss = MathLog((1.0 - prior) + EPSILON);
+      
+      for(int i=0; i<MAX_FEATURES; i++) {
+         double var_w = (n_win > 1) ? M2_win[i]/(n_win-1) : 0.1;
+         double var_l = (n_loss > 1) ? M2_loss[i]/(n_loss-1) : 0.1;
+         
+         log_p_win += LogGaussian(f[i], mean_win[i], var_w);
+         log_p_loss += LogGaussian(f[i], mean_loss[i], var_l);
+      }
+      
+      double max_log = MathMax(log_p_win, log_p_loss);
+      double exp_win = MathExp(log_p_win - max_log);
+      double exp_loss = MathExp(log_p_loss - max_log);
+      
+      return exp_win / (exp_win + exp_loss);
+   }
+
+private:
+   double LogGaussian(double x, double mu, double var) {
+      if (var <= EPSILON) var = 0.001;
+      return -0.5 * MathLog(2 * M_PI * var) - 0.5 * MathPow(x - mu, 2) / var;
+   }
+};
+
+class CNeuralNet {
+private:
+   double weights[MAX_FEATURES];
+   double bias;
+   int iterations;
+   
+public:
+   CNeuralNet() {
+      for(int i=0; i<MAX_FEATURES; i++) weights[i] = (MathRand()/32767.0 - 0.5) * 0.01;
+      bias = 0; iterations = 0;
+   }
+   
+   PredictionResult PredictMC(double &f[]) {
+      double sum_prob = 0;
+      double sum_sq_prob = 0;
+      int samples = InpMCDropoutIters;
+      
+      for(int k=0; k<samples; k++) {
+         double z = bias;
+         for(int i=0; i<MAX_FEATURES; i++) {
+            if (MathRand()%100 > 20) { 
+               z += weights[i] * f[i];
+            }
+         }
+         double p = 1.0 / (1.0 + MathExp(-z));
+         sum_prob += p;
+         sum_sq_prob += p*p;
+      }
+      
+      PredictionResult res;
+      res.probability = sum_prob / samples;
+      double var = (sum_sq_prob / samples) - (res.probability * res.probability);
+      res.uncertainty = (var > 0) ? MathSqrt(var) : 0.0;
+      return res;
+   }
+   
+   void Train(double &f[], double target) {
+      double z = bias;
+      for(int i=0; i<MAX_FEATURES; i++) z += weights[i] * f[i];
+      double p = 1.0 / (1.0 + MathExp(-z));
+      
+      double err = target - p;
+      double grad = err * p * (1.0 - p);
+      
+      for(int i=0; i<MAX_FEATURES; i++) {
+         weights[i] += InpLearningRate * (grad * f[i] - InpL2Reg * weights[i]);
+      }
+      bias += InpLearningRate * grad;
+      iterations++;
+   }
+   
+   int GetIterations() { return iterations; }
+   
+   void Save(string symbol) {
+      int h = FileOpen(ML_FILE, FILE_WRITE|FILE_BIN);
+      if(h!=INVALID_HANDLE) {
+         FileWriteInteger(h, iterations);
+         FileWriteDouble(h, bias);
+         for(int i=0; i<MAX_FEATURES; i++) FileWriteDouble(h, weights[i]);
+         FileClose(h);
+      }
+   }
+   void Load(string symbol) {
+      if(FileIsExist(ML_FILE)) {
+         int h = FileOpen(ML_FILE, FILE_READ|FILE_BIN);
+         if(h!=INVALID_HANDLE) {
+            iterations = FileReadInteger(h);
+            bias = FileReadDouble(h);
+            for(int i=0; i<MAX_FEATURES; i++) weights[i] = FileReadDouble(h);
+            FileClose(h);
+         }
+      }
+   }
+};
+
+//=== INSTÂNCIAS GLOBAIS ===
+CRiskEngine g_risk;
+CBayesGNB   g_bayes;
+CNeuralNet  g_ml;
+
+//=== LOGGER & DASHBOARD ===
+void LogSystemState(double finalProb, double bayesProb, PredictionResult &mlRes, double kelly, const MarketFeatures &f) {
+   if (!InpEnableLogs) return;
+   if (TimeCurrent() - g_lastLogTime < InpLogInterval) return;
+   
+   g_lastLogTime = TimeCurrent();
+   
+   string logMsg = StringFormat(
+      "--- HEARTBEAT [%s] ---\n"
+      "| STATE: %s\n"
+      "| INPUTS: RSI=%.2f ADX=%.2f Trend=%.4f Vol=%.5f\n"
+      "| MODELS: ML=%.1f%%(U:%.3f) Bayes=%.1f%% -> FINAL=%.1f%%\n"
+      "| RISK: Kelly=%.2f%% DD=%.2f%% Trades=%s\n"
+      "| ML ITERATIONS: %d",
+      TimeToString(TimeCurrent(), TIME_SECONDS),
+      g_systemStatus,
+      f.f0_rsi*100, f.f1_adx*100, f.f2_trend, f.f3_vol,
+      mlRes.probability*100, mlRes.uncertainty, bayesProb*100, finalProb*100,
+      kelly*100, CalcDD()*100, g_risk.GetStats(),
+      g_ml.GetIterations()
+   );
+   Print(logMsg);
+}
+
+void LogTrade(string type, double lot, double price, double prob) {
+   PrintFormat(">>> TRADE EXECUTION [%s] Type:%s Lot:%.2f Price:%.5f Prob:%.1f%%", 
+               TimeToString(TimeCurrent(), TIME_SECONDS), type, lot, price, prob*100);
+}
+
+void UpdateDashboard(double prob, double kelly, double ml, double unc) {
+   string sColor = "🟢";
+   double lowerBound = 1.0 - InpMinProb;
+   
+   if(prob < InpMinProb && prob > lowerBound) sColor = "🟡"; // Zona neutra
+   if(unc > InpMaxUncertainty) sColor = "🟠";
+   
+   string txt = "";
+   txt = txt + "╔════PAIMON V17.7 FIXED═════╗\n";
+   txt = txt + "║ Status: " + sColor + " " + g_systemStatus + "\n";
+   txt = txt + "║ --------------------------\n";
+   txt = txt + "║ Prob Final: " + DoubleToString(prob*100, 1) + "% (+/-" + DoubleToString(unc*100,1) + "%)\n";
+   txt = txt + "║ Targets: >" + DoubleToString(InpMinProb*100,0) + "% (B) ou <" + DoubleToString(lowerBound*100,0) + "% (S)\n";
+   txt = txt + "║ Kelly f*: " + DoubleToString(kelly*100, 2) + "% (Skew Adj)\n";
+   txt = txt + "║ --------------------------\n";
+   txt = txt + "║ Saldo: $" + DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY), 2) + "\n";
+   txt = txt + "║ DD: " + DoubleToString(CalcDD()*100, 2) + "%\n";
+   txt = txt + "╚═══════════════════════════╝";
+   
+   Comment(txt);
+}
+
+//=== CORE LOGIC ===
+void OnTick() {
+   if(TimeCurrent()-g_lastReset > 86400) { g_dailyPnL=0; g_lastReset=TimeCurrent(); }
+   double dd = CalcDD();
+   
+   if(dd > InpMaxDrawdown) {
+      g_systemStatus = "⛔ HALT: Max DD";
+      UpdateDashboard(0,0,0,0);
+      return;
+   }
+   
+   // 1. Dados
+   double rsi = GetInd(h_rsi);
+   double adx = GetInd(h_adx);
+   double atr = GetInd(h_atr);
+   double bbU = GetInd(h_bb, 1);
+   double bbL = GetInd(h_bb, 2);
+   double emaF = GetInd(h_ema_fast);
+   double emaS = GetInd(h_ema_slow);
+   
+   // 2. Features
+   MarketFeatures f;
+   f.f0_rsi = rsi / 100.0;
+   f.f1_adx = adx / 100.0;
+   f.f2_trend = (emaS != 0) ? (emaF - emaS)/emaS * 1000.0 : 0.0;
+   f.f3_vol = atr;
+   f.f4_bb = (atr > EPSILON) ? (bbU - bbL)/atr : 0.0;
+   f.f5_spread = (double)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD);
+   
+   double f_array[MAX_FEATURES];
+   FeaturesToArray(f, f_array);
+   
+   // 3. Inferência
+   PredictionResult mlRes = g_ml.PredictMC(f_array); 
+   double bayesProb = g_bayes.Predict(f_array);
+   
+   double wML = 1.0 - mlRes.uncertainty;
+   double wBayes = mlRes.uncertainty;
+   double finalProb = (mlRes.probability * wML) + (bayesProb * wBayes);
+   
+   double kelly = g_risk.GetKellyFraction(dd);
+   
+   // 4. Logging Detalhado
+   LogSystemState(finalProb, bayesProb, mlRes, kelly, f);
+   
+   // 5. Decisão (LÓGICA CORRIGIDA)
+   bool signal = false;
+   bool isBuySignal = false; // Define se a ordem será de compra ou venda
+   
+   // Define thresholds: Ex: MinProb 0.52 -> Compra > 0.52, Venda < 0.48
+   double lowerThreshold = 1.0 - InpMinProb; 
+   
+   bool potentialBuy = (finalProb >= InpMinProb);
+   bool potentialSell = (finalProb <= lowerThreshold);
+   
+   if (mlRes.uncertainty < InpMaxUncertainty) {
+      if (potentialBuy) {
+         // Filtro RSI para compras: Não comprar se RSI > 70 (Sobrecompra)
+         if (rsi < 70) {
+            signal = true;
+            isBuySignal = true;
+         }
+      }
+      else if (potentialSell) {
+         // Filtro RSI para vendas: Não vender se RSI < 30 (Sobrevenda)
+         if (rsi > 30) {
+            signal = true;
+            isBuySignal = false;
+         }
+      }
+   }
+   
+   g_systemStatus = signal ? (isBuySignal ? "🟢 BUY SIGNAL" : "🔴 SELL SIGNAL") : "🟡 SCANNING";
+   if (mlRes.uncertainty > InpMaxUncertainty) g_systemStatus = "🟠 HIGH UNCERTAINTY";
+   
+   UpdateDashboard(finalProb, kelly, mlRes.probability, mlRes.uncertainty);
+   
+   // 6. Execução (FIXED POSITIONS COUNT)
+   // Usa CountMagicPositions() em vez de PositionsTotal() para não travar com outros pares
+   if (signal && TimeCurrent() - g_lastTrade > 300 && CountMagicPositions() < 3) {
+      double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+      double money = equity * kelly;
+      
+      double slDist = atr * 2.0;
+      double slPoints = slDist / SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+      double tickVal = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
+      
+      double lot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+      if (slPoints > 0 && tickVal > 0) {
+         lot = money / (slPoints * tickVal);
+      }
+      
+      double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+      lot = MathFloor(lot/step)*step;
+      lot = MathMax(lot, SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN));
+      lot = MathMin(lot, SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX));
+      
+      double price = isBuySignal ? SymbolInfoDouble(_Symbol, SYMBOL_ASK) : SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      double sl = isBuySignal ? price - slDist : price + slDist;
+      double tp = isBuySignal ? price + slDist*2.0 : price - slDist*2.0;
+      
+      string comm = "V17.7";
+      bool res = false;
+      
+      LogTrade(isBuySignal ? "BUY" : "SELL", lot, price, finalProb);
+      
+      if (isBuySignal) res = trade.Buy(lot, _Symbol, price, sl, tp, comm);
+      else             res = trade.Sell(lot, _Symbol, price, sl, tp, comm);
+      
+      if (res) {
+         g_lastTrade = TimeCurrent();
+         g_lastFeatures = f; 
+         g_hasOpenPos = true;
+         Print(">>> ORDER SUCCESS");
+      } else {
+         Print(">>> ORDER FAILED: ", GetLastError());
+      }
+   }
+}
+
+//=== EVENTS ===
+int OnInit() {
+   if(!symbolInfo.Name(_Symbol)) return INIT_FAILED;
+   symbolInfo.RefreshRates();
+   trade.SetExpertMagicNumber(InpMagic);
+   
+   h_rsi = iRSI(_Symbol, PERIOD_M5, 14, PRICE_CLOSE);
+   h_atr = iATR(_Symbol, PERIOD_M5, 14);
+   h_adx = iADX(_Symbol, PERIOD_M5, 14);
+   h_bb  = iBands(_Symbol, PERIOD_M5, 20, 0, 2.0, PRICE_CLOSE);
+   h_ema_fast = iMA(_Symbol, PERIOD_M5, 9, 0, MODE_EMA, PRICE_CLOSE);
+   h_ema_slow = iMA(_Symbol, PERIOD_M5, 21, 0, MODE_EMA, PRICE_CLOSE);
+   
+   if(h_rsi == INVALID_HANDLE) return INIT_FAILED;
+   
+   if(InpUseML) g_ml.Load(_Symbol);
+   g_equityPeak = AccountInfoDouble(ACCOUNT_EQUITY);
+   
+   Print(">>> PAIMON BLESS V17.7 STARTED - FIXED MODE ACTIVE");
+   return INIT_SUCCEEDED;
+}
+
+void OnDeinit(const int reason) {
+   if(InpUseML) g_ml.Save(_Symbol);
+   IndicatorRelease(h_rsi); IndicatorRelease(h_atr);
+   IndicatorRelease(h_adx); IndicatorRelease(h_bb);
+   IndicatorRelease(h_ema_fast); IndicatorRelease(h_ema_slow);
+   Print(">>> PAIMON BLESS STOPPED");
+   Comment("");
+}
+
+void OnTradeTransaction(const MqlTradeTransaction &trans, const MqlTradeRequest &req, const MqlTradeResult &res) {
+   if(trans.type == TRADE_TRANSACTION_DEAL_ADD) {
+      if(HistoryDealSelect(trans.deal)) {
+         long magic = HistoryDealGetInteger(trans.deal, DEAL_MAGIC);
+         if(magic == InpMagic && HistoryDealGetInteger(trans.deal, DEAL_ENTRY) == DEAL_ENTRY_OUT) {
+            double profit = HistoryDealGetDouble(trans.deal, DEAL_PROFIT);
+            double bal = AccountInfoDouble(ACCOUNT_BALANCE);
+            
+            if(bal > 0) g_risk.AddTradeReturn(profit/bal);
+            
+            if(g_hasOpenPos) {
+               // Target = 1.0 se lucro (compra e subiu OU venda e caiu)
+               // Mas a rede precisa aprender direção:
+               // Se comprei e lucrei, target=1 (reforça sinal alto)
+               // Se vendi e lucrei, target=0 (reforça sinal baixo)
+               
+               double target = 0.5;
+               long dealType = HistoryDealGetInteger(trans.deal, DEAL_TYPE); // Buy=0, Sell=1 no fechamento é invertido
+               // Melhor simplificar: Se profit > 0, o modelo estava certo.
+               // Se o modelo previu > 0.5 (compra) e lucrou -> Target 1
+               // Se o modelo previu < 0.5 (venda) e lucrou -> Target 0
+               // Se prejuízo -> Inverte target
+               
+               // Recupera previsão antiga (aproximada pela g_lastFeatures)
+               double f_arr[MAX_FEATURES];
+               FeaturesToArray(g_lastFeatures, f_arr);
+               PredictionResult lastPred = g_ml.PredictMC(f_arr);
+               bool wasBuy = (lastPred.probability > 0.5);
+               
+               if (profit > 0) target = wasBuy ? 1.0 : 0.0;
+               else            target = wasBuy ? 0.0 : 1.0;
+               
+               if(InpUseML) {
+                  g_ml.Train(f_arr, target);
+                  if(InpEnableLogs) PrintFormat(">>> TRAINING EVENT: Profit=%.2f Target=%.1f ML_Iters=%d", profit, target, g_ml.GetIterations());
+               }
+               if(InpUseBayes) g_bayes.Update(f_arr, profit > 0);
+               
+               g_hasOpenPos = false;
+            }
+         }
+      }
+   }
+}
+//+------------------------------------------------------------------+

@@ -1,0 +1,705 @@
+﻿InpColorZoneSell = C'240, 220, 220'; 
+input ENUM_LINE_STYLE InpLineStyle = STYLE_DOT; 
+
+//--- ESTRUTURAS ---
+struct PivotPoint {
+    double price;
+    datetime time;
+    int barIndex;
+    bool isHigh;
+};
+
+struct SignalScore {
+    bool isValid;
+    bool isBuy;
+    double confidence;
+    double price;
+    datetime time;
+    string reason;
+};
+
+//--- GLOBAIS ---
+int handleZigZag, handleEmaFast, handleEmaSlow, handleRsi, handleAtr;
+string objPrefix;
+datetime lastBarTime = 0;
+ulong currentMagicNumber = 888999; 
+
+//--- Classes
+CTrade trade;
+CSymbolInfo symbolInfo;
+CAccountInfo accountInfo;
+CPositionInfo positionInfo;
+
+datetime lastTradeTime = 0;
+
+//--- Forward Declarations
+void UpdateMacroAnalysis();
+void CheckHardStopLoss();
+void ManageSmartTrailing();
+void CheckEntrySignalsWithScore();
+int CountGlobalPositions();
+bool IsSymbolBusy();
+void ExecuteTrade(bool isBuy, double lotSize, double confidence);
+void DrawMesh(PivotPoint &pivots[], int total, color clr);
+void DrawPivots(PivotPoint &pivots[], int total, bool isHigh);
+void DrawAutoFibo(const double &high[], const double &low[], const datetime &time[]);
+void CreateHLine(string name, double price, color clr);
+void DrawSignalArrow(bool isBuy, double price, datetime time);
+double GetLotSizeByConfidence(double confidence);
+double GetRiskRewardMultiplier(double confidence);
+
+//+------------------------------------------------------------------+
+//| OnInit                                                           |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+    Print("=== INICIALIZANDO TREND MESH V4 RR MASTER ===");
+   
+    if(!symbolInfo.Name(_Symbol)) return INIT_FAILED;
+    symbolInfo.Refresh();
+   objPrefix = "ATM_MINI_" + _Symbol;
+    currentMagicNumber = 888999; 
+    
+    trade.SetExpertMagicNumber(currentMagicNumber);
+    trade.SetDeviationInPoints(10);
+    trade.SetTypeFilling(ORDER_FILLING_FOK);
+    
+    MathSrand(GetTickCount());
+   
+    // Indicadores
+    handleZigZag = iCustom(_Symbol, _Period, "Examples\\ZigZag", InpZigDepth, InpZigDev, InpZigBack);
+    if(handleZigZag == INVALID_HANDLE) {
+        handleZigZag = iCustom(_Symbol, _Period, "ZigZag", InpZigDepth, InpZigDev, InpZigBack);
+        if(handleZigZag == INVALID_HANDLE) {
+             Print("ERRO: ZigZag não encontrado.");
+             return INIT_FAILED;
+        }
+    }
+   
+    handleEmaFast = iMA(_Symbol, _Period, InpEmaFast, 0, MODE_EMA, PRICE_CLOSE);
+    handleEmaSlow = iMA(_Symbol, _Period, InpEmaSlow, 0, MODE_EMA, PRICE_CLOSE);
+    handleRsi = iRSI(_Symbol, _Period, InpRsiPeriod, PRICE_CLOSE);
+    handleAtr = iATR(_Symbol, _Period, InpAtrPeriod); // Novo indicador ATR
+   
+    if(handleEmaFast == INVALID_HANDLE || handleEmaSlow == INVALID_HANDLE || handleRsi == INVALID_HANDLE || handleAtr == INVALID_HANDLE) {
+        Print("ERRO CRÍTICO: Falha ao criar handles.");
+        return INIT_FAILED;
+    }
+   
+    return INIT_SUCCEEDED;
+}
+
+//+------------------------------------------------------------------+
+//| OnDeinit                                                         |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+    ObjectsDeleteAll(0, objPrefix);
+    IndicatorRelease(handleZigZag);
+    IndicatorRelease(handleEmaFast);
+    IndicatorRelease(handleEmaSlow);
+    IndicatorRelease(handleRsi);
+    IndicatorRelease(handleAtr);
+}
+
+//+------------------------------------------------------------------+
+//| OnTick                                                           |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+    if(!symbolInfo.RefreshRates()) return;
+   
+    // Macro
+    datetime currentTime[1];
+    if(CopyTime(_Symbol, _Period, 0, 1, currentTime) > 0) {
+        if(currentTime[0] != lastBarTime) {
+            lastBarTime = currentTime[0];
+            UpdateMacroAnalysis();
+        }
+    }
+   
+    CheckHardStopLoss();
+    ManageSmartTrailing(); // Nova função de Trailing Inteligente
+   
+    if(IsSymbolBusy()) return;
+    if(CountGlobalPositions() >= MaxOpenPositions) return;
+
+    Sleep(MathRand() % 100); 
+    CheckEntrySignalsWithScore();
+}
+
+//+------------------------------------------------------------------+
+//| CÁLCULO DE LOTE (COM EXCEÇÃO PARA OURO)                          |
+//+------------------------------------------------------------------+
+double GetLotSizeByConfidence(double confidence)
+{
+    double lot = 0.0;
+    
+    if(confidence >= 0.70) lot = HighConfidenceLot;
+    else if(confidence >= 0.50) lot = MediumConfidenceLot;
+    else lot = LowConfidenceLot;
+    
+    // Regra Ouro
+    if(StringFind(_Symbol, "XAU") != -1 || StringFind(_Symbol, "GOLD") != -1) {
+        if(lot > 0.15) lot = 0.15;
+    }
+    
+    return lot;
+}
+
+//+------------------------------------------------------------------+
+//| DEFINIÇÃO DE RISCO:RETORNO BASEADA EM SCORE                      |
+//+------------------------------------------------------------------+
+double GetRiskRewardMultiplier(double confidence)
+{
+    // Escala o TP baseado na confiança do sinal
+    if(confidence >= 0.70) return 0.30; // R:R 1:5 (Alta Confiança = Alvo Longo)
+    else if(confidence >= 0.50) return 0.10; // R:R 1:3
+    else return InpBaseRiskReward; // R:R 1:2 (Padrão)
+}
+
+//+------------------------------------------------------------------+
+//| Executar Trade com Lógica R:R Blindada                           |
+//+------------------------------------------------------------------+
+void ExecuteTrade(bool isBuy, double lotSize, double confidence)
+{
+    double entry = isBuy ? symbolInfo.Ask() : symbolInfo.Bid();
+    
+    // 1. Obter Volatilidade (ATR) para definir SL Técnico
+    double atrVal[1];
+    if(CopyBuffer(handleAtr, 0, 0, 1, atrVal) < 1) return;
+    double volatility = atrVal[0];
+    
+    // 2. Calcular Distância do SL (Risco)
+    double slDistance = volatility * InpSlAtrMult;
+    
+    // Garantia mínima de SL (caso ATR seja muito baixo em calmaria)
+    if(slDistance < 50 * _Point) slDistance = 50 * _Point;
+
+    // 3. Calcular Distância do TP (Retorno) baseado no R:R
+    double rrRatio = GetRiskRewardMultiplier(confidence);
+    double tpDistance = slDistance * rrRatio;
+    
+    // 4. Definir Preços
+    double sl = isBuy ? NormalizeDouble(entry - slDistance, _Digits) : NormalizeDouble(entry + slDistance, _Digits);
+    double tp = isBuy ? NormalizeDouble(entry + tpDistance, _Digits) : NormalizeDouble(entry - tpDistance, _Digits);
+    
+    string comment = StringFormat("RR_1:%.0f_C%.0f", rrRatio, confidence * 100);
+   
+    bool res = false;
+    if(isBuy) res = trade.Buy(lotSize, _Symbol, entry, sl, tp, comment);
+    else res = trade.Sell(lotSize, _Symbol, entry, sl, tp, comment);
+    
+    if(res) {
+        Print("ORDEM ABERTA | ", _Symbol, 
+              " | Risco: ", DoubleToString(slDistance/_Point, 0), "pts",
+              " | Retorno: ", DoubleToString(tpDistance/_Point, 0), "pts",
+              " | R:R: 1:", DoubleToString(rrRatio, 1));
+    } else {
+        Print("Erro ao enviar ordem: ", trade.ResultRetcodeDescription());
+    }
+}
+
+//+------------------------------------------------------------------+
+//| Gerenciar Trailing Stop Inteligente (R:R Awareness)              |
+//+------------------------------------------------------------------+
+void ManageSmartTrailing()
+{
+    for(int i = PositionsTotal() - 1; i >= 0; i--) {
+        ulong ticket = PositionGetTicket(i);
+        if(ticket > 0 && PositionSelectByTicket(ticket)) {
+            
+            if(PositionGetInteger(POSITION_MAGIC) == currentMagicNumber && 
+               PositionGetString(POSITION_SYMBOL) == _Symbol) {
+                
+                double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+                double currentPrice = PositionGetDouble(POSITION_PRICE_CURRENT);
+                double stopLoss = PositionGetDouble(POSITION_SL);
+                double takeProfit = PositionGetDouble(POSITION_TP);
+                long type = PositionGetInteger(POSITION_TYPE);
+                
+                // Pegar ATR atual para referência
+                double atrVal[1]; 
+                if(CopyBuffer(handleAtr, 0, 0, 1, atrVal) < 1) continue;
+                
+                double riskUnit = atrVal[0] * InpSlAtrMult; // Unidade de Risco (1R)
+                if(riskUnit <= 0) riskUnit = 100 * _Point; // Fallback
+                
+                double profitPoints = 0;
+                if(type == POSITION_TYPE_BUY) profitPoints = currentPrice - openPrice;
+                else profitPoints = openPrice - currentPrice;
+                
+                // --- FASE 1: BREAKEVEN (Proteção Rápida) ---
+                if(UseBreakeven && profitPoints >= (riskUnit * BreakevenTriggerRR)) {
+                    double beLevel = 0;
+                    if(type == POSITION_TYPE_BUY) {
+                        beLevel = openPrice + (10 * _Point); // Open + Spread leve
+                        if(stopLoss < openPrice) trade.PositionModify(ticket, beLevel, takeProfit);
+                    } else {
+                        beLevel = openPrice - (10 * _Point);
+                        if(stopLoss > openPrice || stopLoss == 0) trade.PositionModify(ticket, beLevel, takeProfit);
+                    }
+                }
+                
+                // --- FASE 2: TRAILING DE LUCRO (Maximizar Ganhos) ---
+                if(profitPoints >= riskUnit) {
+                    double trailDist = riskUnit * 0.8; // Mantém o stop a 0.8R de distância
+                    double newSL = 0;
+                    bool update = false;
+                    
+                    if(type == POSITION_TYPE_BUY) {
+                        newSL = NormalizeDouble(currentPrice - trailDist, _Digits);
+                        if(newSL > stopLoss) update = true;
+                    } else {
+                        newSL = NormalizeDouble(currentPrice + trailDist, _Digits);
+                        if(newSL < stopLoss || stopLoss == 0) update = true;
+                    }
+                    
+                    if(update) trade.PositionModify(ticket, newSL, takeProfit);
+                }
+            }
+        }
+    }
+}
+
+//+------------------------------------------------------------------+
+//| AUXILIARES DE LÓGICA E CONTAGEM                                  |
+//+------------------------------------------------------------------+
+bool IsSymbolBusy()
+{
+    for(int i = PositionsTotal() - 1; i >= 0; i--) {
+        if(PositionGetTicket(i) > 0) {
+            if(PositionGetInteger(POSITION_MAGIC) == currentMagicNumber && 
+               PositionGetString(POSITION_SYMBOL) == _Symbol) return true;
+        }
+    }
+    for(int i = OrdersTotal() - 1; i >= 0; i--) {
+        if(OrderGetTicket(i) > 0) {
+            if(OrderGetInteger(ORDER_MAGIC) == currentMagicNumber && 
+               OrderGetString(ORDER_SYMBOL) == _Symbol) return true;
+        }
+    }
+    return false;
+}
+
+int CountGlobalPositions()
+{
+    int count = 0;
+    for(int i = PositionsTotal() - 1; i >= 0; i--) {
+        if(PositionGetTicket(i) > 0) {
+            if(PositionGetInteger(POSITION_MAGIC) == currentMagicNumber) count++;
+        }
+    }
+    for(int i = OrdersTotal() - 1; i >= 0; i--) {
+        if(OrderGetTicket(i) > 0) {
+            if(OrderGetInteger(ORDER_MAGIC) == currentMagicNumber) count++;
+        }
+    }
+    return count;
+}
+
+void CheckHardStopLoss()
+{
+    for(int i = PositionsTotal() - 1; i >= 0; i--) {
+        ulong ticket = PositionGetTicket(i);
+        if(ticket > 0 && PositionSelectByTicket(ticket)) {
+            if(PositionGetInteger(POSITION_MAGIC) == currentMagicNumber) {
+                double profit = PositionGetDouble(POSITION_PROFIT);
+                double swap = PositionGetDouble(POSITION_SWAP);
+                double commission = PositionGetDouble(POSITION_COMMISSION);
+                double totalPL = profit + swap + commission;
+                
+                if(totalPL <= -MathAbs(HardStopLoss)) {
+                    Print("HARD STOP LOSS! Ticket: ", ticket);
+                    trade.PositionClose(ticket);
+                }
+            }
+        }
+    }
+}
+
+//+------------------------------------------------------------------+
+//| SINAIS E SCORE (CORRIGIDO PARA ARRAY)                            |
+//+------------------------------------------------------------------+
+SignalScore CalculateSignalScore(bool isBuySignal, double signalPrice)
+{
+    SignalScore score;
+    score.isValid = false;
+    score.isBuy = isBuySignal;
+    score.confidence = 0.0;
+    score.price = signalPrice;
+    score.reason = "";
+   
+    double emaFast[], emaSlow[], rsi[];
+    ArraySetAsSeries(emaFast, true);
+    ArraySetAsSeries(emaSlow, true);
+    ArraySetAsSeries(rsi, true);
+   
+    if(CopyBuffer(handleEmaFast, 0, 0, 3, emaFast) < 3) return score;
+    if(CopyBuffer(handleEmaSlow, 0, 0, 3, emaSlow) < 3) return score;
+    if(CopyBuffer(handleRsi, 0, 0, 3, rsi) < 3) return score;
+   
+    double points = 0.0;
+   
+    // 1. EMAs (30%)
+    if(isBuySignal) { if(emaFast[0] > emaSlow[0]) points += 0.30; }
+    else { if(emaFast[0] < emaSlow[0]) points += 0.30; }
+   
+    // 2. RSI (25%)
+    if(isBuySignal) { if(rsi[0] < 30) points += 0.25; else if(rsi[0] < 50) points += 0.15; }
+    else { if(rsi[0] > 70) points += 0.25; else if(rsi[0] > 50) points += 0.15; }
+   
+    // 3. Momentum (20%)
+    if(isBuySignal) { if(emaFast[0] > emaFast[1]) points += 0.20; }
+    else { if(emaFast[0] < emaFast[1]) points += 0.20; }
+   
+    // 4. ZigZag (25%)
+    points += 0.25; 
+   
+    score.confidence = points;
+    score.isValid = (points >= 0.40); 
+   
+    return score;
+}
+
+void CheckEntrySignalsWithScore()
+{
+    double zigZagBuffer[], high[], low[];
+    datetime time[];
+    ArraySetAsSeries(zigZagBuffer, true);
+    ArraySetAsSeries(high, true);
+    ArraySetAsSeries(low, true);
+    ArraySetAsSeries(time, true);
+   
+    int checkRange = 10;
+    if(CopyBuffer(handleZigZag, 0, 0, checkRange, zigZagBuffer) < checkRange) return;
+    if(CopyHigh(_Symbol, _Period, 0, checkRange, high) < checkRange) return;
+    if(CopyLow(_Symbol, _Period, 0, checkRange, low) < checkRange) return;
+    if(CopyTime(_Symbol, _Period, 0, checkRange, time) < checkRange) return;
+   
+    for(int i = 1; i < checkRange; i++) {
+        double zVal = zigZagBuffer[i];
+        if(zVal != 0.0 && zVal != EMPTY_VALUE) {
+            if(time[i] <= lastTradeTime) continue;
+           
+            // Correção: Uso de arrays para variáveis temporárias
+            // Para não confundir com os arrays high/low principais
+            // Mas aqui estamos usando os arrays já copiados (high[] e low[])
+            // O erro anterior era tentar declarar 'double hVal[1]' dentro do loop.
+            // Aqui usamos direto o valor indexado.
+            
+            bool isHigh = (MathAbs(high[i] - zVal) < _Point);
+            bool isLow = (MathAbs(low[i] - zVal) < _Point);
+           
+            if(isHigh || isLow) {
+                bool isBuySignal = isLow;
+                SignalScore score = CalculateSignalScore(isBuySignal, zVal);
+                
+                if(score.isValid) {
+                    if(IsSymbolBusy()) return; 
+                    if(CountGlobalPositions() >= MaxOpenPositions) return; 
+
+                    double lotSize = GetLotSizeByConfidence(score.confidence);
+                    
+                    Print("Sinal Detectado: ", _Symbol, " | Conf: ", score.confidence, " | Lote: ", lotSize);
+                    DrawSignalArrow(isBuySignal, zVal, time[i]);
+                    
+                    if(InpEnableTrading) {
+                        ExecuteTrade(isBuySignal, lotSize, score.confidence);
+                    }
+                    
+                    lastTradeTime = time[i];
+                    break;
+                }
+            }
+        }
+    }
+}
+
+//+------------------------------------------------------------------+
+//| VISUALIZAÇÃO                                                     |
+//+------------------------------------------------------------------+
+void UpdateMacroAnalysis() {
+    double zigZagBuffer[], high[], low[];
+    datetime time[];
+    ArraySetAsSeries(zigZagBuffer, true); ArraySetAsSeries(high, true); ArraySetAsSeries(low, true); ArraySetAsSeries(time, true);
+    if(CopyBuffer(handleZigZag, 0, 0, InpLookBack, zigZagBuffer) < 0) return;
+    if(CopyHigh(_Symbol, _Period, 0, InpLookBack, high) < 0) return;
+    if(CopyLow(_Symbol, _Period, 0, InpLookBack, low) < 0) return;
+    if(CopyTime(_Symbol, _Period, 0, InpLookBack, time) < 0) return;
+    ObjectsDeleteAll(0, objPrefix + "Ln_"); ObjectsDeleteAll(0, objPrefix + "Fibo");
+    PivotPoint highs[], lows[]; ArrayResize(highs, InpLookBack); ArrayResize(lows, InpLookBack);
+    int hCount = 0, lCount = 0;
+    for(int i = 1; i < InpLookBack; i++) {
+        double zVal = zigZagBuffer[i];
+        if(zVal != 0.0 && zVal != EMPTY_VALUE) {
+            if(MathAbs(high[i] - zVal) < _Point) { highs[hCount].price = zVal; highs[hCount].time = time[i]; highs[hCount].barIndex = i; highs[hCount].isHigh = true; hCount++; } 
+            else if(MathAbs(low[i] - zVal) < _Point) { lows[lCount].price = zVal; lows[lCount].time = time[i]; lows[lCount].barIndex = i; lows[lCount].isHigh = false; lCount++; }
+        }
+    }
+    DrawMesh(highs, hCount, InpColorRes); DrawMesh(lows, lCount, InpColorSup); DrawPivots(highs, hCount, true); DrawPivots(lows, lCount, false);
+    if(InpShowFibo) DrawAutoFibo(high, low, time);
+    ChartRedraw(0);
+}
+
+void DrawMesh(PivotPoint &pivots[], int total, color clr) {
+    int limit = MathMin(total, 15);
+    for(int i = 0; i < limit; i++) {
+        int linesDrawn = 0;
+        for(int j = i + 1; j < total; j++) {
+            if(MathAbs(pivots[i].barIndex - pivots[j].barIndex) < InpMinBarsDist) continue;
+            string name = objPrefix + "Ln_" + IntegerToString(pivots[i].isHigh) + "" + IntegerToString(i) + "" + IntegerToString(j);
+            if(ObjectCreate(0, name, OBJ_TREND, 0, pivots[j].time, pivots[j].price, pivots[i].time, pivots[i].price)) {
+                ObjectSetInteger(0, name, OBJPROP_COLOR, clr); ObjectSetInteger(0, name, OBJPROP_RAY_RIGHT, true);
+                ObjectSetInteger(0, name, OBJPROP_STYLE, InpLineStyle); ObjectSetInteger(0, name, OBJPROP_BACK, true);
+            }
+            linesDrawn++; if(linesDrawn >= InpConnectPast) break;
+        }
+    }
+}
+
+void DrawSignalArrow(bool isBuy, double price, datetime time) {
+    string name = objPrefix + "Sig_" + IntegerToString((long)time) + "_" + (isBuy ? "B" : "S");
+    if(ObjectCreate(0, name, OBJ_ARROW, 0, time, price)) {
+        ObjectSetInteger(0, name, OBJPROP_ARROWCODE, isBuy ? 241 : 242); ObjectSetInteger(0, name, OBJPROP_COLOR, isBuy ? clrBlue : clrRed);
+        ObjectSetInteger(0, name, OBJPROP_WIDTH, 2); ObjectSetInteger(0, name, OBJPROP_ANCHOR, isBuy ? ANCHOR_TOP : ANCHOR_BOTTOM);
+    }
+}
+
+void DrawPivots(PivotPoint &pivots[], int total, bool isHigh) {
+    for(int i = 0; i < total; i++) {
+        string name = objPrefix + "Piv_" + (isHigh ? "H_" : "L_") + IntegerToString(pivots[i].barIndex);
+        if(ObjectCreate(0, name, OBJ_ARROW, 0, pivots[i].time, pivots[i].price)) {
+            ObjectSetInteger(0, name, OBJPROP_ARROWCODE, isHigh ? 242 : 241); ObjectSetInteger(0, name, OBJPROP_COLOR, isHigh ? clrRed : clrBlue);
+            ObjectSetInteger(0, name, OBJPROP_WIDTH, 2); ObjectSetInteger(0, name, OBJPROP_ANCHOR, isHigh ? ANCHOR_BOTTOM : ANCHOR_TOP);
+        }
+    }
+}
+
+void DrawAutoFibo(const double &high[], const double &low[], const datetime &time[]) {
+    double maxP = -DBL_MAX, minP = DBL_MAX; int iMax = -1, iMin = -1;
+    for(int i = 1; i < InpLookBack; i++) { if(high[i] > maxP) { maxP = high[i]; iMax = i; } if(low[i] < minP) { minP = low[i]; iMin = i; } }
+    if(iMax == -1 || iMin == -1) return;
+    bool isUptrend = (iMin > iMax); double p50, p618; color zoneColor; double range = maxP - minP;
+    if(isUptrend) { p50 = maxP - (range * 0.5); p618 = maxP - (range * 0.618); zoneColor = InpColorZoneBuy; } 
+    else { p50 = minP + (range * 0.5); p618 = minP + (range * 0.618); zoneColor = InpColorZoneSell; }
+    string rectName = objPrefix + "FiboZone"; datetime tStart = (isUptrend ? time[iMin] : time[iMax]); datetime tEnd = time[0] + PeriodSeconds() * 50;
+    if(ObjectCreate(0, rectName, OBJ_RECTANGLE, 0, tStart, p50, tEnd, p618)) { ObjectSetInteger(0, rectName, OBJPROP_COLOR, zoneColor); ObjectSetInteger(0, rectName, OBJPROP_FILL, true); ObjectSetInteger(0, rectName, OBJPROP_BACK, true); }
+    CreateHLine(objPrefix + "Lv50", p50, zoneColor); CreateHLine(objPrefix + "Lv618", p618, zoneColor);
+}
+
+void CreateHLine(string name, double price, color clr) {
+    if(ObjectCreate(0, name, OBJ_HLINE, 0, 0, price)) { ObjectSetInteger(0, name, OBJPROP_COLOR, clr); ObjectSetInteger(0, name, OBJPROP_STYLE, STYLE_SOLID); ObjectSetInteger(0, name, OBJPROP_BACK, true); } 
+    else { ObjectSetDouble(0, name, OBJPROP_PRICE, price); }
+}
+//+------------------------------------------------------------------+
+Vamos analisar o problema: o usuário reporta que o Stop Loss (SL) está travado e não é alterado na plataforma.
+
+Observando o código, notei que a função ManageSmartTrailing() é responsável por ajustar o Stop Loss (trailing stop). No entanto, há um possível problema: a lógica para modificar o SL pode não estar sendo executada corretamente, ou a modificação não está sendo permitida pela corretora (por exemplo, devido a restrições de nível de stop).
+
+Além disso, note que a função ExecuteTrade() define um SL e TP fixos no momento da abertura da ordem. Já a função ManageSmartTrailing() tenta modificar o SL (e apenas o SL) enquanto a posição está aberta.
+
+Vamos examinar a função ManageSmartTrailing() com mais detalhes:
+
+A função percorre todas as posições abertas e filtra por magic number e símbolo.
+
+Calcula a unidade de risco (riskUnit) com base no ATR e no multiplicador InpSlAtrMult.
+
+Calcula o lucro atual em pontos (profitPoints).
+
+Fase 1 (Breakeven): Se o lucro atingir uma fração do risco (BreakevenTriggerRR), move o SL para o preço de abertura (com um pequeno ajuste).
+
+Fase 2 (Trailing de lucro): Se o lucro for maior ou igual a uma unidade de risco (riskUnit), então tenta ajustar o SL para uma distância de 0.8 * riskUnit do preço atual.
+
+No entanto, note que a Fase 2 só é ativada quando profitPoints >= riskUnit. Isso pode ser muito conservador, pois o risco (riskUnit) é baseado no ATR e no multiplicador, que pode ser grande. Além disso, a cada tick a função tenta ajustar o SL, mas a condição pode não ser atendida.
+
+Outro ponto: a função ManageSmartTrailing() modifica o SL e mantém o TP inalterado. Isso é correto para trailing stop.
+
+Mas o usuário diz que o SL não está sendo alterado. Vamos verificar possíveis problemas:
+
+Condições não atendidas: As condições para breakeven ou trailing podem não estar sendo satisfeitas.
+
+Erro na modificação: A função trade.PositionModify pode estar falhando, mas não estamos vendo o erro no log.
+
+Restrições da corretora: Algumas corretoras não permitem que o SL seja movido apenas, exigindo que o TP também seja movido (ou removido). No entanto, a função modifica ambos (SL e TP) mantendo o TP original.
+
+Para depurar, vamos adicionar alguns prints na função ManageSmartTrailing() para ver o que está acontecendo. No entanto, como não podemos executar o código, vamos analisar a lógica.
+
+Outro ponto importante: a função ManageSmartTrailing() é chamada a cada tick. Mas o usuário diz que o SL não é alterado. Vamos verificar se a função está sendo chamada e se as condições estão sendo atendidas.
+
+Sugestões de correção:
+
+Adicionar logs (Print) na função ManageSmartTrailing() para rastrear o comportamento.
+
+Verificar se a função trade.PositionModify está retornando true. Caso contrário, imprimir o erro.
+
+Considerar que a corretora pode não permitir modificar o SL sem modificar o TP. Nesse caso, podemos tentar modificar apenas o SL (deixando o TP como está) e, se falhar, tentar modificar ambos (SL e TP) para o mesmo TP.
+
+No entanto, note que a função já modifica ambos (SL e TP) mantendo o TP original. Portanto, não deve ser esse o problema.
+
+Outra possibilidade: a função ManageSmartTrailing() está tentando modificar o SL para um valor que não é válido (por exemplo, muito próximo do preço atual, ou do lado errado). A corretora rejeita.
+
+Vamos revisar a lógica de cálculo do novo SL:
+
+Para compra (BUY):
+newSL = currentPrice - trailDist;
+A condição para modificar é: newSL > stopLoss (ou seja, subir o SL).
+
+Para venda (SELL):
+newSL = currentPrice + trailDist;
+A condição para modificar é: newSL < stopLoss (ou seja, baixar o SL).
+
+Isso parece correto.
+
+No entanto, note que trailDist é calculado como riskUnit * 0.8. O riskUnit é baseado no ATR. Se o ATR for muito grande, o trailDist pode ser grande, e o novo SL pode não ser tão apertado. Mas isso é uma escolha de design.
+
+Outro ponto: a função ManageSmartTrailing() não leva em conta o Take Profit (TP) original. Ela tenta modificar o SL mantendo o TP. Isso é permitido pela maioria das corretoras.
+
+Sugiro alterar a função ManageSmartTrailing() para incluir logs e verificar erros. Além disso, vamos garantir que a modificação seja feita apenas se o novo SL for diferente do atual (com uma tolerância de pontos).
+
+Vamos reescrever a função com logs e tratamento de erros:
+
+mq5
+void ManageSmartTrailing()
+{
+    for(int i = PositionsTotal() - 1; i >= 0; i--) {
+        ulong ticket = PositionGetTicket(i);
+        if(ticket > 0 && PositionSelectByTicket(ticket)) {
+            
+            if(PositionGetInteger(POSITION_MAGIC) == currentMagicNumber && 
+               PositionGetString(POSITION_SYMBOL) == _Symbol) {
+                
+                double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+                double currentPrice = PositionGetDouble(POSITION_PRICE_CURRENT);
+                double stopLoss = PositionGetDouble(POSITION_SL);
+                double takeProfit = PositionGetDouble(POSITION_TP);
+                long type = PositionGetInteger(POSITION_TYPE);
+                
+                // Pegar ATR atual para referência
+                double atrVal[1]; 
+                if(CopyBuffer(handleAtr, 0, 0, 1, atrVal) < 1) {
+                    Print("Erro ao copiar ATR para trailing.");
+                    continue;
+                }
+                
+                double riskUnit = atrVal[0] * InpSlAtrMult; // Unidade de Risco (1R)
+                if(riskUnit <= 0) riskUnit = 100 * _Point; // Fallback
+                
+                double profitPoints = 0;
+                if(type == POSITION_TYPE_BUY) profitPoints = currentPrice - openPrice;
+                else profitPoints = openPrice - currentPrice;
+                
+                // --- FASE 1: BREAKEVEN (Proteção Rápida) ---
+                if(UseBreakeven && profitPoints >= (riskUnit * BreakevenTriggerRR)) {
+                    double beLevel = 0;
+                    if(type == POSITION_TYPE_BUY) {
+                        beLevel = openPrice + (10 * _Point); // Open + Spread leve
+                        if(stopLoss < openPrice) {
+                            PrintFormat("Tentando Breakeven para compra. Ticket: %d, BE Level: %f", ticket, beLevel);
+                            if(!trade.PositionModify(ticket, beLevel, takeProfit)) {
+                                Print("Falha ao modificar para breakeven: ", trade.ResultRetcodeDescription());
+                            }
+                        }
+                    } else {
+                        beLevel = openPrice - (10 * _Point);
+                        if(stopLoss > openPrice || stopLoss == 0) {
+                            PrintFormat("Tentando Breakeven para venda. Ticket: %d, BE Level: %f", ticket, beLevel);
+                            if(!trade.PositionModify(ticket, beLevel, takeProfit)) {
+                                Print("Falha ao modificar para breakeven: ", trade.ResultRetcodeDescription());
+                            }
+                        }
+                    }
+                }
+                
+                // --- FASE 2: TRAILING DE LUCRO (Maximizar Ganhos) ---
+                if(profitPoints >= riskUnit) {
+                    double trailDist = riskUnit * 0.8; // Mantém o stop a 0.8R de distância
+                    double newSL = 0;
+                    bool update = false;
+                    
+                    if(type == POSITION_TYPE_BUY) {
+                        newSL = NormalizeDouble(currentPrice - trailDist, _Digits);
+                        if(newSL > stopLoss) update = true;
+                    } else {
+                        newSL = NormalizeDouble(currentPrice + trailDist, _Digits);
+                        if(newSL < stopLoss || stopLoss == 0) update = true;
+                    }
+                    
+                    if(update) {
+                        PrintFormat("Tentando Trailing. Ticket: %d, New SL: %f, Old SL: %f", ticket, newSL, stopLoss);
+                        if(!trade.PositionModify(ticket, newSL, takeProfit)) {
+                            Print("Falha ao modificar trailing: ", trade.ResultRetcodeDescription());
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+Com esses logs, o usuário poderá ver no terminal do MetaTrader se a função está tentando modificar o SL e se há erros.
+
+Além disso, note que a função ManageSmartTrailing() é chamada a cada tick. Isso pode gerar muitos logs, então talvez seja melhor adicionar uma condição para imprimir apenas quando houver uma tentativa de modificação.
+
+Outro ponto: a função CheckHardStopLoss() também modifica posições (fecha). Certifique-se de que não há interferência.
+
+Se o problema persistir, o usuário deve verificar os logs para entender por que a modificação não está ocorrendo.
+
+Além disso, considere que a corretora pode ter restrições sobre o quanto você pode mover o SL (por exemplo, mínimo de distância). Verifique as especificações do símbolo.
+
+Por fim, note que a função ManageSmartTrailing() só atua quando o lucro em pontos é maior ou igual a riskUnit. Se o riskUnit for muito grande, o trailing pode nunca ser ativado. O usuário pode ajustar o multiplicador InpSlAtrMult para um valor menor, ou ajustar a lógica.
+
+Espero que isso ajude a diagnosticar o problema.
+
+DIAGNÓSTICO: STOP LOSS TRAVADO - ANÁLISE DO CÓDIGO
+Problema identificado no mecanismo de trailing stop que causa o SL travado. Vamos analisar os pontos críticos:
+
+🔴 PROBLEMAS ENCONTRADOS
+1. LÓGICA DE MODIFICAÇÃO FALHA NA FUNÇÃO ManageSmartTrailing()
+mql5
+// Linha 188-192: Problema de comparação com stopLoss == 0
+if(type == POSITION_TYPE_BUY) {
+    beLevel = openPrice + (10 * _Point);
+    if(stopLoss < openPrice) trade.PositionModify(ticket, beLevel, takeProfit);  // ← Problema aqui
+} else {
+    beLevel = openPrice - (10 * _Point);
+    if(stopLoss > openPrice || stopLoss == 0) trade.PositionModify(ticket, beLevel, takeProfit); // ← Problema aqui
+}
+Problema: Quando stopLoss == 0 (posição sem SL inicial), a condição:
+
+stopLoss > openPrice é FALSA para vendas
+
+stopLoss < openPrice é VERDADEIRA para compras (pois 0 < openPrice)
+
+Isso causa modificações inconsistentes e pode travar o SL.
+
+2. MULTIPLICADOR DE R:R INVERTIDO
+mql5
+// Linha 87-92: Lógica invertida
+double GetRiskRewardMultiplier(double confidence)
+{
+    if(confidence >= 0.70) return 0.30; // ← Isso é 1:0.3, não 1:5!
+    else if(confidence >= 0.50) return 0.10; // ← 1:0.1
+    else return InpBaseRiskReward; // ← Este está correto
+}
+Correção necessária: Se você quer R:R 1:5, deve retornar 5.0, não 0.30.
+
+3. FUNÇÃO ExecuteTrade() COM CÁLCULO DE TP ERRADO
+mql5
+// Linha 105-107: Usando o multiplicador errado
+double rrRatio = GetRiskRewardMultiplier(confidence); // ← Retorna 0.30 em vez de 5.0
+double tpDistance = slDistance * rrRatio; // ← SL de 100 pips * 0.30 = 30 pips (1:0.3)
+4. CONFLITO ENTRE TRAILING E BREAKEVEN
+A função ManageSmartTrailing() tenta modificar o SL duas vezes:
+
+Primeiro para breakeven
+
+Depois para trailing
+
+Se a primeira modificação falhar, a segunda também falhará.
+
+🟢 SOLUÇÃO COMPLETA
+VERSÃO CORRIGIDA DAS FUNÇÕES CRÍTICAS
+mql5
+//+------------------------------------------------------------------+
+//| DEFINIÇÃO DE RISCO:RETORNO CORRIGIDA                             |
+//+--------------------------------------------------

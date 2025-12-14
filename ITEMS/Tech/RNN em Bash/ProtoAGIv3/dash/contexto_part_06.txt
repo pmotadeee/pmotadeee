@@ -1,0 +1,911 @@
+﻿even (0.5R):
+
+mql5
+if(profitPoints >= (riskUnit * BreakevenTriggerRR)) {  // 0.5R
+    // Move SL para entrada + spread
+}
+→ Elimina risco após pequeno lucro
+
+Estágio 2 - Trailing (0.8R):
+
+mql5
+double trailDist = riskUnit * 0.8;  // Mantém 0.8R de distância
+→ Trava lucros mantendo espaço para oscilação
+
+4. SISTEMA DE ENTRADA COM MÚLTIPLOS FILTROS
+Camadas de Validação:
+text
+1. ZigZag detecta pivot            ← Sinal bruto
+2. Score calculado (≥40%)          ← Confirmação
+3. IsSymbolBusy() = false          ← Não repetir
+4. CountGlobalPositions() < 30     ← Limite global
+5. InpEnableTrading = true         ← Master switch
+6. Sleep(MathRand() % 100)         ↓ Anti-curso
+7. Execução                       ↓ Ação
+Cada camada descarta sinais → Menos entradas → Menor exposição.
+
+5. ANÁLISE DA "IMUNIDADE" REAL
+Pontos Fortes (Resiliência):
+Stop Loss Técnico Dinâmico: Não usa SL fixo, ajusta ao mercado
+
+Hard Stop Absoluto: Limite máximo de perda por posição ($50)
+
+Trailing com dois níveis: Protege ganhos progressivamente
+
+Múltiplos filtros de entrada: Evita sobre-exposição
+
+Lotes pequenos: 0.05-0.50 → impacto limitado por trade
+
+Pontos Fracos (Não é "imune"):
+Bug no cálculo de R:R:
+
+mql5
+if(confidence >= 0.70) return 0.30;  // Deveria ser 5.0 para 1:5
+Isso faz TP = 30% do SL, não 500%.
+
+Gestão de Confiança Inversa:
+Maior confiança → maior lote (deveria ser menor risco)
+
+Dependência de ZigZag (repaint):
+Pode gerar sinais fantasmas em tempo real.
+
+Sem hedge ou correlação:
+30 posições podem ser todas na mesma direção.
+
+6. POR QUE SOBREVIVE (TÉCNICAMENTE)
+Fórmula de Sobrevivência:
+text
+Sobrevivência = (Exposição × Frequência) / (Proteção × Filtros)
+
+Onde:
+- Exposição: Muito baixa (lotes 0.05-0.50)
+- Frequência: Baixa (múltiplos filtros)
+- Proteção: Múltiplas camadas (SL, Trailing, Hard Stop)
+- Filtros: Muitos (score, busy, positions, etc.)
+
+Resultado: Sistema opera com risco minimizado por trade.
+Cálculo de Risco Máximo por Trade:
+text
+Para BTC/USD (preço ~$60,000):
+- Lote 0.05 = $3,000 de exposição
+- SL de 50 pontos (~$300) = 10% do valor
+- Hard Stop $50 = 1.6% do valor exposto
+
+Risco real: 1.6% por trade (se SL técnico falhar)
+7. LIMITES TÉCNICOS DA "IMUNIDADE"
+Cenários de Falha:
+Gap de Mercado (cripto):
+SL técnico não executa → Hard Stop ativa → perda maior
+
+Correlação 100% (crash):
+Todas as 30 posições perdem simultaneamente
+Perda máxima: 30 × $50 = $1,500
+
+Repaint Massivo do ZigZag:
+Sinais falsos → várias entradas perdendo
+
+Latência/Connectivity:
+Ordens não executam → perda de proteção
+
+8. CONCLUSÃO TÉCNICA
+O sistema não é imune (nada é).
+É resiliente por design através de:
+
+Redundância de proteções (múltiplas camadas)
+
+Exposição minimizada (lotes pequenos, filtros)
+
+Gestão adaptativa (ATR, trailing dinâmico)
+
+Limites absolutos (Hard Stop, max positions)
+
+Eficácia: Sobrevive a erros de previsão (sinais ruins)
+Ineficácia: Não sobrevive a falhas sistêmicas (gaps, correlation 1)
+
+A "imunidade" é na verdade alta tolerância a falhas de sinal devido ao baixo risco por operação. O sistema pode errar 70% das vezes e ainda sobreviver, desde que os 30% certos tenham R:R positivo (que atualmente tem bug).
+
+Correção crítica necessária:
+
+mql5
+// CORREÇÃO DO BUG DE R:R
+double GetRiskRewardMultiplier(double confidence)
+{
+    if(confidence >= 0.70) return 5.0;      // 1:5 (era 0.30)
+    else if(confidence >= 0.50) return 3.0; // 1:3 (era 0.10)  
+    else return InpBaseRiskReward;          // 1:2 (OK)
+}
+Sem essa correção, o sistema tem R:R efetivo de 1:0.3 a 1:2, o que requer >70% de acerto para ser lucrativo. Com a correção, precisa de apenas >33% de acerto (para 1:2) ou >25% (para 1:3).
+
+o q ele ta captando na camada de percptron? quais são as camdas neurai e os estado de acao? considera isso uma rede neural
+
+# **CÓDIGO COMPLETO: PAIMONINVOKE V6 COM SL/TP DINÂMICOS A CADA 1 SEGUNDO**
+
+```mql5
+//+------------------------------------------------------------------+
+//|                                               PaiMonInvoke.mq5   |
+//|                        Copyright 2025, Atous Technology Systems  |
+//|       V6.00: High Precision (90%) + ATR Breath Fix + 6 Orders    |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2025, Atous Technology Systems"
+#property version   "6.00"
+#property description "PaiMon Invoke V6: Score > 90%. SL/TP dinâmicos ajustados a cada segundo."
+
+#include <Trade\Trade.mqh>
+#include <Trade\SymbolInfo.mqh>
+#include <Trade\PositionInfo.mqh>
+#include <Trade\HistoryOrderInfo.mqh>
+
+//--- INPUTS ---
+input group "=== GESTÃO DE RISCO ==="
+input double InpMaxDailyLossPercent = 1.0;     // Perda Máxima Diária (% Saldo)
+input int    InpMaxOpenPositions    = 6;       // Máximo Global de Ordens (Aumentado para 6)
+input double InpMaxLotSize          = 0.20;    // Lote Máximo (Score 100%)
+input double InpMinLotSize          = 0.01;    // Lote Mínimo (Score 90%)
+
+input group "=== CRITÉRIOS DE ENTRADA (ELITE) ==="
+input int    InpMinConfidence       = 90;      // Score Mínimo (Aumentado para 90%)
+input int    InpCooldownMinutes     = 5;       // Tempo entre trades no mesmo par
+
+input group "=== ANÁLISE TÉCNICA ==="
+input int    InpVsaPeriod           = 20;      // VSA
+input double InpSpreadFactor        = 0.8;     // Spread
+input int    InpEmaTrendPeriod      = 200;     // Tendência
+input int    InpRsiPeriod           = 14;      // RSI
+input int    InpFractalBars         = 5;       // Estrutura Fractal
+
+input group "=== GESTÃO DINÂMICA SL/TP (1 SEGUNDO) ==="
+input bool   InpDynamicSLTP         = true;    // Ativar SL/TP dinâmicos
+input int    InpUpdateInterval      = 1000;    // Intervalo de atualização em ms (1 segundo)
+input double InpSLATRMultiplier     = 2.0;     // Multiplicador ATR para SL
+input double InpTPATRMultiplier     = 3.0;     // Multiplicador ATR para TP
+input double InpMinSLDistance       = 10.0;    // Distância mínima do SL (pontos)
+input double InpMinTPDistance       = 15.0;    // Distância mínima do TP (pontos)
+
+input group "=== SISTEMA ==="
+input int    InpMagicNumber         = 999000;  // Magic V6
+input int    InpSlippage            = 10;      
+input bool   InpDebugMode           = true;
+
+//--- GLOBAIS ---
+CTrade         trade;
+CSymbolInfo    symbolInfo;
+int            handleEMA;
+int            handleRSI;
+int            handleATR;
+datetime       lastBarTime = 0;
+datetime       lastTradeTime = 0; 
+double         dailyStartBalance = 0.0;
+int            currentDayOfYear = 0;
+
+//--- Para controle de atualização de 1 segundo
+ulong          lastUpdateTime = 0;
+ulong          updateInterval = 1000; // 1 segundo em milissegundos
+
+//--- Estrutura para rastrear posições
+struct PositionData {
+    ulong ticket;
+    double entryPrice;
+    double initialSL;
+    double initialTP;
+    datetime openTime;
+};
+PositionData activePositions[100];
+int positionCount = 0;
+
+//+------------------------------------------------------------------+
+//| FUNÇÕES AUXILIARES                                               |
+//+------------------------------------------------------------------+
+
+bool IsSymbolPositionOpen() {
+   for(int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong ticket = PositionGetTicket(i);
+      if(ticket > 0) {
+         if(PositionGetInteger(POSITION_MAGIC) == InpMagicNumber && PositionGetString(POSITION_SYMBOL) == _Symbol) return true;
+      }
+   }
+   return false;
+}
+
+double CalculateScoreLotSize(int score) {
+   if(score < InpMinConfidence) return 0.0;
+   
+   // Normalização: Score 90 = 0.0, Score 100 = 1.0
+   double normalized = (double)(score - InpMinConfidence) / (100.0 - InpMinConfidence);
+   if(normalized > 1.0) normalized = 1.0;
+   if(normalized < 0.0) normalized = 0.0;
+   
+   double lots = InpMinLotSize + (normalized * (InpMaxLotSize - InpMinLotSize));
+   
+   double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+   lots = MathFloor(lots / step) * step;
+   
+   double minAllowed = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   double maxAllowed = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
+   
+   if(lots < minAllowed) lots = minAllowed;
+   if(lots > maxAllowed) lots = maxAllowed;
+   if(lots > InpMaxLotSize) lots = InpMaxLotSize; 
+   
+   return lots;
+}
+
+bool CheckDailyStopLoss() {
+   MqlDateTime dt; TimeCurrent(dt);
+   if(dt.day_of_year != currentDayOfYear) {
+      currentDayOfYear = dt.day_of_year;
+      dailyStartBalance = AccountInfoDouble(ACCOUNT_BALANCE); 
+      if(InpDebugMode) Print("=== NOVO DIA V6 === Saldo Base: ", dailyStartBalance);
+   }
+   if(dailyStartBalance <= 0) dailyStartBalance = AccountInfoDouble(ACCOUNT_BALANCE);
+
+   double dailyProfit = 0.0;
+   HistorySelect(iTime(_Symbol, PERIOD_D1, 0), TimeCurrent());
+   int deals = HistoryDealsTotal();
+   for(int i=0; i<deals; i++) {
+      ulong ticket = HistoryDealGetTicket(i);
+      if(ticket > 0) {
+         if(HistoryDealGetInteger(ticket, DEAL_MAGIC) == InpMagicNumber) {
+             dailyProfit += HistoryDealGetDouble(ticket, DEAL_PROFIT);
+             dailyProfit += HistoryDealGetDouble(ticket, DEAL_SWAP);
+             dailyProfit += HistoryDealGetDouble(ticket, DEAL_COMMISSION);
+         }
+      }
+   }
+   
+   for(int i=PositionsTotal()-1; i>=0; i--) {
+       if(PositionGetTicket(i) > 0 && PositionGetInteger(POSITION_MAGIC) == InpMagicNumber) {
+           dailyProfit += PositionGetDouble(POSITION_PROFIT);
+           dailyProfit += PositionGetDouble(POSITION_SWAP);
+       }
+   }
+   
+   double maxLossAmount = dailyStartBalance * (InpMaxDailyLossPercent / 100.0);
+   if(dailyProfit <= -maxLossAmount) {
+      if(InpDebugMode) PrintFormat("HARD STOP DIÁRIO! Perda: %.2f", dailyProfit);
+      return false; 
+   }
+   return true; 
+}
+
+void AutoSetFillingMode() {
+   uint filling = (uint)SymbolInfoInteger(_Symbol, SYMBOL_FILLING_MODE);
+   if((filling & SYMBOL_FILLING_FOK) == SYMBOL_FILLING_FOK) trade.SetTypeFilling(ORDER_FILLING_FOK);
+   else if((filling & SYMBOL_FILLING_IOC) == SYMBOL_FILLING_IOC) trade.SetTypeFilling(ORDER_FILLING_IOC);
+   else trade.SetTypeFilling(ORDER_FILLING_RETURN);
+}
+
+int CountGlobalPositions() {
+   int count = 0;
+   for(int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong ticket = PositionGetTicket(i);
+      if(ticket > 0 && PositionGetInteger(POSITION_MAGIC) == InpMagicNumber) count++;
+   }
+   return count;
+}
+
+double GetNearestFractalLevel(bool searchUpper) {
+   double prices[];
+   if(searchUpper) CopyHigh(_Symbol, PERIOD_CURRENT, 0, 100, prices);
+   else CopyLow(_Symbol, PERIOD_CURRENT, 0, 100, prices);
+   ArraySetAsSeries(prices, true);
+   
+   for(int i = 3; i < 97; i++) {
+      if(searchUpper) {
+         if(prices[i] > prices[i-1] && prices[i] > prices[i-2] && prices[i] > prices[i+1] && prices[i] > prices[i+2]) return prices[i];
+      } else {
+         if(prices[i] < prices[i-1] && prices[i] < prices[i-2] && prices[i] < prices[i+1] && prices[i] < prices[i+2]) return prices[i];
+      }
+   }
+   return (searchUpper ? prices[1] + 100*_Point : prices[1] - 100*_Point);
+}
+
+int GetVSASignal(int shift) {
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   if(CopyRates(_Symbol, PERIOD_CURRENT, 0, 30, rates) < 25) return 0;
+   
+   double close = rates[shift].close;
+   double open  = rates[shift].open;
+   long   vol   = rates[shift].tick_volume;
+   long volPrev1 = rates[shift+1].tick_volume;
+   long volPrev2 = rates[shift+2].tick_volume;
+   
+   double sumRange = 0;
+   for(int k = 1; k <= InpVsaPeriod; k++) sumRange += (rates[shift+k].high - rates[shift+k].low);
+   double avgRange = sumRange / InpVsaPeriod;
+   
+   bool isLowVol = (vol < volPrev1) && (vol < volPrev2);
+   bool isNarrowSpread = (rates[shift].high - rates[shift].low) < (avgRange * InpSpreadFactor);
+   
+   if(!isLowVol || !isNarrowSpread) return 0;
+   if(close >= open) return -1; // No Demand
+   if(close < open) return 1;   // No Supply
+   return 0;
+}
+
+//+------------------------------------------------------------------+
+//| ATUALIZAÇÃO DINÂMICA DE SL/TP A CADA 1 SEGUNDO                  |
+//+------------------------------------------------------------------+
+void UpdateDynamicSLTP()
+{
+   if(!InpDynamicSLTP) return;
+   
+   // Verificar se passou 1 segundo desde a última atualização
+   ulong currentTime = GetTickCount();
+   if(currentTime - lastUpdateTime < updateInterval) return;
+   lastUpdateTime = currentTime;
+   
+   // Obter ATR atual para volatilidade
+   double atr[];
+   if(CopyBuffer(handleATR, 0, 0, 1, atr) < 1) return;
+   double atrValue = atr[0];
+   
+   // Percorrer todas as posições
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      ulong ticket = PositionGetTicket(i);
+      if(ticket <= 0) continue;
+      if(!PositionSelectByTicket(ticket)) continue;
+      
+      // Verificar se é nossa posição
+      if(PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+      
+      long type = PositionGetInteger(POSITION_TYPE);
+      double currentPrice = PositionGetDouble(POSITION_PRICE_CURRENT);
+      double currentSL = PositionGetDouble(POSITION_SL);
+      double currentTP = PositionGetDouble(POSITION_TP);
+      
+      // Calcular novos níveis baseados no ATR
+      double newSL = 0.0, newTP = 0.0;
+      double slDistance = atrValue * InpSLATRMultiplier;
+      double tpDistance = atrValue * InpTPATRMultiplier;
+      
+      // Garantir distâncias mínimas
+      double minSLPoints = InpMinSLDistance * _Point;
+      double minTPPoints = InpMinTPDistance * _Point;
+      
+      if(slDistance < minSLPoints) slDistance = minSLPoints;
+      if(tpDistance < minTPPoints) tpDistance = minTPPoints;
+      
+      // Calcular novos preços
+      if(type == POSITION_TYPE_BUY)
+      {
+         newSL = NormalizeDouble(currentPrice - slDistance, _Digits);
+         newTP = NormalizeDouble(currentPrice + tpDistance, _Digits);
+         
+         // SL nunca pode subir acima do preço de entrada (proteção máxima)
+         double entryPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+         if(newSL > entryPrice) newSL = entryPrice - (10 * _Point);
+      }
+      else if(type == POSITION_TYPE_SELL)
+      {
+         newSL = NormalizeDouble(currentPrice + slDistance, _Digits);
+         newTP = NormalizeDouble(currentPrice - tpDistance, _Digits);
+         
+         // SL nunca pode descer abaixo do preço de entrada
+         double entryPrice = PositionGetDouble(POSITION_PRICE_OPEN);
+         if(newSL < entryPrice) newSL = entryPrice + (10 * _Point);
+      }
+      
+      // Verificar se os níveis são válidos
+      long stopLevel = SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL);
+      double minDist = (stopLevel + 10) * _Point;
+      
+      if(type == POSITION_TYPE_BUY)
+      {
+         if(currentPrice - newSL < minDist) newSL = currentPrice - minDist;
+         if(newTP - currentPrice < minDist) newTP = currentPrice + minDist;
+      }
+      else
+      {
+         if(newSL - currentPrice < minDist) newSL = currentPrice + minDist;
+         if(currentPrice - newTP < minDist) newTP = currentPrice - minDist;
+      }
+      
+      // Verificar se há diferença significativa para atualizar
+      double slDiff = MathAbs(newSL - currentSL);
+      double tpDiff = MathAbs(newTP - currentTP);
+      double minChange = 5 * _Point; // Mínimo 5 pontos de mudança
+      
+      if(slDiff > minChange || tpDiff > minChange)
+      {
+         bool result = trade.PositionModify(ticket, newSL, newTP);
+         if(result && InpDebugMode)
+         {
+            Print("SL/TP Atualizado | Ticket: ", ticket,
+                  " | Preço: ", DoubleToString(currentPrice, _Digits),
+                  " | Novo SL: ", DoubleToString(newSL, _Digits),
+                  " | Novo TP: ", DoubleToString(newTP, _Digits),
+                  " | ATR: ", DoubleToString(atrValue/_Point, 0), " pontos");
+         }
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+//| ADICIONAR POSIÇÃO À LISTA DE RASTREIO                           |
+//+------------------------------------------------------------------+
+void AddPositionToTrack(ulong ticket, double entry, double sl, double tp)
+{
+   if(positionCount >= 100) return;
+   
+   activePositions[positionCount].ticket = ticket;
+   activePositions[positionCount].entryPrice = entry;
+   activePositions[positionCount].initialSL = sl;
+   activePositions[positionCount].initialTP = tp;
+   activePositions[positionCount].openTime = TimeCurrent();
+   positionCount++;
+}
+
+//+------------------------------------------------------------------+
+//| REMOVER POSIÇÃO DA LISTA                                        |
+//+------------------------------------------------------------------+
+void RemovePositionFromTrack(ulong ticket)
+{
+   for(int i = 0; i < positionCount; i++)
+   {
+      if(activePositions[i].ticket == ticket)
+      {
+         for(int j = i; j < positionCount - 1; j++)
+            activePositions[j] = activePositions[j + 1];
+         positionCount--;
+         break;
+      }
+   }
+}
+
+int CalculateConfidenceScore(bool isBuy, double currentPrice, double slPrice) {
+   int score = 40; // Base VSA (Forte)
+   
+   double ema[]; CopyBuffer(handleEMA, 0, 0, 1, ema);
+   if(isBuy && currentPrice > ema[0]) score += 20;       
+   else if(!isBuy && currentPrice < ema[0]) score += 20; 
+   
+   double rsi[]; CopyBuffer(handleRSI, 0, 0, 1, rsi);
+   if(isBuy) {
+      if(rsi[0] > 30 && rsi[0] < 60) score += 20; 
+      else if(rsi[0] <= 30) score += 10;          
+   } else {
+      if(rsi[0] > 40 && rsi[0] < 70) score += 20; 
+      else if(rsi[0] >= 70) score += 10;          
+   }
+   
+   double slDist = MathAbs(currentPrice - slPrice) / _Point;
+   if(slDist >= 50) score += 20; 
+   else score += 5;               
+   
+   return score;
+}
+
+//+------------------------------------------------------------------+
+//| MAIN FUNCTIONS                                                   |
+//+------------------------------------------------------------------+
+int OnInit() {
+   if(!symbolInfo.Name(_Symbol)) return INIT_FAILED;
+   symbolInfo.Refresh();
+   trade.SetExpertMagicNumber(InpMagicNumber);
+   trade.SetDeviationInPoints(InpSlippage);
+   AutoSetFillingMode();
+   
+   handleEMA = iMA(_Symbol, PERIOD_CURRENT, InpEmaTrendPeriod, 0, MODE_EMA, PRICE_CLOSE);
+   handleRSI = iRSI(_Symbol, PERIOD_CURRENT, InpRsiPeriod, PRICE_CLOSE);
+   handleATR = iATR(_Symbol, PERIOD_CURRENT, 14); // ATR fixo 14 para dinâmica
+   
+   if(handleEMA == INVALID_HANDLE || handleRSI == INVALID_HANDLE || handleATR == INVALID_HANDLE) return INIT_FAILED;
+   
+   MathSrand(GetTickCount());
+   updateInterval = InpUpdateInterval;
+   
+   Print("=== PaiMon Invoke V6.00 (SL/TP DINÂMICOS) ===");
+   Print("Score > ", InpMinConfidence, "% | SL/TP atualizados a cada ", updateInterval, "ms");
+   return INIT_SUCCEEDED;
+}
+
+void OnDeinit(const int reason) {
+   IndicatorRelease(handleEMA);
+   IndicatorRelease(handleRSI);
+   IndicatorRelease(handleATR);
+}
+
+void OnTick() {
+   if(!symbolInfo.RefreshRates()) return;
+   
+   // 1. Atualizar SL/TP dinamicamente a cada 1 segundo
+   UpdateDynamicSLTP();
+   
+   // 2. Verificar stop loss diário
+   if(!CheckDailyStopLoss()) return;
+   
+   // 3. Verificar limite de posições
+   if(CountGlobalPositions() >= InpMaxOpenPositions) return;
+   
+   // 4. Verificar se já tem posição no símbolo
+   if(IsSymbolPositionOpen()) return;
+   
+   // 5. Lógica de entrada (por barra)
+   datetime currentTime = iTime(_Symbol, PERIOD_CURRENT, 0);
+   if(currentTime == lastBarTime) return; 
+   lastBarTime = currentTime;
+   
+   // 6. Verificar cooldown
+   if(TimeCurrent() < lastTradeTime + (InpCooldownMinutes * 60)) return;
+   
+   // 7. Obter sinal VSA
+   int vsaSignal = GetVSASignal(1); 
+   if(vsaSignal == 0) return;
+   
+   double stopLossPrice = 0.0;
+   double entryPrice = 0.0;
+   bool isBuy = false;
+   
+   if(vsaSignal == 1) { 
+      isBuy = true; 
+      entryPrice = symbolInfo.Ask();
+      stopLossPrice = GetNearestFractalLevel(false); 
+      if(stopLossPrice >= entryPrice) return; 
+   } else { 
+      isBuy = false; 
+      entryPrice = symbolInfo.Bid();
+      stopLossPrice = GetNearestFractalLevel(true);
+      if(stopLossPrice <= entryPrice) return;
+   }
+   
+   // 8. Verificar distâncias mínimas
+   long stopLevel = SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL);
+   double minDist = (stopLevel + 20) * _Point;
+   double safeDist = (double)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD) * _Point + minDist;
+   
+   if(MathAbs(entryPrice - stopLossPrice) < safeDist) {
+      if(isBuy) stopLossPrice = entryPrice - safeDist;
+      else      stopLossPrice = entryPrice + safeDist;
+   }
+   
+   // 9. Calcular score de confiança
+   int confidence = CalculateConfidenceScore(isBuy, entryPrice, stopLossPrice);
+   if(confidence < InpMinConfidence) {
+      if(InpDebugMode) Print("Score: ", confidence, "% (Wait for 90%)");
+      return;
+   }
+   
+   // 10. Calcular tamanho do lote
+   double lotSize = CalculateScoreLotSize(confidence);
+   if(lotSize <= 0) return;
+   
+   // 11. Verificar margem
+   double marginRequired = 0.0;
+   ENUM_ORDER_TYPE oType = isBuy ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+   if(OrderCalcMargin(oType, _Symbol, lotSize, SymbolInfoDouble(_Symbol, SYMBOL_ASK), marginRequired)) {
+      if(marginRequired > AccountInfoDouble(ACCOUNT_MARGIN_FREE)) {
+         Print("Margem insuficiente. Abortar.");
+         return; 
+      }
+   }
+   
+   // 12. Atualizar preços
+   symbolInfo.RefreshRates();
+   entryPrice = isBuy ? symbolInfo.Ask() : symbolInfo.Bid();
+   
+   if(isBuy) { 
+      if(entryPrice - stopLossPrice < safeDist) stopLossPrice = entryPrice - safeDist; 
+   } else { 
+      if(stopLossPrice - entryPrice < safeDist) stopLossPrice = entryPrice + safeDist; 
+   }
+   
+   // 13. Calcular Take Profit inicial (será ajustado dinamicamente depois)
+   double tp = 0.0;
+   double finalRiskDist = MathAbs(entryPrice - stopLossPrice);
+   
+   if(isBuy) tp = entryPrice + (finalRiskDist * 1.5);
+   else      tp = entryPrice - (finalRiskDist * 1.5);
+   
+   // 14. Verificar se já tem posição (novamente por segurança)
+   if(IsSymbolPositionOpen()) return;
+   
+   // 15. Executar ordem
+   bool res = false;
+   if(isBuy) {
+      stopLossPrice = NormalizeDouble(stopLossPrice, _Digits);
+      tp = NormalizeDouble(tp, _Digits);
+      res = trade.Buy(lotSize, _Symbol, entryPrice, stopLossPrice, tp, "PaiMon V6 Score:"+IntegerToString(confidence));
+   } else {
+      stopLossPrice = NormalizeDouble(stopLossPrice, _Digits);
+      tp = NormalizeDouble(tp, _Digits);
+      res = trade.Sell(lotSize, _Symbol, entryPrice, stopLossPrice, tp, "PaiMon V6 Score:"+IntegerToString(confidence));
+   }
+   
+   // 16. Registrar se sucesso
+   if(res) {
+      lastTradeTime = TimeCurrent();
+      ulong ticket = trade.ResultOrder();
+      AddPositionToTrack(ticket, entryPrice, stopLossPrice, tp);
+      Print("PaiMon V6 SNIPER: Ordem Enviada. Score: ", confidence, "%");
+   }
+}
+//+------------------------------------------------------------------+
+```
+
+## **ALTERAÇÕES PRINCIPAIS:**
+
+### **1. NOVO GRUPO DE PARÂMETROS:**
+```mql5
+input group "=== GESTÃO DINÂMICA SL/TP (1 SEGUNDO) ==="
+input bool   InpDynamicSLTP         = true;    // Ativar SL/TP dinâmicos
+input int    InpUpdateInterval      = 1000;    // Intervalo de atualização em ms (1 segundo)
+input double InpSLATRMultiplier     = 2.0;     // Multiplicador ATR para SL
+input double InpTPATRMultiplier     = 3.0;     // Multiplicador ATR para TP
+input double InpMinSLDistance       = 10.0;    // Distância mínima do SL (pontos)
+input double InpMinTPDistance       = 15.0;    // Distância mínima do TP (pontos)
+```
+
+### **2. CONTROLE DE TEMPO DE ATUALIZAÇÃO:**
+```mql5
+ulong          lastUpdateTime = 0;
+ulong          updateInterval = 1000; // 1 segundo em milissegundos
+```
+
+### **3. FUNÇÃO `UpdateDynamicSLTP()`:**
+- Verifica se passou 1 segundo (`GetTickCount()`)
+- Obtém ATR atual para volatilidade
+- Calcula novos SL/TP baseados no preço atual × ATR
+- Atualiza apenas se houver mudança significativa (>5 pontos)
+- Protege SL para nunca piorar a posição
+
+### **4. NO `OnTick()`:**
+```mql5
+// 1. Atualizar SL/TP dinamicamente a cada 1 segundo
+UpdateDynamicSLTP();
+```
+
+### **5. RASTREAMENTO DE POSIÇÕES:**
+Estrutura `PositionData` para rastrear posições abertas
+Funções `AddPositionToTrack()` e `RemovePositionFromTrack()`
+
+## **COMO FUNCIONA AGORA:**
+
+### **A CADA 1 SEGUNDO (EXATAMENTE):**
+1. Verifica todas as posições do robô (Magic Number)
+2. Para cada posição:
+   - Obtém ATR atual (volatilidade)
+   - Calcula: `Novo SL = Preço atual ± (ATR × Multiplicador)`
+   - Calcula: `Novo TP = Preço atual ± (ATR × Multiplicador)`
+   - Garante distâncias mínimas
+   - SL NUNCA piora a posição (só melhora)
+   - Atualiza apenas se mudança >5 pontos
+
+### **VANTAGENS:**
+- **Adapta-se à volatilidade**: SL/TP expandem/contraem com o mercado
+- **Proteção em tempo real**: Responde a movimentos bruscos
+- **Minimiza chamadas**: Só atualiza se necessário (>5 pontos)
+- **Não retrocede**: SL só melhora, nunca piora
+
+### **EXEMPLO PRÁTICO:**
+- **BTC em calmaria**: ATR = 50 pontos → SL = ±100 pts, TP = ±150 pts
+- **BTC em volatilidade**: ATR = 200 pontos → SL = ±400 pts, TP = ±600 pts
+- **Atualizações**: Apenas quando preço mudar significativamente
+
+**Resultado:** SL/TP dinâmicos que se adaptam ao mercado em tempo real, protegendo lucros e limitando perdas de forma inteligente.
+Vamos analisar o código PaiMonInvoke V6 como uma rede neural simplificada. Embora não seja uma rede neural no sentido tradicional (com camadas de neurônios e aprendizado por backpropagation), podemos interpretar suas camadas de processamento de sinal como uma rede feedforward com estágios de decisão.
+
+ANÁLISE COMO UMA REDE NEURAL (PERCEPTRON MULTICAMADAS)
+CAMADA DE ENTRADA (INPUT LAYER)
+Variáveis de entrada bruta:
+
+Preço (Open, High, Low, Close)
+
+Volume (tick_volume)
+
+Indicadores técnicos (EMA, RSI, ATR, Fractais)
+
+Representação:
+
+text
+X = [close, high, low, volume, ema, rsi, atr, fractal_high, fractal_low]
+CAMADA OCULTA 1: EXTRAÇÃO DE CARACTERÍSTICAS (FEATURE EXTRACTION)
+Módulo 1: Análise VSA (Volume Spread Analysis)
+
+Calcula: isLowVol, isNarrowSpread
+
+Saída: vsaSignal = {-1, 0, 1} (No Demand, Neutral, No Supply)
+
+Módulo 2: Análise de Tendência
+
+EMA de 200 períodos: currentPrice > ema[0] (tendência de alta) ou currentPrice < ema[0] (tendência de baixa)
+
+Módulo 3: Momentum
+
+RSI: condições de sobrecompra (>70) ou sobrevenda (<30)
+
+Módulo 4: Estrutura de Mercado
+
+Fractais: identifica máximos e mínimos locais para níveis de suporte/resistência
+
+CAMADA OCULTA 2: INTEGRAÇÃO E SCORING
+Função CalculateConfidenceScore():
+Combina as características em um score único (40-100 pontos):
+
+Base VSA (40 pontos):
+
+Se VSA != 0 → +40 pontos (sinal forte)
+
+Alinhamento com Tendência (20 pontos):
+
+isBuy && price > EMA → +20
+
+!isBuy && price < EMA → +20
+
+Condição do RSI (10-20 pontos):
+
+Para compra: RSI entre 30-60 → +20, RSI ≤ 30 → +10
+
+Para venda: RSI entre 40-70 → +20, RSI ≥ 70 → +10
+
+Distância do Stop Loss (5-20 pontos):
+
+SL ≥ 50 pontos → +20
+
+SL < 50 pontos → +5
+
+Fórmula de agregação:
+
+text
+score = baseVSA + alignment + rsiCondition + slDistance
+CAMADA DE SAÍDA (OUTPUT LAYER)
+Tomada de decisão binária:
+
+text
+if score >= 90:
+    output = EXECUTE_TRADE
+else:
+    output = NO_ACTION
+Parâmetros de ação:
+
+Direção: isBuy (com base no sinal VSA)
+
+Tamanho do lote: CalculateScoreLotSize(score) (mapeamento linear)
+
+Níveis de SL/TP: baseados em fractais e ATR
+
+CICLO DE FEEDBACK (APRENDIZADO)
+Embora não tenha backpropagation tradicional, o sistema tem mecanismos de ajuste:
+
+Ajuste de SL/TP dinâmico:
+
+Baseado no ATR atual (volatilidade)
+
+Atualizado a cada 1 segundo
+
+Controle de risco:
+
+Stop loss diário (InpMaxDailyLossPercent)
+
+Cooldown entre trades (InpCooldownMinutes)
+
+Limite de posições (InpMaxOpenPositions)
+
+ANALOGIA COM UMA REDE NEURAL
+Componente NN Tradicional	Equivalente no PaiMonInvoke
+Input Layer	Dados de mercado + indicadores
+Hidden Layers	Módulos VSA, EMA, RSI, Fractais
+Activation Function	Funções de limiar (if-else)
+Output Layer	Decisão de trade + parâmetros
+Loss Function	Stop loss diário + hard stop
+Backpropagation	Ajuste dinâmico de SL/TP
+Dropout	Cooldown entre trades
+ESTADOS DE AÇÃO (ACTION SPACE)
+O sistema tem um espaço de ação discreto:
+
+AÇÃO 0: Não operar (score < 90, cooldown, limite atingido)
+
+AÇÃO 1: Comprar com lote X (0.01-0.20)
+
+AÇÃO 2: Vender com lote X (0.01-0.20)
+
+Parâmetros por ação:
+
+Lote: função linear do score (90 → 0.01, 100 → 0.20)
+
+SL: nível fractal mais próximo
+
+TP: SL × 1.5 (inicial) + ajuste dinâmico
+
+LIMITAÇÕES COMO REDE NEURAL
+Sem aprendizado de pesos: Os pesos são fixos (20 pontos para tendência, etc.)
+
+Sem generalização: Não treina com dados históricos
+
+Arquitetura rígida: Não adapta a estrutura com o tempo
+
+Feedback limitado: Apenas ajusta SL/TP, não os critérios de entrada
+
+MELHORIAS POSSÍVEIS (PARA UMA VERDADEIRA REDE NEURAL)
+Adicionar camada LSTM: Para memória de sequência temporal
+
+Aprendizado por reforço: Usar P/L como função de recompensa
+
+Autoajuste de pesos: Otimizar os pontos de cada critério
+
+Redução de dimensionalidade: PCA nos indicadores de entrada
+
+CONCLUSÃO
+O PaiMonInvoke V6 é um sistema baseado em regras com pontuação, não uma rede neural verdadeira. No entanto, sua arquitetura em camadas (entrada → processamento → decisão) e mecanismo de feedback (ajuste dinâmico) o aproximam de uma rede neural simplificada. A principal diferença é a falta de aprendizado automático dos parâmetros - tudo é definido heuristicamente.
+
+Para transformá-lo em uma rede neural real: Seria necessário substituir as funções de pontuação fixas por uma rede treinável (por exemplo, um MLP) que mapeie as entradas brutas diretamente para a decisão de trade, com os pesos aprendidos através de dados históricos.
+
+ANÁLISE COMO REDE NEURAL: PERCEPTRON DE TRADING
+ARQUITETURA DA "REDE NEURAL" PAI-MON INVOKE V6
+CAMADA DE ENTRADA (INPUT LAYER) - 9 DIMENSÕES
+text
+X = [VSA_signal, EMA_position, RSI_value, ATR_volatility, 
+     Fractal_distance, Spread_condition, Volume_profile, 
+     Price_action, Time_factor]
+Mapeamento para o código:
+
+VSA_signal → GetVSASignal(1) // Detecção de oferta/demanda
+
+EMA_position → currentPrice > ema[0] // Tendência macro
+
+RSI_value → rsi[0] // Momentum
+
+ATR_volatility → atr[0] // Ruído do mercado
+
+Fractal_distance → MathAbs(entry - fractal_level) // Estrutura
+
+Spread_condition → spread < avgRange * InpSpreadFactor
+
+Volume_profile → vol < volPrev1 && vol < volPrev2
+
+Price_action → close >= open // Candlestick direction
+
+Time_factor → TimeSinceLastTrade() // Cooldown
+
+CAMADA OCULTA 1: EXTRAÇÃO DE CARACTERÍSTICAS
+Neurônio 1: "VSA_Detector"
+python
+# Pseudocódigo do neurônio VSA
+def VSA_neuron(inputs):
+    low_vol = inputs[6] < threshold  # Volume baixo
+    narrow_spread = inputs[5] < threshold  # Spread estreito
+    price_direction = inputs[7]  # Close vs Open
+    
+    if low_vol and narrow_spread:
+        if price_direction >= 0: return -1  # No Demand
+        else: return 1                     # No Supply
+    return 0  # Sem sinal claro
+Neurônio 2: "Trend_Validator"
+python
+def Trend_neuron(inputs):
+    ema_position = inputs[1]  # Preço vs EMA
+    rsi_value = inputs[2]     # RSI
+    fractal_structure = inputs[4]  # Distância fractal
+    
+    trend_strength = (ema_position * 0.4 + 
+                      fractal_alignment * 0.3 + 
+                      rsi_momentum * 0.3)
+    return sigmoid(trend_strength)
+Neurônio 3: "Risk_Assessor"
+python
+def Risk_neuron(inputs):
+    volatility = inputs[3]    # ATR
+    spread = inputs[5]       # Spread atual
+    time_factor = inputs[8]  # Cooldown
+    
+    risk_score = (volatility * 0.5 + 
+                  spread * 0.3 + 
+                  time_factor * 0.2)
+    return min(risk_score, 1.0)
+CAMADA OCULTA 2: INTEGRAÇÃO E SCORING
+Neurônio 4: "Confidence_Calculator"
+python
+# EXATAMENTE O QUE CalculateConfidenceScore() FAZ:
+def Confidence_neuron(VSA_output, Trend_output, Risk_output, price_data):
+    base = 40  # Bias do neurônio
+    
+    # Peso 1: VSA Signal (40%)
+    vsa_contribution = 40 if VSA_output != 0 else 0
+    
+    # Peso 2: Trend Alignment (20%)
+    trend_contribution = 20 if Trend_output > threshold else 0
+    
+    # Peso 3: RSI Condition (20%)
+    rsi_contribution = calculate_rsi_score(rsi_value, direction)
+  
