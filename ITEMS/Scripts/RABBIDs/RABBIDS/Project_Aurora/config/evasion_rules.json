@@ -1,0 +1,12 @@
+﻿{
+    "sandbox": {
+        "check_vm": true,
+        "min_cpu_cores": 4,
+        "min_disk_gb": 50,
+        "min_uptime_min": 10
+    },
+    "defender": {
+        "amsi_bypass": true,
+        "etw_patch": true
+    }
+}

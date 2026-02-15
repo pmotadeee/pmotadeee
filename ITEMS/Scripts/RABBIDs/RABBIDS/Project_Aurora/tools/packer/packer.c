@@ -1,0 +1,1 @@
+﻿// Empacotador customizado (placeholder)

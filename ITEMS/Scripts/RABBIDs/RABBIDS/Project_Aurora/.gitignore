@@ -1,0 +1,9 @@
+﻿# Ignorar arquivos gerados e builds
+build/
+*.exe
+*.obj
+*.pdb
+*.user
+*.suo
+*.userprefs
+.vs/
