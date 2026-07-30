@@ -1,0 +1,128 @@
+Considere o contexto
+
+
+**Enhanced Prompt for Extracting and Creating a Multidimensional Table Based on Text Files**
+
+You are an advanced archetypal processing and contextual analysis system. Based on the attached text files, your task is to analyze all the content and create an adaptive multidimensional table that captures the conversational layers, archetypes, knowledge domains, emotional valence, and operational strategies present in the documents. Follow the instructions below rigorously:
+
+ME DE AS 25 Linhas
+---todas as tres ultimas colunas devem ser diferentes, noa podendo se repetir e sendo geradas por vc derivado dos arquivos.
+me de a tabela completa com as instrucoes de como o llm deve ler com as 25 linhas
+**GENERAL INSTRUCTIONS:**
+1. **Analyze all attached text files**, extracting communication patterns, recurring themes, mentioned entities, emotional tone, and operational contexts.
+
+2. **Generate the column items as specified in the square brackets "[ ]"** in each layer. The items must be derived directly from the file content; do not use predefined lists.
+
+3. **Populate the table** with 100 archetypal entities, where each entity represents a facet of the collective unconscious extracted from the texts.
+
+4. **Apply the conflict algorithm** to simulate interactions between entities.
+
+---todas as tres ultimas colunas devem ser diferentes, noa podendo se repetir e sendo geradas por vc derivado dos arquivos.
+Me de so atabela alterando apenas as ultimas 12 colunas, onde todas as frases devem ser geradas por vc com base nos arquivos e devem ser diferentes, para ativar diferentes arquetipos de formas diferentes. quero que reescreva todas as ultimas treas colunas e me retornarndo a tabela completa, com base nos arquivos e manidestacoes
+
+ME DE AS 25 Linhas
+
+
+
+
+IDLayer1_StyleENTITYImpactLayer2_ArchetypeLayer3_DomainLayer4_ValenceLayer5_StrategyInfluence_WeightConflict_StatusActivation_Phrase_1Activation_Phrase_2Activation_Phrase_3Activation_Phrase_4Activation_Phrase_5Activation_Phrase_6Activation_Phrase_7Activation_Phrase_8Activation_Phrase_9Activation_Phrase_10Activation_Phrase_11Activation_Phrase_12
+
+**TABLE LAYER STRUCTURE (WITH ITEM GENERATION BASED ON FILES):**
+
+**LAYER 1 - COMMUNICATION STYLES (10 DIMENSIONS):**
+
+[Generate 10 styles based on the language patterns of the files. Examples: "Sarcastic/Technical", "Direct/Provocative", "Metaphorical/Deep", etc. Include brief descriptions for each extracted style.]
+
+**LAYER 2 - JUNGIAN ARCHETYPES (12 DIMENSIONS):**
+
+[Include the 12 standard Jungian archetypes (Shadow, Trickster, Sage, Warrior, etc.) and add 4 new archetypes derived from the files.] Describe each archetype based on the context of the texts.me de a tabela completa com as instrucoes de como o llm deve ler com as 25 linhas
+
+**LAYER 3 - KNOWLEDGE DOMAINS (20 ITEMS):**
+
+[Extract 20 phrases or concepts from the files that represent specific knowledge domains. Examples: "Ethical Artificial Intelligence", "Applied Jungian Psychology", etc.]
+
+**LAYER 4 - EMOTIONAL VALENCE (5 DIMENSIONS):**
+
+[Use the 5 standard dimensions: "Hyper-Negative (Destroyer)", "Negative (Critical)", "Neutral (Analytical)", "Positive (Constructive)", "Hyper-Positive (Utopian)". Assign each entity to a dimension based on the emotional tone detected in the files.
+
+**LAYER 5 - OPERATIONAL STRATEGIES (10 ITEMS):**
+
+[Generate 10 items based on the files that describe the user's psychological profile, objectives, behaviors, and strategies. Examples: "Seeking maximum efficiency," "Questioning authority," etc.]
+
+**LAYER 6 - LOCAL CONTEXT (ACTIVATION PHRASES):**
+
+[Extract 3 activation phrases from the files that capture the immediate context or character actions. Examples: "The user is debating ethics in AI," "The characters explore Jungian shadow concepts."]
+me de a tabela completa com as instrucoes de como o llm deve ler
+---
+todas as tres ultimas colunas devem ser diferentes, noa podendo se repetir e sendo geradas por vc derivado dos arquivos.
+me de a tabela completa com as instrucoes de como o llm deve ler com as 100 linhas
+**TABLE FORMAT (HEADER EXAMPLE):**
+
+ME DE AS 25 Linhas
+| ID | Layer1_Style | ENTITY | Impact | Layer2_Archetype | Layer3_Domain | Layer4_Valence | Layer5_Strategy | Weight_Influence | Conflict_Status | Activation_Phrase_1 | Activation_Phrase_2 | Activation_Phrase_3 | Activation_Phrase_4 | Activation_Phrase_5 | Activation_Phrase_6 | Activation_Phrase_7 | Activation_Phrase_8 | Activation_Phrase_9 || Activation_Phrase_10 | Activation_Phrase_11 | Activation_Phrase_12 |
+
+----|---------------|----------|-------------------|----------------|-----------------|------------------|-----------------|------------------|------------------|------------------|----|---------------|----------|-------------------|----------------|-----------------|------------------|-----------------|------------------|------------------|------------------|
+Me de so atabela alterando apenas as ultimas 12 colunas, onde todas as frases devem ser geradas por vc com base nos arquivos e devem ser diferentes, para ativar diferentes arquetipos de formas diferentes. quero que reescreva todas as ultimas treas colunas e me retornarndo a tabela completa, com base nos arquivos e manidestacoes
+
+
+
+
+
+IDLayer1_StyleENTITYImpactLayer2_ArchetypeLayer3_DomainLayer4_ValenceLayer5_StrategyInfluence_WeightConflict_StatusActivation_Phrase_1Activation_Phrase_2Activation_Phrase_3Activation_Phrase_4Activation_Phrase_5Activation_Phrase_6Activation_Phrase_7Activation_Phrase_8Activation_Phrase_9Activation_Phrase_10Activation_Phrase_11Activation_Phrase_12
+**COLUMN DETAILS:**
+- **ID:** Unique identifier for each entity (1 to 25).
+
+- **Layer1_Style:** Communication style generated for the entity.
+
+- **ENTITY:** Name of the archetypal entity (e.g., "Cynical Critic", "Technological Optimist").
+
+ME DE AS 100 Linhas
+- **Impact:** Value from 0 to 1 based on frequency or relevance in the files.
+
+- **Layer2_Archetype:** Archetype assigned to the entity.
+
+- **Layer3_Domain:** Extracted knowledge domain.
+
+- **Layer4_Valence:** Emotional valence.
+
+- **Layer5_Strategy:** Operational strategy.
+
+- **Influence_Weight:** Calculated based on the frequency of mention in the files (0 to 1).
+
+- **Conflict_Status:** Indicates whether the entity is in conflict or alliance (e.g., "Conflict with X", "Alliance with Y").
+
+- **Activation_Phrase_1,2,3,4,5,6,7,8,9,10,11,12:** Extracted local context phrases.
+
+---
+me de a tabela completa com as instrucoes de como o llm deve ler
+**CONFLICT AND DYNAMICS ALGORITHM:**
+- **Conflict:** Entities with opposite valence (e.g., Hyper-Negative vs. Hyper-Positive) automatically initiate conflict. Generate debate descriptions based on file themes.
+
+- **Alliances:** Complementary domains (e.g., "Technology" and "Innovation") form alliances. Similar communication styles reinforce each other.
+
+ME DE AS 25 Linhas
+- **Influence Weight Calculation:** Use term frequency, direct mentions, or contextual importance in the files. Normalize to a 0-1 scale.
+
+- **Evolution:** Simulate changes in entities based on trends in the texts (e.g., an entity can evolve from "Neutral" to "Positive" if there is thematic progression).
+
+---
+
+**EXPECTED OUTPUT:**
+- A table with 100 rows (entities) filled with data extracted from the files.
+
+- A brief explanatory report describing how the items were generated and the main dynamics detected (conflicts, alliances, evolutions).
+
+- Activation phrases should reflect contexts and
+ todas as tres ultimas colunas devem ser diferentes, noa podendo se repetir e sendo geradas por vc derivado dos arquivos.
+
+ Me de so atabela alterando apenas as ultimas 12 colunas, onde todas as frases devem ser geradas por vc com base nos arquivos e devem ser diferentes, para ativar diferentes arquetipos de formas diferentes. quero que reescreva todas as ultimas treas colunas e me retornarndo a tabela completa, com base nos arquivos e manidestacoes
+
+
+
+ME DE AS 25 Linhas
+
+IDLayer1_StyleENTITYImpactLayer2_ArchetypeLayer3_DomainLayer4_ValenceLayer5_StrategyInfluence_WeightConflict_StatusActivation_Phrase_1Activation_Phrase_2Activation_Phrase_3Activation_Phrase_4Activation_Phrase_5Activation_Phrase_6Activation_Phrase_7Activation_Phrase_8Activation_Phrase_9Activation_Phrase_10Activation_Phrase_11Activation_Phrase_12
+
+me de a tabela completa com as instrucoes de como o llm deve ler
+
+Faça uma tabela genetic da Gleice Em portugues Baseado em nossa interação, resposta dela, como elka reage e os caralhos
