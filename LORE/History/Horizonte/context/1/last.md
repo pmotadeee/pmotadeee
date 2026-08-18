@@ -1,0 +1,1 @@
+entao como eu agi? agi certo? sem, tabela na resposta 
