@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>warpdrv — backends</title>
+<style>
+	:root {
+		--wc-bg-page: #0d0d0d;
+		--wc-bg-surface: rgba(255,255,255,0.03);
+		--wc-bg-card: rgba(255,255,255,0.03);
+		--wc-bg-hover: rgba(255,255,255,0.04);
+		--wc-bg-elevated: #080808;
+		--wc-border-subtle: rgba(255,255,255,0.06);
+		--wc-border-default: rgba(255,255,255,0.1);
+		--wc-text-heading: #d4d4d4;
+		--wc-text-primary: #b0b0b0;
+		--wc-text-secondary: rgba(176,176,176,0.7);
+		--wc-text-tertiary: rgba(176,176,176,0.55);
+		--wc-text-muted: rgba(176,176,176,0.5);
+		--wc-text-faint: rgba(176,176,176,0.35);
+		--wc-accent-blue: #6ba3ff;
+		--wc-accent-green: #85b055;
+		--wc-accent-green-bg-8: rgba(133,176,85,0.1);
+		--wc-accent-green-border: rgba(133,176,85,0.3);
+		--wc-accent-yellow: #ffc845;
+		--wc-accent-yellow-bg-8: rgba(255,200,69,0.1);
+		--wc-accent-yellow-border: rgba(255,200,69,0.3);
+		--wc-accent-purple: #9d7de8;
+		--wc-accent-purple-bg-8: rgba(157,125,232,0.1);
+		--wc-accent-purple-bg-15: rgba(157,125,232,0.18);
+		--wc-accent-purple-border: rgba(157,125,232,0.3);
+		--wc-special-code-bg: #060606;
+		--wc-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+	}
+
+	* { box-sizing: border-box; }
+
+	body {
+		margin: 0;
+		min-height: 100vh;
+		display: flex;
+		justify-content: center;
+		padding: 48px 24px;
+		background: var(--wc-bg-page);
+		font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+		color: var(--wc-text-primary);
+		-webkit-font-smoothing: antialiased;
+	}
+
+	svg { stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+	.stack { width: 100%; max-width: 1010px; display: flex; flex-direction: column; gap: 18px; }
+
+	.panel {
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 12px;
+		background: var(--wc-bg-surface);
+		padding: 14px;
+	}
+
+	.panel-head {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 2px 4px 14px;
+	}
+
+	.panel-head .caret { width: 15px; height: 15px; color: var(--wc-text-faint); }
+	.panel-head .glyph { width: 16px; height: 16px; color: var(--wc-text-muted); }
+	.panel-head .title { font-size: 14px; font-weight: 600; color: var(--wc-text-heading); }
+	.panel-head .grow { flex: 1; }
+
+	.badge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 20px;
+		height: 20px;
+		padding: 0 6px;
+		border-radius: 6px;
+		background: var(--wc-bg-hover);
+		color: var(--wc-text-muted);
+		font-size: 11px;
+	}
+
+	.icon-sm {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 26px;
+		height: 26px;
+		border: none;
+		border-radius: 7px;
+		background: transparent;
+		color: var(--wc-text-faint);
+		cursor: pointer;
+	}
+
+	.icon-sm:hover { background: var(--wc-bg-hover); color: var(--wc-text-secondary); }
+	.icon-sm svg { width: 15px; height: 15px; }
+
+	/* ---------- backend rows ---------- */
+
+	.rows { display: flex; flex-direction: column; gap: 8px; }
+
+	.backend {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		padding: 12px 14px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 10px;
+		background: var(--wc-bg-card);
+		cursor: pointer;
+		transition: background 140ms ease, border-color 140ms ease;
+	}
+
+	.backend:hover { background: var(--wc-bg-hover); border-color: var(--wc-border-default); }
+
+	.tile {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		flex-shrink: 0;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 9px;
+		background: var(--wc-bg-hover);
+		color: var(--wc-text-muted);
+	}
+
+	.tile svg { width: 18px; height: 18px; }
+
+	.backend .info { flex: 1; min-width: 0; }
+
+	.backend .line1 {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+		margin-bottom: 5px;
+	}
+
+	.backend .name { font-size: 14px; font-weight: 600; color: var(--wc-text-heading); }
+
+	.verified { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; }
+	.verified svg { width: 13px; height: 13px; }
+	.verified.rocm { color: var(--wc-accent-green); }
+	.verified.cuda { color: var(--wc-accent-green); }
+
+	.ver { font-size: 12px; color: var(--wc-text-muted); font-family: var(--wc-mono); }
+
+	.sha {
+		padding: 1px 6px;
+		border-radius: 5px;
+		background: var(--wc-special-code-bg);
+		border: 1px solid var(--wc-border-subtle);
+		font-family: var(--wc-mono);
+		font-size: 11.5px;
+		color: var(--wc-text-faint);
+	}
+
+	.meta { font-size: 12px; color: var(--wc-text-muted); margin-left: 4px; }
+
+	.tag {
+		display: inline-flex;
+		align-items: center;
+		height: 21px;
+		padding: 0 9px;
+		border-radius: 6px;
+		font-size: 11.5px;
+		font-weight: 500;
+	}
+
+	.tag.servers { background: var(--wc-accent-purple-bg-15); color: var(--wc-accent-purple); }
+	.tag.running { border: 1px solid var(--wc-accent-yellow-border); background: var(--wc-accent-yellow-bg-8); color: var(--wc-accent-yellow); }
+
+	.path {
+		font-family: var(--wc-mono);
+		font-size: 12px;
+		color: var(--wc-text-faint);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.backend .tools { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+
+	/* ---------- groups ---------- */
+
+	.groups { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+	.group {
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 11px;
+		background: var(--wc-bg-card);
+		padding: 14px;
+	}
+
+	.group-head { display: flex; align-items: center; gap: 8px; }
+	.group-head .title { font-size: 15px; font-weight: 600; color: var(--wc-text-heading); }
+	.group-head .grow { flex: 1; }
+
+	.group .active-name {
+		display: block;
+		margin: 4px 0 14px;
+		font-size: 12.5px;
+		color: var(--wc-accent-blue);
+	}
+
+	.members-label {
+		display: block;
+		margin-bottom: 9px;
+		font-size: 11px;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--wc-text-faint);
+	}
+
+	.member {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 9px 11px;
+		margin-bottom: 8px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 9px;
+		background: var(--wc-bg-surface);
+		font-size: 13px;
+		color: var(--wc-text-secondary);
+		cursor: pointer;
+	}
+
+	.member:last-child { margin-bottom: 0; }
+	.member:hover { background: var(--wc-bg-hover); }
+
+	.member .chip {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 26px;
+		height: 26px;
+		border-radius: 7px;
+		background: var(--wc-bg-hover);
+		color: var(--wc-text-muted);
+		flex-shrink: 0;
+	}
+
+	.member .chip svg { width: 14px; height: 14px; }
+	.member .grow { flex: 1; }
+
+	.member.active {
+		border-color: var(--wc-accent-purple-border);
+		background: var(--wc-accent-purple-bg-8);
+		color: var(--wc-text-heading);
+	}
+
+	.member.active .chip { background: var(--wc-accent-purple-bg-15); color: var(--wc-accent-purple); }
+
+	.member .state {
+		font-size: 10.5px;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--wc-accent-purple);
+	}
+</style>
+</head>
+<body>
+
+<div class="stack">
+
+	<div class="panel">
+		<div class="panel-head">
+			<svg class="caret" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+			<svg class="glyph" viewBox="0 0 24 24"><path d="m5 7 4 4-4 4M12 16h7"/></svg>
+			<span class="title">Backends</span>
+			<span class="badge">9</span>
+			<div class="grow"></div>
+			<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+		</div>
+
+		<div class="rows">
+
+			<div class="backend">
+				<span class="tile"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></span>
+				<div class="info">
+					<div class="line1">
+						<span class="name">Rocm 7.2 Aug 02</span>
+						<span class="verified rocm"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/></svg>ROCm</span>
+						<span class="ver">v.10235</span>
+						<span class="sha">221f0f6</span>
+						<span class="meta">1 Device(s)</span>
+						<span class="tag servers">3 Server(s)</span>
+						<span class="tag running">1 Running</span>
+					</div>
+					<div class="path">/mnt/ml/llama.cpp/llama.cpp-rocm-7.2.0-20260802/build/bin/llama-server</div>
+				</div>
+				<div class="tools">
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"/></svg></button>
+				</div>
+			</div>
+
+			<div class="backend">
+				<span class="tile"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></span>
+				<div class="info">
+					<div class="line1">
+						<span class="name">CUDA 13.2 Aug 02</span>
+						<span class="verified cuda"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/></svg>CUDA</span>
+						<span class="ver">v.10235</span>
+						<span class="sha">221f0f6</span>
+						<span class="meta">1 Device(s)</span>
+						<span class="tag servers">4 Server(s)</span>
+						<span class="tag running">1 Running</span>
+					</div>
+					<div class="path">/mnt/ml/llama.cpp/llama.cpp-cuda-13.2-20260802/build/bin/llama-server</div>
+				</div>
+				<div class="tools">
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"/></svg></button>
+				</div>
+			</div>
+
+			<div class="backend">
+				<span class="tile"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></span>
+				<div class="info">
+					<div class="line1">
+						<span class="name">CUDA 13 July 23</span>
+						<span class="verified cuda"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/></svg>CUDA</span>
+						<span class="ver">v.10099</span>
+						<span class="sha">1acee6b</span>
+						<span class="meta">1 Device(s)</span>
+					</div>
+					<div class="path">/mnt/ml/llama.cpp/llama.cpp-cuda-13.2-20260723/build/bin/llama-server</div>
+				</div>
+				<div class="tools">
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"/></svg></button>
+				</div>
+			</div>
+
+			<div class="backend">
+				<span class="tile"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></span>
+				<div class="info">
+					<div class="line1">
+						<span class="name">ROCm 7.2 July 23</span>
+						<span class="verified rocm"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/></svg>ROCm</span>
+						<span class="ver">v.10095</span>
+						<span class="sha">e8e6c7a</span>
+						<span class="meta">1 Device(s)</span>
+					</div>
+					<div class="path">/mnt/ml/llama.cpp/llama.cpp-rocm-7.2.0-20260722/build/bin/llama-server</div>
+				</div>
+				<div class="tools">
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"/></svg></button>
+				</div>
+			</div>
+
+			<div class="backend">
+				<span class="tile"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></span>
+				<div class="info">
+					<div class="line1">
+						<span class="name">ROCm 7.13 [May 23]</span>
+						<span class="verified rocm"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/></svg>ROCm</span>
+						<span class="ver">v.9293</span>
+						<span class="sha">1acee6b</span>
+						<span class="meta">1 Device(s)</span>
+					</div>
+					<div class="path">/mnt/ml/llama.cpp/llama.cpp-rocm-7.13.0-20260523/build/bin/llama-server</div>
+				</div>
+				<div class="tools">
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"/></svg></button>
+				</div>
+			</div>
+
+			<div class="backend">
+				<span class="tile"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></span>
+				<div class="info">
+					<div class="line1">
+						<span class="name">CUDA 13.2 (NVFP4 + MTP) [MAY 23]</span>
+						<span class="verified cuda"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/></svg>CUDA</span>
+						<span class="ver">v.9293</span>
+						<span class="sha">1acee6b</span>
+						<span class="meta">1 Device(s)</span>
+					</div>
+					<div class="path">/mnt/ml/llama.cpp/llama.cpp-cuda-13.2-20260523/build/bin/llama-server</div>
+				</div>
+				<div class="tools">
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"/></svg></button>
+				</div>
+			</div>
+
+			<div class="backend">
+				<span class="tile"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></span>
+				<div class="info">
+					<div class="line1">
+						<span class="name">CUDA 13.2 NVFP4 May 01</span>
+						<span class="verified cuda"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/></svg>CUDA</span>
+						<span class="ver">v.8999</span>
+						<span class="sha">b97ebdc</span>
+						<span class="meta">1 Device(s)</span>
+					</div>
+					<div class="path">/mnt/ml/llama.cpp/llama.cpp-cuda-13.2-20260501/build/bin/llama-server</div>
+				</div>
+				<div class="tools">
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"/></svg></button>
+				</div>
+			</div>
+
+			<div class="backend">
+				<span class="tile"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></span>
+				<div class="info">
+					<div class="line1">
+						<span class="name">CUDA 13 APR 23</span>
+						<span class="verified cuda"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/></svg>CUDA</span>
+						<span class="ver">v.8892</span>
+						<span class="sha">0d0764d</span>
+						<span class="meta">3 Device(s)</span>
+					</div>
+					<div class="path">/mnt/ml/llama.cpp/llama.cpp-cuda-13.2-20260423/build/bin/llama-server</div>
+				</div>
+				<div class="tools">
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"/></svg></button>
+				</div>
+			</div>
+
+			<div class="backend">
+				<span class="tile"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></span>
+				<div class="info">
+					<div class="line1">
+						<span class="name">ROCm 7.2 (Apr)</span>
+						<span class="verified rocm"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/></svg>ROCm</span>
+						<span class="ver">v.8709</span>
+						<span class="sha">85d482e</span>
+						<span class="meta">1 Device(s)</span>
+						<span class="tag servers">2 Server(s)</span>
+					</div>
+					<div class="path">/mnt/ml/llama.cpp/llama.cpp-rocm-7.2-20260408/build/bin/llama-server</div>
+				</div>
+				<div class="tools">
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"/></svg></button>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<div class="panel">
+		<div class="panel-head">
+			<svg class="caret" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+			<svg class="glyph" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>
+			<span class="title">Groups</span>
+			<span class="badge">2</span>
+			<div class="grow"></div>
+			<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+		</div>
+
+		<div class="groups">
+
+			<div class="group">
+				<div class="group-head">
+					<span class="title">CUDA</span>
+					<div class="grow"></div>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"/></svg></button>
+				</div>
+				<span class="active-name">CUDA 13.2 Aug 02</span>
+				<span class="members-label">Members (2)</span>
+
+				<div class="member">
+					<span class="chip"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg></span>
+					<span class="grow">CUDA 13 July 23</span>
+				</div>
+
+				<div class="member active">
+					<span class="chip"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg></span>
+					<span class="grow">CUDA 13.2 Aug 02</span>
+					<span class="state">Active</span>
+				</div>
+			</div>
+
+			<div class="group">
+				<div class="group-head">
+					<span class="title">ROCm</span>
+					<div class="grow"></div>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+					<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"/></svg></button>
+				</div>
+				<span class="active-name">Rocm 7.2 Aug 02</span>
+				<span class="members-label">Members (2)</span>
+
+				<div class="member">
+					<span class="chip"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg></span>
+					<span class="grow">ROCm 7.2 July 23</span>
+				</div>
+
+				<div class="member active">
+					<span class="chip"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg></span>
+					<span class="grow">Rocm 7.2 Aug 02</span>
+					<span class="state">Active</span>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1366 @@
+<div class="app">
+	<div class="titlebar">
+		<div class="brand">
+			<svg viewBox="0 0 24 24" width="22" height="22">
+				<defs>
+					<linearGradient id="bg-servers" x1="0" y1="1" x2="1" y2="0">
+						<stop offset="0" stop-color="#9d7de8"></stop>
+						<stop offset="1" stop-color="#ffc845"></stop>
+					</linearGradient>
+				</defs>
+				<path
+					d="M20.5 3.2 6.4 11.1l3.6 1.3 1.3 3.6z"
+					fill="url(#bg-servers)"></path>
+				<path
+					d="M9.4 14.6 4.2 19.8"
+					stroke="#9d7de8"
+					stroke-width="1.6"
+					stroke-linecap="round"></path>
+			</svg>
+		</div>
+		<span class="title-label">Servers</span>
+
+		<div class="searchbar">
+			<svg viewBox="0 0 24 24"
+				><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"
+				></path></svg
+			>
+			Search servers...
+		</div>
+
+		<button class="select">
+			Recently Used
+			<svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg>
+		</button>
+
+		<button class="sq-btn"
+			><svg viewBox="0 0 24 24"
+				><path d="M7 4v16M4 17l3 3 3-3M14 7h6M14 12h5M14 17h4"
+				></path></svg
+			></button
+		>
+
+		<div class="toggle-wrap">
+			<span class="toggle"></span>
+			<span class="label">Running only</span>
+		</div>
+
+		<div class="grow"></div>
+
+		<button class="launch llama">
+			<svg viewBox="0 0 24 24"><path d="M6 4.5 19 12 6 19.5z"></path></svg
+			>
+			Launch LLAMA
+		</button>
+		<button class="launch whisper">
+			<svg viewBox="0 0 24 24"><path d="M6 4.5 19 12 6 19.5z"></path></svg
+			>
+			Launch Whisper
+		</button>
+
+		<div style="width:8px;"></div>
+		<button class="win-btn"
+			><svg viewBox="0 0 24 24"><path d="M5 12h14"></path></svg></button
+		>
+		<button class="win-btn"
+			><svg viewBox="0 0 24 24"
+				><rect x="5" y="5" width="14" height="14" rx="2"></rect></svg
+			></button
+		>
+		<button class="win-btn close"
+			><svg viewBox="0 0 24 24"
+				><path d="M6 6l12 12M18 6 6 18"></path></svg
+			></button
+		>
+	</div>
+
+	<div class="body">
+		<div class="rail">
+			<button class="rail-btn active" title="Servers">
+				<svg viewBox="0 0 24 24"
+					><rect x="3" y="4" width="18" height="7" rx="2"></rect><rect
+						x="3"
+						y="13"
+						width="18"
+						height="7"
+						rx="2"></rect><path d="M7 7.5h.01M7 16.5h.01"
+					></path></svg
+				>
+				<span class="live"></span>
+			</button>
+			<button class="rail-btn" title="Chat">
+				<svg viewBox="0 0 24 24"
+					><path
+						d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"
+					></path></svg
+				>
+			</button>
+			<div class="spacer"></div>
+			<button class="rail-btn" title="Settings">
+				<svg viewBox="0 0 24 24"
+					><circle cx="12" cy="12" r="3"></circle><path
+						d="M19.4 15a1.6 1.6 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.6 1.6 0 0 0-2.8 1.2 2 2 0 1 1-4 0 1.6 1.6 0 0 0-2.8-1.2 2 2 0 1 1-2.8-2.8A1.6 1.6 0 0 0 3.3 13a2 2 0 1 1 0-4 1.6 1.6 0 0 0 1.2-2.8 2 2 0 1 1 2.8-2.8A1.6 1.6 0 0 0 10.1 3.3a2 2 0 1 1 4 0 1.6 1.6 0 0 0 2.8 1.2 2 2 0 1 1 2.8 2.8A1.6 1.6 0 0 0 20.7 11a2 2 0 1 1 0 4z"
+					></path></svg
+				>
+			</button>
+			<button class="rail-btn" title="About">
+				<svg viewBox="0 0 24 24"
+					><circle cx="12" cy="12" r="9"></circle><path
+						d="M12 16v-5M12 8h.01"></path></svg
+				>
+			</button>
+		</div>
+
+		<div class="list">
+			<div class="server running">
+				<span class="tile"
+					><svg viewBox="0 0 24 24"
+						><rect x="3" y="4" width="18" height="7" rx="2"
+						></rect><rect x="3" y="13" width="18" height="7" rx="2"
+						></rect><path d="M7 7.5h.01M7 16.5h.01"></path></svg
+					></span
+				>
+				<div class="info">
+					<div class="line1">
+						<span class="name">Qwen3.6 35B A3B ROCm</span>
+						<span class="alias"
+							>qwen35brocm <svg viewBox="0 0 24 24"
+								><path d="M6 6l12 12M18 6 6 18"></path></svg
+							></span
+						>
+						<span class="add"
+							><svg viewBox="0 0 24 24"
+								><path d="M12 5v14M5 12h14"></path></svg
+							></span
+						>
+						<span class="port"
+							><span class="dot"></span>Port 8093</span
+						>
+						<span class="uptime"
+							><svg viewBox="0 0 24 24"
+								><circle cx="12" cy="12" r="9"></circle><path
+									d="M12 7v5l3 2"></path></svg
+							>0m</span
+						>
+					</div>
+					<div class="line2">
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="3" y="6" width="18" height="12" rx="2"
+								></rect><path d="M9 6v12"></path></svg
+							>Qwen3.6-35B-A3B-UD-Q6_K_XL</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><path d="M12 3v18M5 8l14 8M19 8 5 16"
+								></path></svg
+							>MTP</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="5" y="5" width="14" height="14" rx="2"
+								></rect><path
+									d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"
+								></path></svg
+							>ROCm</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="2" y="6" width="20" height="12" rx="2"
+								></rect><path d="M6 18v2M18 18v2"></path></svg
+							>AMD Radeon Graphics (ROCm0)</span
+						>
+					</div>
+				</div>
+				<div class="tools">
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path
+								d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+							></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"
+							></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="m5 7 4 4-4 4M12 16h7"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M12 20h9"></path><path
+								d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
+							></path></svg
+						></button
+					>
+					<button class="tool-btn stop"
+						><svg viewBox="0 0 24 24"
+							><rect x="6" y="6" width="12" height="12" rx="1.5"
+							></rect></svg
+						></button
+					>
+				</div>
+			</div>
+
+			<div class="server running">
+				<span class="tile"
+					><svg viewBox="0 0 24 24"
+						><rect x="3" y="4" width="18" height="7" rx="2"
+						></rect><rect x="3" y="13" width="18" height="7" rx="2"
+						></rect><path d="M7 7.5h.01M7 16.5h.01"></path></svg
+					></span
+				>
+				<div class="info">
+					<div class="line1">
+						<span class="name">Qwen 3.6 27B NVFP4</span>
+						<span class="alias"
+							>qwen27b <svg viewBox="0 0 24 24"
+								><path d="M6 6l12 12M18 6 6 18"></path></svg
+							></span
+						>
+						<span class="add"
+							><svg viewBox="0 0 24 24"
+								><path d="M12 5v14M5 12h14"></path></svg
+							></span
+						>
+						<span class="port"
+							><span class="dot"></span>Port 8034</span
+						>
+						<span class="uptime"
+							><svg viewBox="0 0 24 24"
+								><circle cx="12" cy="12" r="9"></circle><path
+									d="M12 7v5l3 2"></path></svg
+							>0m</span
+						>
+					</div>
+					<div class="line2">
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="3" y="6" width="18" height="12" rx="2"
+								></rect><path d="M9 6v12"></path></svg
+							>Nvidia-Qwen3.6-27B-NVFP4-Q8</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><path d="M12 3v18M5 8l14 8M19 8 5 16"
+								></path></svg
+							>MTP</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="5" y="5" width="14" height="14" rx="2"
+								></rect><path
+									d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"
+								></path></svg
+							>CUDA</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="2" y="6" width="20" height="12" rx="2"
+								></rect><path d="M6 18v2M18 18v2"></path></svg
+							>NVIDIA RTX PRO 5000 Blackwell (CUDA0)</span
+						>
+					</div>
+				</div>
+				<div class="tools">
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path
+								d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+							></path><path d="M17 21v-8H7v8M7 3v5h8"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"
+							></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="m5 7 4 4-4 4M12 16h7"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M12 20h9"></path><path
+								d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
+							></path></svg
+						></button
+					>
+					<button class="tool-btn stop"
+						><svg viewBox="0 0 24 24"
+							><rect x="6" y="6" width="12" height="12" rx="1.5"
+							></rect></svg
+						></button
+					>
+				</div>
+			</div>
+
+			<div class="server running">
+				<span class="tile"
+					><svg viewBox="0 0 24 24"
+						><rect x="9" y="2" width="6" height="11" rx="3"
+						></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v4"
+						></path></svg
+					></span
+				>
+				<div class="info">
+					<div class="line1">
+						<span class="name">ggml-large-v3-turbo</span>
+						<span class="port"
+							><span class="dot"></span>Port 8038</span
+						>
+						<span class="add"
+							><svg viewBox="0 0 24 24"
+								><path d="M12 5v14M5 12h14"></path></svg
+							></span
+						>
+						<span class="uptime"
+							><svg viewBox="0 0 24 24"
+								><circle cx="12" cy="12" r="9"></circle><path
+									d="M12 7v5l3 2"></path></svg
+							>0m</span
+						>
+					</div>
+					<div class="line2">
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="3" y="6" width="18" height="12" rx="2"
+								></rect><path d="M9 6v12"></path></svg
+							>whisper.cpp <span class="q">f16</span></span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="5" y="5" width="14" height="14" rx="2"
+								></rect><path
+									d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"
+								></path></svg
+							>Whisper ROCm</span
+						>
+					</div>
+				</div>
+				<div class="tools">
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"
+							></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="m5 7 4 4-4 4M12 16h7"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M12 20h9"></path><path
+								d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
+							></path></svg
+						></button
+					>
+					<button class="tool-btn stop"
+						><svg viewBox="0 0 24 24"
+							><rect x="6" y="6" width="12" height="12" rx="1.5"
+							></rect></svg
+						></button
+					>
+				</div>
+			</div>
+
+			<div class="server">
+				<span class="tile"
+					><svg viewBox="0 0 24 24"
+						><rect x="3" y="4" width="18" height="7" rx="2"
+						></rect><rect x="3" y="13" width="18" height="7" rx="2"
+						></rect><path d="M7 7.5h.01M7 16.5h.01"></path></svg
+					></span
+				>
+				<div class="info">
+					<div class="line1">
+						<span class="name">Laguna S2.1</span>
+						<span class="alias"
+							>laguna <svg viewBox="0 0 24 24"
+								><path d="M6 6l12 12M18 6 6 18"></path></svg
+							></span
+						>
+						<span class="add"
+							><svg viewBox="0 0 24 24"
+								><path d="M12 5v14M5 12h14"></path></svg
+							></span
+						>
+					</div>
+					<div class="line2">
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="3" y="6" width="18" height="12" rx="2"
+								></rect><path d="M9 6v12"></path></svg
+							><span class="err">Model Not Found!</span></span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="5" y="5" width="14" height="14" rx="2"
+								></rect><path
+									d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"
+								></path></svg
+							>ROCm</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="2" y="6" width="20" height="12" rx="2"
+								></rect><path d="M6 18v2M18 18v2"></path></svg
+							>AMD Radeon Graphics (ROCm0)</span
+						>
+					</div>
+				</div>
+				<div class="tools">
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg
+						></button
+					>
+					<button class="tool-btn play"
+						><svg viewBox="0 0 24 24"
+							><path d="M6 4.5 19 12 6 19.5z"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="m5 7 4 4-4 4M12 16h7"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M12 20h9"></path><path
+								d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
+							></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path
+								d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"
+							></path></svg
+						></button
+					>
+				</div>
+			</div>
+
+			<div class="server">
+				<span class="tile"
+					><svg viewBox="0 0 24 24"
+						><rect x="3" y="4" width="18" height="7" rx="2"
+						></rect><rect x="3" y="13" width="18" height="7" rx="2"
+						></rect><path d="M7 7.5h.01M7 16.5h.01"></path></svg
+					></span
+				>
+				<div class="info">
+					<div class="line1">
+						<span class="name">Qwen3.6 35B A3B CUDA</span>
+						<span class="alias"
+							>qwen35b <svg viewBox="0 0 24 24"
+								><path d="M6 6l12 12M18 6 6 18"></path></svg
+							></span
+						>
+						<span class="add"
+							><svg viewBox="0 0 24 24"
+								><path d="M12 5v14M5 12h14"></path></svg
+							></span
+						>
+					</div>
+					<div class="line2">
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="3" y="6" width="18" height="12" rx="2"
+								></rect><path d="M9 6v12"></path></svg
+							>Qwen3.5-35B-A3B-Uncensored-HauhauCS-Aggressive-Q6_K</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="5" y="5" width="14" height="14" rx="2"
+								></rect><path
+									d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"
+								></path></svg
+							>CUDA</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="2" y="6" width="20" height="12" rx="2"
+								></rect><path d="M6 18v2M18 18v2"></path></svg
+							>NVIDIA RTX PRO 5000 Blackwell (CUDA0)</span
+						>
+					</div>
+				</div>
+				<div class="tools">
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg
+						></button
+					>
+					<button class="tool-btn play"
+						><svg viewBox="0 0 24 24"
+							><path d="M6 4.5 19 12 6 19.5z"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="m5 7 4 4-4 4M12 16h7"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M12 20h9"></path><path
+								d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
+							></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path
+								d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"
+							></path></svg
+						></button
+					>
+				</div>
+			</div>
+
+			<div class="server">
+				<span class="tile"
+					><svg viewBox="0 0 24 24"
+						><rect x="3" y="4" width="18" height="7" rx="2"
+						></rect><rect x="3" y="13" width="18" height="7" rx="2"
+						></rect><path d="M7 7.5h.01M7 16.5h.01"></path></svg
+					></span
+				>
+				<div class="info">
+					<div class="line1">
+						<span class="name">Qwen3.6 27B</span>
+						<span class="alias"
+							>qwen27b <svg viewBox="0 0 24 24"
+								><path d="M6 6l12 12M18 6 6 18"></path></svg
+							></span
+						>
+						<span class="add"
+							><svg viewBox="0 0 24 24"
+								><path d="M12 5v14M5 12h14"></path></svg
+							></span
+						>
+					</div>
+					<div class="line2">
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="3" y="6" width="18" height="12" rx="2"
+								></rect><path d="M9 6v12"></path></svg
+							>Qwen3.6-27B-UD-Q6_K_XL</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><path d="M12 3v18M5 8l14 8M19 8 5 16"
+								></path></svg
+							>MTP</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="5" y="5" width="14" height="14" rx="2"
+								></rect><path
+									d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"
+								></path></svg
+							>CUDA</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="2" y="6" width="20" height="12" rx="2"
+								></rect><path d="M6 18v2M18 18v2"></path></svg
+							>NVIDIA RTX PRO 5000 Blackwell (CUDA0)</span
+						>
+					</div>
+				</div>
+				<div class="tools">
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg
+						></button
+					>
+					<button class="tool-btn play"
+						><svg viewBox="0 0 24 24"
+							><path d="M6 4.5 19 12 6 19.5z"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="m5 7 4 4-4 4M12 16h7"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M12 20h9"></path><path
+								d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
+							></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path
+								d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"
+							></path></svg
+						></button
+					>
+				</div>
+			</div>
+
+			<div class="server">
+				<span class="tile"
+					><svg viewBox="0 0 24 24"
+						><rect x="3" y="4" width="18" height="7" rx="2"
+						></rect><rect x="3" y="13" width="18" height="7" rx="2"
+						></rect><path d="M7 7.5h.01M7 16.5h.01"></path></svg
+					></span
+				>
+				<div class="info">
+					<div class="line1">
+						<span class="name">Qwen3.5 122B</span>
+						<span class="alias"
+							>qwen122b <svg viewBox="0 0 24 24"
+								><path d="M6 6l12 12M18 6 6 18"></path></svg
+							></span
+						>
+						<span class="add"
+							><svg viewBox="0 0 24 24"
+								><path d="M12 5v14M5 12h14"></path></svg
+							></span
+						>
+					</div>
+					<div class="line2">
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="3" y="6" width="18" height="12" rx="2"
+								></rect><path d="M9 6v12"></path></svg
+							>Qwen3.5-122B-A10B-MXFP4_MOE</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><path d="M12 3v18M5 8l14 8M19 8 5 16"
+								></path></svg
+							>MTP</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="5" y="5" width="14" height="14" rx="2"
+								></rect><path
+									d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"
+								></path></svg
+							>ROCm</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="2" y="6" width="20" height="12" rx="2"
+								></rect><path d="M6 18v2M18 18v2"></path></svg
+							>AMD Radeon Graphics (ROCm0)</span
+						>
+					</div>
+				</div>
+				<div class="tools">
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg
+						></button
+					>
+					<button class="tool-btn play"
+						><svg viewBox="0 0 24 24"
+							><path d="M6 4.5 19 12 6 19.5z"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="m5 7 4 4-4 4M12 16h7"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M12 20h9"></path><path
+								d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
+							></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path
+								d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"
+							></path></svg
+						></button
+					>
+				</div>
+			</div>
+
+			<div class="server">
+				<span class="tile"
+					><svg viewBox="0 0 24 24"
+						><rect x="3" y="4" width="18" height="7" rx="2"
+						></rect><rect x="3" y="13" width="18" height="7" rx="2"
+						></rect><path d="M7 7.5h.01M7 16.5h.01"></path></svg
+					></span
+				>
+				<div class="info">
+					<div class="line1">
+						<span class="name">Qwen3-Embedding-4B-Q6_K</span>
+						<span class="add"
+							><svg viewBox="0 0 24 24"
+								><path d="M12 5v14M5 12h14"></path></svg
+							></span
+						>
+					</div>
+					<div class="line2">
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="3" y="6" width="18" height="12" rx="2"
+								></rect><path d="M9 6v12"></path></svg
+							>Qwen3-Embedding-4B-Q6_K</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="5" y="5" width="14" height="14" rx="2"
+								></rect><path
+									d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"
+								></path></svg
+							>ROCm</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="2" y="6" width="20" height="12" rx="2"
+								></rect><path d="M6 18v2M18 18v2"></path></svg
+							>AMD Radeon Graphics (ROCm0)</span
+						>
+					</div>
+				</div>
+				<div class="tools">
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg
+						></button
+					>
+					<button class="tool-btn play"
+						><svg viewBox="0 0 24 24"
+							><path d="M6 4.5 19 12 6 19.5z"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="m5 7 4 4-4 4M12 16h7"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M12 20h9"></path><path
+								d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
+							></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path
+								d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"
+							></path></svg
+						></button
+					>
+				</div>
+			</div>
+
+			<div class="server">
+				<span class="tile"
+					><svg viewBox="0 0 24 24"
+						><rect x="3" y="4" width="18" height="7" rx="2"
+						></rect><rect x="3" y="13" width="18" height="7" rx="2"
+						></rect><path d="M7 7.5h.01M7 16.5h.01"></path></svg
+					></span
+				>
+				<div class="info">
+					<div class="line1">
+						<span class="name">Nemotron 3 Nano 30B</span>
+						<span class="alias"
+							>nemo <svg viewBox="0 0 24 24"
+								><path d="M6 6l12 12M18 6 6 18"></path></svg
+							></span
+						>
+						<span class="add"
+							><svg viewBox="0 0 24 24"
+								><path d="M12 5v14M5 12h14"></path></svg
+							></span
+						>
+					</div>
+					<div class="line2">
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="3" y="6" width="18" height="12" rx="2"
+								></rect><path d="M9 6v12"></path></svg
+							>Nemotron-3-Nano-30B-A3B-UD-Q6_K_XL</span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="5" y="5" width="14" height="14" rx="2"
+								></rect><path
+									d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"
+								></path></svg
+							><span class="err">Backend Not Found!</span></span
+						>
+						<span class="fact"
+							><svg viewBox="0 0 24 24"
+								><rect x="2" y="6" width="20" height="12" rx="2"
+								></rect><path d="M6 18v2M18 18v2"></path></svg
+							>ROCm0</span
+						>
+					</div>
+				</div>
+				<div class="tools">
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg
+						></button
+					>
+					<button class="tool-btn play"
+						><svg viewBox="0 0 24 24"
+							><path d="M6 4.5 19 12 6 19.5z"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="m5 7 4 4-4 4M12 16h7"></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path d="M12 20h9"></path><path
+								d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
+							></path></svg
+						></button
+					>
+					<button class="tool-btn"
+						><svg viewBox="0 0 24 24"
+							><path
+								d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13"
+							></path></svg
+						></button
+					>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<style>
+	svg {
+		stroke: currentColor;
+		fill: none;
+		stroke-width: 1.7;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.app {
+		display: flex;
+		flex-direction: column;
+		width: 1020px;
+		max-width: 1400px;
+		height: 892px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 14px;
+		background: var(--wc-bg-page);
+		box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.8);
+		overflow: hidden;
+		transform: scale(0.85) translate(-60px, -60px);
+		transform-origin: top left;
+	}
+
+	/* ---------- titlebar ---------- */
+
+	.titlebar {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		height: 56px;
+		padding: 0 8px 0 14px;
+		border-bottom: 1px solid var(--wc-border-header);
+		background: var(--wc-bg-header);
+		flex-shrink: 0;
+	}
+
+	.brand {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 30px;
+		height: 30px;
+	}
+	.brand svg {
+		stroke: none;
+	}
+
+	.title-label {
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--wc-text-primary);
+		margin: 0 6px 0 4px;
+	}
+
+	.searchbar {
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		width: 230px;
+		height: 36px;
+		padding: 0 13px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 9px;
+		background: var(--wc-bg-surface);
+		color: var(--wc-text-placeholder);
+		font-size: 13px;
+	}
+
+	.searchbar svg {
+		width: 14px;
+		height: 14px;
+		color: var(--wc-text-faint);
+	}
+
+	.select {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		height: 36px;
+		padding: 0 12px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 9px;
+		background: var(--wc-bg-surface);
+		color: var(--wc-text-secondary);
+		font-size: 13px;
+		font-family: inherit;
+		cursor: pointer;
+	}
+
+	.select svg {
+		width: 13px;
+		height: 13px;
+		color: var(--wc-text-faint);
+	}
+
+	.sq-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 9px;
+		background: var(--wc-bg-surface);
+		color: var(--wc-text-tertiary);
+		cursor: pointer;
+	}
+
+	.sq-btn:hover {
+		background: var(--wc-bg-hover);
+	}
+	.sq-btn svg {
+		width: 15px;
+		height: 15px;
+	}
+
+	.toggle-wrap {
+		display: inline-flex;
+		align-items: center;
+		gap: 11px;
+		margin-left: 8px;
+	}
+
+	.toggle {
+		position: relative;
+		width: 38px;
+		height: 20px;
+		border-radius: 10px;
+		background: var(--wc-bg-active);
+		border: 1px solid var(--wc-border-subtle);
+		cursor: pointer;
+	}
+
+	.toggle::after {
+		content: "";
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: var(--wc-text-faint);
+		transition: transform 160ms ease;
+	}
+
+	.toggle-wrap .label {
+		font-size: 13px;
+		color: var(--wc-text-secondary);
+	}
+
+	.launch {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		height: 38px;
+		padding: 0 18px;
+		border-radius: 9px;
+		font-size: 13.5px;
+		font-weight: 600;
+		font-family: inherit;
+		cursor: pointer;
+	}
+
+	.launch svg {
+		width: 15px;
+		height: 15px;
+	}
+	.launch.llama {
+		border: 1px solid var(--wc-accent-blue-border);
+		background: var(--wc-accent-blue-bg-8);
+		color: var(--wc-accent-blue);
+	}
+	.launch.whisper {
+		border: 1px solid var(--wc-accent-green-border);
+		background: var(--wc-accent-green-bg-8);
+		color: var(--wc-accent-green);
+	}
+	.launch:hover {
+		filter: brightness(1.3);
+	}
+
+	.win-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 34px;
+		height: 30px;
+		border: none;
+		border-radius: 7px;
+		background: transparent;
+		color: var(--wc-text-muted);
+		cursor: pointer;
+	}
+
+	.win-btn:hover {
+		background: var(--wc-bg-hover);
+		color: var(--wc-text-heading);
+	}
+	.win-btn.close:hover {
+		background: var(--wc-text-header-close-bg);
+		color: var(--wc-accent-red);
+	}
+	.win-btn svg {
+		width: 15px;
+		height: 15px;
+	}
+
+	.grow {
+		flex: 1;
+	}
+
+	/* ---------- layout ---------- */
+
+	.body {
+		display: flex;
+		flex: 1;
+		min-height: 0;
+	}
+
+	.rail {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+		width: 62px;
+		padding: 12px 0;
+		flex-shrink: 0;
+	}
+
+	.rail-btn {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 38px;
+		border: 1px solid transparent;
+		border-radius: 10px;
+		background: transparent;
+		color: var(--wc-text-faint);
+		cursor: pointer;
+		transition:
+			background 140ms ease,
+			color 140ms ease;
+	}
+
+	.rail-btn:hover {
+		background: var(--wc-bg-hover);
+		color: var(--wc-text-secondary);
+	}
+	.rail-btn.active {
+		background: var(--wc-bg-selected);
+		border-color: var(--wc-accent-blue-border);
+		color: var(--wc-accent-blue);
+	}
+	.rail-btn svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	.rail-btn .live {
+		position: absolute;
+		top: 4px;
+		right: 3px;
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--wc-accent-green);
+	}
+
+	.rail .spacer {
+		flex: 1;
+	}
+
+	.list {
+		flex: 1;
+		min-width: 0;
+		overflow-y: auto;
+		padding: 12px 18px 24px 6px;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+	}
+
+	/* ---------- server rows ---------- */
+
+	.server {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		padding: 14px 18px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 11px;
+		background: var(--wc-bg-card);
+		cursor: pointer;
+		transition:
+			background 140ms ease,
+			border-color 140ms ease;
+	}
+
+	.server:hover {
+		background: var(--wc-bg-hover);
+		border-color: var(--wc-border-default);
+	}
+	.server.running {
+		border-color: var(--wc-run-border);
+		background: var(--wc-run-bg);
+	}
+
+	.tile {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 42px;
+		height: 42px;
+		flex-shrink: 0;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 10px;
+		background: var(--wc-bg-hover);
+		color: var(--wc-text-faint);
+	}
+
+	.tile svg {
+		width: 19px;
+		height: 19px;
+	}
+	.server.running .tile {
+		border-color: var(--wc-accent-green-border);
+		background: var(--wc-accent-green-bg-8);
+		color: var(--wc-accent-green);
+	}
+
+	.info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.line1 {
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		flex-wrap: wrap;
+		margin-bottom: 7px;
+	}
+	.name {
+		font-size: 14.5px;
+		font-weight: 600;
+		color: var(--wc-text-heading);
+	}
+
+	.alias {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		height: 23px;
+		padding: 0 8px;
+		border: 1px solid var(--wc-accent-blue-border);
+		border-radius: 6px;
+		background: var(--wc-accent-blue-bg-8);
+		color: var(--wc-accent-blue);
+		font-family: var(--wc-mono);
+		font-size: 11.5px;
+	}
+
+	.alias svg {
+		width: 10px;
+		height: 10px;
+	}
+
+	.add {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 23px;
+		height: 23px;
+		border: 1px solid var(--wc-accent-blue-border);
+		border-radius: 6px;
+		background: var(--wc-accent-blue-bg-8);
+		color: var(--wc-accent-blue);
+		cursor: pointer;
+	}
+
+	.add svg {
+		width: 11px;
+		height: 11px;
+	}
+
+	.port {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 12px;
+		font-weight: 500;
+		color: var(--wc-accent-green);
+	}
+	.port .dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--wc-accent-green);
+	}
+
+	.uptime {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		font-size: 12px;
+		color: var(--wc-text-muted);
+	}
+	.uptime svg {
+		width: 12px;
+		height: 12px;
+	}
+
+	.line2 {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		flex-wrap: wrap;
+		font-size: 12px;
+		color: var(--wc-text-muted);
+	}
+	.fact {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.fact svg {
+		width: 13px;
+		height: 13px;
+		color: var(--wc-text-faint);
+		flex-shrink: 0;
+	}
+	.fact .err {
+		color: var(--wc-accent-red);
+	}
+
+	.q {
+		padding: 1px 6px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 5px;
+		background: var(--wc-special-code-bg);
+		font-family: var(--wc-mono);
+		font-size: 11px;
+		color: var(--wc-text-tertiary);
+	}
+
+	.tools {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		flex-shrink: 0;
+	}
+
+	.tool-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 30px;
+		height: 30px;
+		border: none;
+		border-radius: 7px;
+		background: transparent;
+		color: var(--wc-text-faint);
+		cursor: pointer;
+	}
+
+	.tool-btn:hover {
+		background: var(--wc-bg-hover);
+		color: var(--wc-text-secondary);
+	}
+	.tool-btn svg {
+		width: 15px;
+		height: 15px;
+	}
+	.tool-btn.stop:hover {
+		color: var(--wc-accent-red);
+	}
+	.tool-btn.play:hover {
+		color: var(--wc-accent-green);
+	}
+
+	.sep {
+		width: 1px;
+		height: 18px;
+		background: var(--wc-border-subtle);
+		margin: 0 6px;
+	}
+
+	.app ::-webkit-scrollbar {
+		width: 8px;
+	}
+	.app ::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.1);
+		border-radius: 4px;
+	}
+	.app ::-webkit-scrollbar-track {
+		background: transparent;
+	}
+</style>

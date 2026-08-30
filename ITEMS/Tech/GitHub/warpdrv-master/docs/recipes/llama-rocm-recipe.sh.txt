@@ -1,0 +1,55 @@
+#!input REPO_URL string default=https://github.com/ggml-org/llama.cpp
+#!input BRANCH string default=master
+#!input BUILD_DIR string default=/mnt/ml/llamatest-rocm
+#!input ROCM_PATH string default=/opt/rocm description="ROCm install root (e.g. /opt/rocm, /opt/rocm-7.13.0)"
+#!input AMDGPU_TARGET choice options=gfx900,gfx906,gfx908,gfx90a,gfx940,gfx942,gfx1030,gfx1100,gfx1101,gfx1151 default=gfx1151 description="gfx1151=Strix Halo, gfx1100=RX 7900, gfx90a=MI200"
+#!input UNROLL_THRESHOLD number default=600 description="AMDGPU loop unroll threshold (Strix Halo: 600)"
+#!input JOBS number default=8 description="Parallel build jobs"
+#!step Pre-flight checks
+if [ ! -d "$ROCM_PATH" ]; then
+    echo "ERROR: ROCM_PATH=$ROCM_PATH not found."
+    exit 1
+fi
+if [ ! -x "$ROCM_PATH/bin/hipcc" ]; then
+    echo "ERROR: $ROCM_PATH/bin/hipcc missing or not executable."
+    exit 1
+fi
+echo "[OK] ROCm root: $(readlink -f "$ROCM_PATH")"
+echo "[OK] hipcc: $("$ROCM_PATH/bin/hipcc" --version | head -1)"
+LIBXML=$(ldconfig -p | grep -oE '/.*/libxml2\.so\.[0-9]+' | head -1)
+if [ -z "$LIBXML" ]; then
+    echo "ERROR: no libxml2 found via ldconfig."
+    exit 1
+fi
+echo "[OK] libxml2: $LIBXML"
+#!step Clone repository cwd=~
+export GIT_TERMINAL_PROMPT=0
+export GIT_SSH_COMMAND="ssh -o BatchMode=yes"
+git clone --progress -b "$BRANCH" "$REPO_URL" "$BUILD_DIR" || (cd "$BUILD_DIR" && git fetch --progress && git checkout "$BRANCH" && git pull --progress)
+#!step Configure cmake
+cd "$BUILD_DIR"
+export ROCM_PATH
+export HIP_PATH="$ROCM_PATH"
+export PATH="$ROCM_PATH/bin:$ROCM_PATH/llvm/bin:$PATH"
+export LD_LIBRARY_PATH="$ROCM_PATH/lib:$ROCM_PATH/lib64:$LD_LIBRARY_PATH"
+cmake -B build \
+    -DGGML_HIP=ON \
+    -DAMDGPU_TARGETS="$AMDGPU_TARGET" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_HIP_COMPILER_ROCM_ROOT="$ROCM_PATH" \
+    -DCMAKE_PREFIX_PATH="$ROCM_PATH" \
+    -DCMAKE_INSTALL_RPATH="\$ORIGIN;$ROCM_PATH/lib;$ROCM_PATH/lib64" \
+    -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--disable-new-dtags" \
+    -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--disable-new-dtags" \
+    -DCMAKE_HIP_FLAGS="-mllvm --amdgpu-unroll-threshold-local=$UNROLL_THRESHOLD"
+#!step Build
+cd "$BUILD_DIR"
+export ROCM_PATH
+export PATH="$ROCM_PATH/bin:$ROCM_PATH/llvm/bin:$PATH"
+export LD_LIBRARY_PATH="$ROCM_PATH/lib:$ROCM_PATH/lib64:$LD_LIBRARY_PATH"
+cmake --build build --config Release -j "$JOBS"
+#!step Verify
+"$BUILD_DIR/build/bin/llama-server" --version
+echo "---"
+ldd "$BUILD_DIR/build/bin/llama-server" | grep -iE 'rocm|hip|amd'

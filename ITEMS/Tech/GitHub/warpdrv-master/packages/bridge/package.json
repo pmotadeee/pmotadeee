@@ -1,0 +1,49 @@
+{
+	"name": "@warpcore/bridge",
+	"version": "0.1.0",
+	"description": "Chat engine with MCP tool orchestration for OpenAI-compatible inference servers",
+	"type": "module",
+	"exports": {
+		".": "./src/types/index.ts",
+		"./server": "./src/server.ts",
+		"./client": "./src/client.ts",
+		"./types": "./src/types/index.ts",
+		"./parser": "./src/parser/index.ts",
+		"./store": "./src/store/index.ts",
+		"./mcp": {
+			"import": "./src/mcp/client.ts"
+		},
+		"./mcp/config": "./src/mcp/config.ts",
+		"./orchestrator": "./src/orchestrator/index.ts",
+		"./persistence": "./src/persistence/betterSqlite.ts",
+		"./persistence/embeddingService": "./src/persistence/embeddingService.ts",
+		"./permissions": "./src/permissions/index.ts",
+		"./validation": "./src/validation/index.ts",
+		"./transport": "./src/transport/fetch.ts",
+		"./broadcaster": "./src/broadcaster/sseBroadcaster.ts",
+		"./inferParamNames": "./src/types/inferParamNames.ts",
+		"./util/topic": "./src/util/topic.ts"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.29.0",
+		"ajv": "^8.17.0",
+		"nanoid": "^3.3.12"
+	},
+	"peerDependencies": {
+		"better-sqlite3": "^12.8.0",
+		"better-sse": "^0.16.0",
+		"sqlite-vec": "^0.1.9",
+		"zustand": ">=4.0.0"
+	},
+	"peerDependenciesMeta": {
+		"zustand": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@types/better-sqlite3": "^7.6.13",
+		"@types/express": "^5.0.0",
+		"@types/node": "^22.0.0",
+		"typescript": "^5.7.0"
+	}
+}

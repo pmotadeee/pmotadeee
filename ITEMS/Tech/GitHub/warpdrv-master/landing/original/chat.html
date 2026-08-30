@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>warpdrv — chat</title>
+<style>
+	:root {
+		--wc-bg-page: #0d0d0d;
+		--wc-bg-surface: rgba(255,255,255,0.03);
+		--wc-bg-subtle: rgba(255,255,255,0.04);
+		--wc-bg-card: rgba(255,255,255,0.03);
+		--wc-bg-interactive: rgba(255,255,255,0.06);
+		--wc-bg-hover: rgba(255,255,255,0.04);
+		--wc-bg-active: rgba(255,255,255,0.08);
+		--wc-bg-selected: rgba(153,193,255,0.1);
+		--wc-bg-elevated: #080808;
+		--wc-border-subtle: rgba(255,255,255,0.06);
+		--wc-border-default: rgba(255,255,255,0.1);
+		--wc-border-overlay: rgba(255,255,255,0.14);
+		--wc-border-hover: rgba(255,255,255,0.18);
+		--wc-text-heading: #d4d4d4;
+		--wc-text-primary: #b0b0b0;
+		--wc-text-secondary: rgba(176,176,176,0.7);
+		--wc-text-tertiary: rgba(176,176,176,0.55);
+		--wc-text-muted: rgba(176,176,176,0.5);
+		--wc-text-faint: rgba(176,176,176,0.35);
+		--wc-text-placeholder: rgba(176,176,176,0.25);
+		--wc-accent-blue: #6ba3ff;
+		--wc-accent-blue-bg-8: rgba(107,163,255,0.1);
+		--wc-accent-blue-border: rgba(107,163,255,0.35);
+		--wc-accent-green: #85b055;
+		--wc-accent-green-bg-8: rgba(133,176,85,0.1);
+		--wc-accent-green-border: rgba(133,176,85,0.3);
+		--wc-accent-red: #ff7b7b;
+		--wc-text-header-close-bg: rgba(255,123,123,0.15);
+		--wc-special-code-bg: #060606;
+		--wc-bg-header: rgba(13,13,13,0.85);
+		--wc-border-header: rgba(255,255,255,0.04);
+		--wc-mode-default: rgba(255,255,255,0.1);
+		--wc-mode-plan: #FF9F38;
+		--wc-mode-build: #00B7FF;
+		--composer-padding: 8px;
+	}
+
+	* { box-sizing: border-box; }
+
+	body {
+		margin: 0;
+		min-height: 100vh;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 32px;
+		background: #050505;
+		font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+		color: var(--wc-text-primary);
+		-webkit-font-smoothing: antialiased;
+	}
+
+	svg { stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+	/* ---------- window ---------- */
+
+	.app {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		max-width: 1400px;
+		height: min(860px, calc(100vh - 64px));
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 14px;
+		background: var(--wc-bg-page);
+		box-shadow: 0 40px 80px -20px rgba(0,0,0,0.8);
+		overflow: hidden;
+	}
+
+	.titlebar {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		height: 52px;
+		padding: 0 8px 0 14px;
+		border-bottom: 1px solid var(--wc-border-header);
+		background: var(--wc-bg-header);
+		flex-shrink: 0;
+	}
+
+	.brand {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 30px;
+		height: 30px;
+	}
+
+	.brand svg { stroke: none; }
+
+	.title-label {
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--wc-text-primary);
+		margin-left: 6px;
+	}
+
+	.thread-title {
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		font-size: 13px;
+		color: var(--wc-text-secondary);
+		pointer-events: none;
+	}
+
+	.titlebar-inner {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: 100%;
+	}
+
+	.new-chat {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		height: 34px;
+		padding: 0 14px;
+		border: 1px solid var(--wc-accent-blue-border);
+		border-radius: 9px;
+		background: var(--wc-accent-blue-bg-8);
+		color: var(--wc-accent-blue);
+		font-size: 13px;
+		font-family: inherit;
+		font-weight: 500;
+		cursor: pointer;
+		margin-left: 8px;
+	}
+
+	.new-chat:hover { background: rgba(107,163,255,0.18); }
+
+	.win-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 34px;
+		height: 30px;
+		border: none;
+		border-radius: 7px;
+		background: transparent;
+		color: var(--wc-text-muted);
+		cursor: pointer;
+	}
+
+	.win-btn:hover { background: var(--wc-bg-hover); color: var(--wc-text-heading); }
+	.win-btn.close:hover { background: var(--wc-text-header-close-bg); color: var(--wc-accent-red); }
+	.win-btn svg { width: 15px; height: 15px; }
+
+	/* ---------- layout ---------- */
+
+	.body { display: flex; flex: 1; min-height: 0; }
+
+	.rail {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+		width: 62px;
+		padding: 12px 0;
+		flex-shrink: 0;
+	}
+
+	.rail-btn {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 38px;
+		border: 1px solid transparent;
+		border-radius: 10px;
+		background: transparent;
+		color: var(--wc-text-faint);
+		cursor: pointer;
+		transition: background 140ms ease, color 140ms ease;
+	}
+
+	.rail-btn:hover { background: var(--wc-bg-hover); color: var(--wc-text-secondary); }
+
+	.rail-btn.active {
+		background: var(--wc-bg-selected);
+		border-color: var(--wc-accent-blue-border);
+		color: var(--wc-accent-blue);
+	}
+
+	.rail-btn svg { width: 18px; height: 18px; }
+
+	.rail-btn .live {
+		position: absolute;
+		top: 4px;
+		right: 3px;
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--wc-accent-green);
+	}
+
+	.rail .spacer { flex: 1; }
+
+	/* ---------- threads sidebar ---------- */
+
+	.threads {
+		display: flex;
+		flex-direction: column;
+		width: 292px;
+		flex-shrink: 0;
+		padding: 8px 12px 12px;
+		gap: 8px;
+		min-height: 0;
+	}
+
+	.search {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		height: 36px;
+		padding: 0 12px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 9px;
+		background: var(--wc-bg-surface);
+		color: var(--wc-text-muted);
+		font-size: 13px;
+	}
+
+	.search svg { width: 14px; height: 14px; }
+
+	.sort-row { display: flex; align-items: center; gap: 6px; }
+
+	.chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		height: 26px;
+		padding: 0 10px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 7px;
+		background: transparent;
+		color: var(--wc-text-tertiary);
+		font-size: 12px;
+		font-family: inherit;
+		cursor: pointer;
+	}
+
+	.chip:hover { background: var(--wc-bg-hover); }
+
+	.icon-sm {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 26px;
+		height: 26px;
+		border: none;
+		border-radius: 7px;
+		background: transparent;
+		color: var(--wc-text-faint);
+		cursor: pointer;
+	}
+
+	.icon-sm:hover { background: var(--wc-bg-hover); color: var(--wc-text-secondary); }
+	.icon-sm svg { width: 14px; height: 14px; }
+
+	.thread-list {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		overflow-y: auto;
+		min-height: 0;
+		margin: 0 -4px;
+		padding: 0 4px;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(255,255,255,0.12) transparent;
+	}
+
+	.folder {
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		height: 44px;
+		padding: 8px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 9px;
+		background: var(--wc-bg-surface);
+		font-size: 13px;
+		color: var(--wc-text-secondary);
+		cursor: pointer;
+		margin-top: 6px;
+	}
+
+	.folder svg { width: 13px; height: 13px; flex-shrink: 0; }
+	.folder .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.folder .count { font-size: 11.5px; color: var(--wc-text-faint); }
+
+	.folder-body {
+		display: flex;
+		flex-direction: column;
+		border: 1px solid var(--wc-border-subtle);
+		border-top: none;
+		border-radius: 0 0 9px 9px;
+		padding: 5px;
+		margin-top: -6px;
+	}
+
+	.thread-list > .thread { margin-top: 2px; }
+
+	.thread {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		height: 34px;
+		padding: 5px 8px;
+		border: 1px solid transparent;
+		border-radius: 7px;
+		font-size: 12.5px;
+		color: var(--wc-text-secondary);
+		cursor: pointer;
+	}
+
+	.thread:hover { background: var(--wc-bg-hover); }
+
+	.thread.active {
+		background: var(--wc-bg-active);
+		border-color: var(--wc-border-overlay);
+		color: var(--wc-text-heading);
+	}
+
+	.thread .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.thread .tks { font-size: 11px; color: var(--wc-text-faint); font-variant-numeric: tabular-nums; }
+	.thread .star { width: 11px; height: 11px; color: var(--wc-text-muted); fill: currentColor; stroke: none; }
+
+	/* ---------- main pane ---------- */
+
+	.main {
+		position: relative;
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		border-left: 1px solid var(--wc-border-header);
+	}
+
+	.messages {
+		flex: 1;
+		overflow-y: auto;
+		padding: 20px 40px 210px;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(255,255,255,0.12) transparent;
+	}
+
+	.msg { max-width: 860px; margin: 0 auto; }
+
+	.thinking {
+		display: flex;
+		align-items: center;
+		height: 40px;
+		padding: 0 14px;
+		margin: 18px 0;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 9px;
+		background: var(--wc-bg-surface);
+		font-size: 12.5px;
+		color: var(--wc-text-muted);
+		cursor: pointer;
+	}
+
+	.thinking .caret { margin-left: auto; width: 14px; height: 14px; }
+
+	.tool {
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		padding: 7px 4px;
+		font-size: 13.5px;
+		color: var(--wc-text-secondary);
+	}
+
+	.tool .caret { width: 13px; height: 13px; color: var(--wc-text-faint); }
+	.tool .verb { color: var(--wc-text-heading); }
+	.tool .path { color: var(--wc-text-muted); }
+	.tool .path b { color: var(--wc-text-heading); font-weight: 600; }
+	.tool .ok { margin-left: auto; width: 14px; height: 14px; color: var(--wc-text-muted); }
+
+	.meta-row { display: flex; align-items: center; gap: 12px; padding: 4px 4px 10px; color: var(--wc-text-faint); }
+	.meta-row svg { width: 13px; height: 13px; }
+
+	.prose { font-size: 14px; line-height: 1.65; color: var(--wc-text-primary); }
+	.prose p { margin: 12px 0; }
+	.prose strong { color: var(--wc-text-heading); font-weight: 600; }
+	.prose ol { margin: 12px 0; padding-left: 24px; }
+	.prose li { margin: 9px 0; padding-left: 4px; }
+	.prose li::marker { color: var(--wc-text-muted); }
+
+	code {
+		padding: 2px 6px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 5px;
+		background: var(--wc-special-code-bg);
+		font-family: ui-monospace, "SF Mono", Menlo, monospace;
+		font-size: 12px;
+		color: var(--wc-text-heading);
+		white-space: nowrap;
+	}
+
+	.scroll-fab {
+		position: absolute;
+		left: 50%;
+		bottom: 178px;
+		transform: translateX(-50%);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 34px;
+		height: 34px;
+		border: 1px solid var(--wc-border-overlay);
+		border-radius: 50%;
+		background: var(--wc-bg-elevated);
+		color: var(--wc-text-secondary);
+		cursor: pointer;
+		z-index: 3;
+		box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+	}
+
+	.scroll-fab svg { width: 16px; height: 16px; }
+
+	/* ---------- composer ---------- */
+
+	.composer-dock {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		display: flex;
+		justify-content: center;
+		padding: 0 40px 22px;
+		z-index: 2;
+	}
+
+	.composer-root {
+		position: relative;
+		display: flex;
+		width: 100%;
+		max-width: 780px;
+		flex-direction: column;
+	}
+
+	.tts-flame {
+		position: absolute;
+		bottom: 100%;
+		left: 0;
+		right: 0;
+		height: 96px;
+		pointer-events: none;
+		z-index: 1;
+		overflow: hidden;
+		border-bottom-left-radius: 12px;
+		border-bottom-right-radius: 12px;
+	}
+
+	.composer-shell {
+		display: flex;
+		width: 100%;
+		flex-direction: column;
+		gap: 8px;
+		border-radius: 12px;
+		padding: var(--composer-padding);
+		background: var(--wc-bg-elevated);
+		box-shadow: 0px 10px 10px 10px rgba(0,0,0,0.15);
+		color: var(--wc-text-primary);
+	}
+
+	.composer-gradient-border { position: relative; border: none; }
+
+	.composer-gradient-border::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		padding: 2px;
+		background: radial-gradient(
+			ellipse 80% 150% at 50% 0%,
+			var(--composer-border-color) 0%,
+			transparent 75%
+		);
+		opacity: 1;
+		-webkit-mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		-webkit-mask-composite: xor;
+		mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		mask-composite: exclude;
+		pointer-events: none;
+		transition: background 200ms ease;
+	}
+
+	.row { display: flex; align-items: center; gap: 6px; }
+	.grow { flex: 1; }
+
+	.modes { display: flex; align-items: center; gap: 2px; }
+
+	.mode {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 30px;
+		padding: 0 10px;
+		border: none;
+		border-radius: 7px;
+		background: transparent;
+		color: var(--wc-text-tertiary);
+		font-size: 13px;
+		font-family: inherit;
+		cursor: pointer;
+		transition: background 140ms ease, color 140ms ease;
+	}
+
+	.mode:hover { background: var(--wc-bg-hover); color: var(--wc-text-secondary); }
+
+	.mode[aria-selected="true"] {
+		background: color-mix(in srgb, var(--mode-color) 16%, transparent);
+		color: var(--mode-color);
+	}
+
+	.mode[data-mode="default"] { --mode-color: var(--wc-text-primary); }
+	.mode[data-mode="plan"] { --mode-color: var(--wc-mode-plan); }
+	.mode[data-mode="build"] { --mode-color: var(--wc-mode-build); }
+	.mode svg { width: 13px; height: 13px; }
+
+	.pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 30px;
+		padding: 0 10px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 8px;
+		background: transparent;
+		color: var(--wc-text-tertiary);
+		font-size: 12.5px;
+		font-family: inherit;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+
+	.pill:hover { background: var(--wc-bg-hover); border-color: var(--wc-border-default); }
+	.pill svg { width: 15px; height: 15px; }
+	.pill.green { border-color: var(--wc-accent-green-border); background: var(--wc-accent-green-bg-8); color: var(--wc-accent-green); }
+	.pill.blue { border-color: var(--wc-accent-blue-border); background: var(--wc-accent-blue-bg-8); color: var(--wc-accent-blue); }
+
+	.icon-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 30px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 8px;
+		background: transparent;
+		color: var(--wc-text-tertiary);
+		cursor: pointer;
+	}
+
+	.icon-btn.bare { border-color: transparent; }
+	.icon-btn:hover { background: var(--wc-bg-hover); color: var(--wc-text-secondary); }
+	.icon-btn svg { width: 15px; height: 15px; }
+	.icon-btn.send { width: 34px; border-color: var(--wc-accent-blue-border); background: var(--wc-accent-blue-bg-8); color: var(--wc-accent-blue); }
+
+	.editor {
+		min-height: 40px;
+		max-height: 128px;
+		overflow-y: auto;
+		padding: 4px 7px;
+		font-size: 14px;
+		line-height: 1.5;
+		outline: none;
+	}
+
+	.editor:empty::before { content: attr(data-placeholder); color: var(--wc-text-placeholder); }
+
+	.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--wc-accent-green); }
+
+	.context { display: flex; align-items: center; gap: 10px; padding: 0 4px 2px; }
+	.track { position: relative; flex: 1; height: 3px; border-radius: 2px; background: var(--wc-border-subtle); overflow: hidden; }
+	.fill { position: absolute; inset: 0 auto 0 0; width: 47.7%; border-radius: 2px; background: var(--wc-text-muted); }
+	.context span { font-size: 11.5px; color: var(--wc-text-muted); font-variant-numeric: tabular-nums; }
+
+	::-webkit-scrollbar { width: 8px; }
+	::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+	::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+	<div class="titlebar">
+		<div class="titlebar-inner">
+			<div class="brand">
+				<svg viewBox="0 0 24 24" width="22" height="22">
+					<defs>
+						<linearGradient id="bg" x1="0" y1="1" x2="1" y2="0">
+							<stop offset="0" stop-color="#9d7de8"/>
+							<stop offset="1" stop-color="#ffc845"/>
+						</linearGradient>
+					</defs>
+					<path d="M20.5 3.2 6.4 11.1l3.6 1.3 1.3 3.6z" fill="url(#bg)"/>
+					<path d="M9.4 14.6 4.2 19.8" stroke="#9d7de8" stroke-width="1.6" stroke-linecap="round"/>
+				</svg>
+			</div>
+			<span class="title-label">Chat</span>
+			<button class="win-btn" title="Toggle sidebar">
+				<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+			</button>
+			<button class="new-chat">
+				<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 5v14M5 12h14"/></svg>
+				New Chat
+			</button>
+
+			<span class="thread-title">Plan WarpMCP Chat Search Tool</span>
+
+			<div class="grow"></div>
+
+			<button class="win-btn" title="Text size">
+				<svg viewBox="0 0 24 24"><path d="M3 18 8 6l5 12M4.6 14.4h6.9M15 18l3-8 3 8M15.8 15.6h4.4"/></svg>
+			</button>
+			<button class="win-btn" title="Toggle panel">
+				<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg>
+			</button>
+			<button class="win-btn" title="Minimize"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+			<button class="win-btn" title="Maximize"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></svg></button>
+			<button class="win-btn close" title="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+		</div>
+	</div>
+
+	<div class="body">
+
+		<div class="rail">
+			<button class="rail-btn" title="Servers">
+				<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>
+				<span class="live"></span>
+			</button>
+			<button class="rail-btn active" title="Chat">
+				<svg viewBox="0 0 24 24"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></svg>
+			</button>
+			<div class="spacer"></div>
+			<button class="rail-btn" title="Settings">
+				<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>
+			</button>
+			<button class="rail-btn" title="About">
+				<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+			</button>
+		</div>
+
+		<div class="threads">
+			<div class="search">
+				<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+				Search
+			</div>
+
+			<div class="sort-row">
+				<button class="chip">Updated</button>
+				<button class="icon-sm" title="Sort"><svg viewBox="0 0 24 24"><path d="M7 4v16M4 17l3 3 3-3M14 6h6M14 11h5M14 16h4"/></svg></button>
+				<div class="grow"></div>
+				<button class="icon-sm" title="New folder"><svg viewBox="0 0 24 24"><path d="M4 20a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1z"/><path d="M12 11v5M9.5 13.5h5"/></svg></button>
+			</div>
+
+			<div class="thread-list">
+				<div class="folder">
+					<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+					<svg viewBox="0 0 24 24"><path d="M4 20a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1z"/></svg>
+					<span class="name">test folder</span>
+					<span class="count">5</span>
+					<span class="count">···</span>
+				</div>
+
+				<div class="folder">
+					<svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+					<svg viewBox="0 0 24 24"><path d="M4 20a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1z"/></svg>
+					<span class="name">warpdrv</span>
+					<span class="count">55</span>
+					<span class="count">···</span>
+				</div>
+
+				<div class="folder-body">
+					<div class="thread"><span class="name">Nested threads and folders</span><span class="tks">empty</span></div>
+					<div class="thread"><span class="name">AppImage bundle resources</span><span class="tks">1.1k</span></div>
+					<div class="thread active"><span class="name">Plan WarpMCP chat search</span><span class="tks">48.3k</span></div>
+					<div class="thread"><span class="name">List directory contents</span><span class="tks">0.3k</span></div>
+					<div class="thread"><span class="name">Starred threads feature</span><span class="tks">48.3k</span></div>
+					<div class="thread"><span class="name">Tauri resource path fix</span><span class="tks">8.1k</span></div>
+					<div class="thread"><span class="name">Composer gradient border</span><span class="tks">2.3k</span></div>
+					<div class="thread"><span class="name">Custom context length</span><span class="tks">3.9k</span></div>
+					<div class="thread"><span class="name">Code graph ingest speed</span><span class="tks">17.0k</span></div>
+					<div class="thread"><span class="name">VAAPI error handling</span><span class="tks">2.1k</span></div>
+					<div class="thread"><span class="name">Ripgrep tool wiring</span><span class="tks">17.2k</span></div>
+					<div class="thread"><span class="name">Slash command suggestions</span><span class="tks">34.5k</span></div>
+					<div class="thread"><span class="name">Push-to-talk dictation</span><span class="tks">27.8k</span></div>
+					<div class="thread"><span class="name">Kokoro TTS streaming</span><span class="tks">11.6k</span></div>
+					<div class="thread"><span class="name">Verify guardrail presets</span><span class="tks">6.5k</span></div>
+					<div class="thread"><span class="name">Preserve thinking toggle</span><span class="tks">4.0k</span></div>
+					<div class="thread"><span class="name">Recipes input directives</span><span class="tks">6.0k</span></div>
+					<div class="thread"><span class="name">Context usage bar</span><span class="tks">2.6k</span></div>
+				</div>
+
+				<div class="thread" style="margin-top:16px;">
+					<svg class="star" viewBox="0 0 24 24"><path d="m12 3 2.6 5.6 6.4.8-4.7 4.3 1.2 6.3L12 17l-5.5 3 1.2-6.3L3 9.4l6.4-.8z"/></svg>
+					<span class="name">Strix Halo ROCm build notes</span><span class="tks">36.0k</span>
+				</div>
+				<div class="thread"><span class="name">Speculative decoding flags</span><span class="tks">1.5k</span></div>
+				<div class="thread"><span class="name">Quantisation trade-offs</span><span class="tks">0.9k</span></div>
+				<div class="thread"><span class="name">Draft model pairing</span><span class="tks">0.1k</span></div>
+				<div class="thread"><span class="name">MCP tool permissions</span><span class="tks">1.3k</span></div>
+				<div class="thread"><span class="name">KV cache checkpoints</span><span class="tks">3.2k</span></div>
+				<div class="thread"><span class="name">Embedding model swap</span><span class="tks">5.4k</span></div>
+				<div class="thread"><span class="name">Whisper latency tuning</span><span class="tks">0.3k</span></div>
+				<div class="thread"><span class="name">Context window budgeting</span><span class="tks">5.1k</span></div>
+			</div>
+		</div>
+
+		<div class="main">
+			<div class="messages">
+				<div class="msg">
+
+					<div class="thinking">
+						Thinking (59 tks)
+						<svg class="caret" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+					</div>
+
+					<div class="tool">
+						<svg class="caret" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+						<span class="verb">Edit</span>
+						<span class="path">packages/server/src/<b>warpmcpRunner.ts</b></span>
+						<svg class="ok" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg>
+					</div>
+
+					<div class="meta-row">
+						<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+						<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+					</div>
+
+					<div class="prose">
+						<p>Done. All changes complete:</p>
+						<p><strong>What was fixed:</strong></p>
+						<ol>
+							<li><code>ChatSearchToolService</code> — Now contains all business logic: pagination, thread filtering, result formatting, and message text extraction</li>
+							<li><code>chatSearchHandler</code> — Simplified to just call <code>deps.chatSearch(args.query, args.threadId, limit, page)</code></li>
+							<li><code>chatGetMessageHandler</code> — Simplified to just call <code>deps.chatGetMessage(args.messageId)</code></li>
+							<li><code>warpmcp/src/index.ts</code> — Added <code>chatSearch</code> and <code>chatGetMessage</code> to deps construction (was missing)</li>
+							<li><code>warpmcpRunner.ts</code> — Updated both <code>bootWarpmcp</code> and <code>restartWarpmcpIfChanged</code> to use the new service signature</li>
+							<li><code>types.ts</code> — Updated dep signatures to match the new API</li>
+						</ol>
+					</div>
+
+					<div class="tool">
+						<svg class="caret" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+						<span class="verb">To-dos 7/7</span>
+						<svg class="ok" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg>
+					</div>
+
+					<div class="meta-row">
+						<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+						<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+					</div>
+
+					<div class="thinking">
+						Thinking (51 tks)
+						<svg class="caret" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+					</div>
+
+					<div class="prose">
+						<p>Let me verify the final state of the implementation to ensure everything is correct.</p>
+					</div>
+
+					<div class="tool">
+						<svg class="caret" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+						<span class="verb">Read</span>
+						<span class="path">packages/server/src/services/<b>chatSearchToolService.ts</b></span>
+						<svg class="ok" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg>
+					</div>
+					<div class="tool">
+						<svg class="caret" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+						<span class="verb">Read</span>
+						<span class="path">packages/warpmcp/src/tools/<b>chat_search.ts</b></span>
+						<svg class="ok" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg>
+					</div>
+					<div class="tool">
+						<svg class="caret" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+						<span class="verb">Read</span>
+						<span class="path">packages/warpmcp/src/tools/<b>chat_get_message.ts</b></span>
+						<svg class="ok" viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg>
+					</div>
+
+					<div class="meta-row">
+						<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+						<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+					</div>
+
+					<div class="thinking">
+						Thinking (83 tks)
+						<svg class="caret" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+					</div>
+
+					<div class="prose">
+						<p>All implementation is complete and verified. The tools should now work correctly:</p>
+						<p><strong>Call flow:</strong></p>
+						<ol>
+							<li>LLM calls <code>chat_search(query="...")</code></li>
+							<li>Handler forwards to <code>ChatSearchToolService.searchMessages</code></li>
+							<li>Service paginates and formats the result set</li>
+						</ol>
+					</div>
+
+				</div>
+			</div>
+
+			<button class="scroll-fab" title="Scroll to bottom">
+				<svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+			</button>
+
+			<div class="composer-dock">
+				<div class="composer-root">
+					<div class="tts-flame" id="ttsWrap"><canvas id="ttsCanvas"></canvas></div>
+					<div class="composer-shell composer-gradient-border" id="shell" style="--composer-border-color: var(--wc-mode-plan);">
+
+						<div class="row">
+							<div class="modes" role="tablist">
+								<button class="mode" data-mode="default" role="tab" aria-selected="false">
+									<svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>
+									Default
+								</button>
+								<button class="mode" data-mode="plan" role="tab" aria-selected="true">
+									<svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>
+									Plan
+								</button>
+								<button class="mode" data-mode="build" role="tab" aria-selected="false">
+									<svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>
+									Build
+								</button>
+							</div>
+							<div class="grow"></div>
+							<button class="pill">
+								<svg viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 8.9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1 1 0 0 1 1.5 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+								Guardrails
+								<svg viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="m6 9 6 6 6-6"/></svg>
+							</button>
+						</div>
+
+						<div class="editor" contenteditable="true" data-placeholder="Send a message..."></div>
+
+						<div class="row">
+							<button class="icon-btn bare" title="Attach">
+								<svg viewBox="0 0 24 24"><path d="M13.2 20.5 20.6 13a5 5 0 0 0-7-7l-8.5 8.5a3 3 0 0 0 4.2 4.3l7.8-7.9"/></svg>
+							</button>
+							<button class="pill green">Effort Low</button>
+							<button class="pill blue">12 Tool(s)</button>
+							<button class="icon-btn" title="Checkpoints">
+								<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+							</button>
+							<div class="grow"></div>
+							<button class="icon-btn bare" title="Dictate">
+								<svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>
+							</button>
+							<button class="icon-btn bare" title="Voice">
+								<svg viewBox="0 0 24 24"><path d="M2 12h2M7 6v12M12 3v18M17 7v10M22 12h-2"/></svg>
+							</button>
+							<button class="pill">
+								<span class="dot"></span>
+								Qwen 3.6 27B …
+								<svg viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="m6 9 6 6 6-6"/></svg>
+							</button>
+							<button class="icon-btn send" title="Send">
+								<svg viewBox="0 0 24 24"><path d="M4.5 12.5 20 5l-7.5 15.5-2-7z"/></svg>
+							</button>
+						</div>
+
+						<div class="context">
+							<div class="track"><div class="fill"></div></div>
+							<span>125.1k / 262k</span>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+<script>
+	const colors = {
+		"default": "var(--wc-mode-default)",
+		"plan": "var(--wc-mode-plan)",
+		"build": "var(--wc-mode-build)"
+	};
+
+	const shell = document.getElementById("shell");
+	const tabs = Array.from(document.querySelectorAll(".mode"));
+
+	tabs.forEach((tab) => {
+		tab.addEventListener("click", () => {
+			tabs.forEach((t) => t.setAttribute("aria-selected", String(t === tab)));
+			shell.style.setProperty("--composer-border-color", colors[tab.dataset.mode]);
+		});
+	});
+
+	// TTS flame waveform
+	(() => {
+		const height = 96;
+		const wrap = document.getElementById("ttsWrap");
+		const canvas = document.getElementById("ttsCanvas");
+		const ctx = canvas.getContext("2d");
+		const dpr = window.devicePixelRatio || 1;
+		let width = wrap.clientWidth;
+
+		const resize = () => {
+			width = wrap.clientWidth;
+			canvas.width = width * dpr;
+			canvas.height = height * dpr;
+			canvas.style.width = width + "px";
+			canvas.style.height = height + "px";
+			ctx.setTransform(1, 0, 0, 1, 0, 0);
+			ctx.scale(dpr, dpr);
+		};
+
+		resize();
+		new ResizeObserver(resize).observe(wrap);
+
+		const bufferLength = 1024;
+		const data = new Uint8Array(bufferLength);
+		const samples = 64;
+		const binStart = 2;
+		const binEnd = Math.floor(bufferLength * 0.6);
+		const usableBins = binEnd - binStart;
+		let phase = 0;
+
+		const formants = [
+			{ base: 0.08, range: 0.020, speed: 0.71, width: 0.030, gain: 1.00 },
+			{ base: 0.18, range: 0.035, speed: 0.47, width: 0.040, gain: 0.85 },
+			{ base: 0.30, range: 0.050, speed: 0.33, width: 0.055, gain: 0.62 },
+			{ base: 0.44, range: 0.060, speed: 0.24, width: 0.075, gain: 0.40 }
+		];
+
+		const fillSpectrum = (t) => {
+			const s = Math.sin(t * 4.7) * 0.5 + Math.sin(t * 2.9 + 1.1) * 0.3 + Math.sin(t * 1.7 + 2.3) * 0.2;
+			let env = Math.max(0, s * 0.5 + 0.5);
+			env = env ** 1.5;
+			const breath = 0.5 + 0.5 * Math.sin(t * 0.37);
+			env *= 0.30 + 0.70 * breath ** 0.8;
+
+			for (let i = 0; i < bufferLength; i++) {
+				const f = i / bufferLength;
+				let v = 0.10 * Math.exp(-((f / 0.28) ** 2));
+				for (let k = 0; k < formants.length; k++) {
+					const fm = formants[k];
+					const c = fm.base + fm.range * Math.sin(t * fm.speed * 2 + k * 1.9);
+					const d = (f - c) / fm.width;
+					v += fm.gain * Math.exp(-d * d);
+				}
+				v *= env * (0.80 + 0.20 * Math.sin(t * 15 + i * 0.31));
+				v += 0.03 * Math.random() * env;
+				data[i] = Math.max(0, Math.min(255, Math.round(v * 255)));
+			}
+		};
+
+		const drawPass = (pts, hueShift, alpha, yScale) => {
+			ctx.beginPath();
+			ctx.moveTo(0, height);
+			ctx.lineTo(pts[0].x, height - pts[0].y * yScale);
+			for (let i = 0; i < pts.length - 1; i++) {
+				const p0 = pts[i];
+				const p1 = pts[i + 1];
+				const mx = (p0.x + p1.x) / 2;
+				const my = height - ((p0.y + p1.y) / 2) * yScale;
+				ctx.quadraticCurveTo(p0.x, height - p0.y * yScale, mx, my);
+			}
+			ctx.lineTo(width, height);
+			ctx.closePath();
+			const grad = ctx.createLinearGradient(0, height, width, 0);
+			grad.addColorStop(0, `hsla(${(190 + hueShift) % 360}, 90%, 65%, ${alpha})`);
+			grad.addColorStop(0.33, `hsla(${(270 + hueShift) % 360}, 85%, 65%, ${alpha})`);
+			grad.addColorStop(0.66, `hsla(${(320 + hueShift) % 360}, 90%, 65%, ${alpha})`);
+			grad.addColorStop(1, `hsla(${(20 + hueShift) % 360}, 95%, 65%, ${alpha})`);
+			ctx.fillStyle = grad;
+			ctx.fill();
+		};
+
+		const draw = () => {
+			fillSpectrum(performance.now() / 1000);
+			ctx.clearRect(0, 0, width, height);
+			phase = (phase + 0.4) % 360;
+
+			const pts = [];
+			const cx = samples / 2;
+			for (let i = 0; i <= samples; i++) {
+				const binIndex = binStart + Math.floor((i / samples) * usableBins);
+				const v = data[binIndex] / 255;
+				const envelope = 1 - (Math.abs(i - cx) / cx) ** 1.6;
+				const amp = v * envelope;
+				const y = Math.max(2, amp * height * 0.95);
+				const x = (i / samples) * width;
+				pts.push({ x: x, y: y });
+			}
+
+			ctx.globalCompositeOperation = "lighter";
+			ctx.filter = "blur(14px)";
+			drawPass(pts, phase, 0.35, 1.15);
+			ctx.filter = "blur(7px)";
+			drawPass(pts, phase + 60, 0.30, 1.0);
+			ctx.filter = "blur(2px)";
+			drawPass(pts, phase + 120, 0.25, 0.85);
+			ctx.filter = "none";
+			ctx.globalCompositeOperation = "source-over";
+
+			requestAnimationFrame(draw);
+		};
+
+		draw();
+	})();
+</script>
+
+</body>
+</html>

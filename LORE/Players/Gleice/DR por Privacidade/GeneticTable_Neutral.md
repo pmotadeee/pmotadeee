@@ -67,3 +67,4 @@ A tabela foi estruturada para que um LLM possa ler e interpretar as nuances do c
 - **Evolução percebida:** Há um movimento gradual de busca por ferramentas (TDP, IA, psiquiatra) para lidar com a desregulação, mas ainda com recaídas impulsivas.
 
 - **Padrão relacional:** Ela oscila entre "Lover" (busca de conexão) e "Destroyer" (fuga/isolação), criando um ciclo de intensidade e vazio.
+

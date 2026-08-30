@@ -1,0 +1,92 @@
+import { Box, HStack, Text } from "@chakra-ui/react";
+import type { ISlotLiveMetadata, ISlotLiveState } from "@warpcore/shared";
+import React from "react";
+import { useStore } from "@/store";
+
+export const ServerSlots = React.memo(({ serverId }: { serverId: string }) => {
+	const serverSlots = useStore((s) => s.serverSlots[serverId]);
+
+	if (!serverSlots || serverSlots.slots.length === 0) return null;
+	return (
+		<HStack gap="2.5" flexWrap="wrap">
+			{serverSlots.slots.map((slot) => (
+				<SlotPill
+					key={slot.slotId}
+					slot={slot}
+					metadata={serverSlots.metadata[slot.slotId] ?? null}
+				/>
+			))}
+		</HStack>
+	);
+});
+
+interface ISlotPillProps {
+	slot: ISlotLiveState;
+	metadata: ISlotLiveMetadata | null;
+}
+
+function SlotPill({ slot, metadata }: ISlotPillProps) {
+	const isPrompt = slot?.isProcessing && slot?.prefillProgress !== null;
+	const isGen = slot?.isProcessing && slot?.prefillProgress === null;
+
+	let color: string;
+	let label: string;
+	let progress: number;
+
+	if (isPrompt) {
+		color = "var(--wc-accent-yellow-strong)";
+		const pct = Math.round((slot.prefillProgress ?? 0) * 100);
+		label = pct >= 100 ? "pp" : `pp ${pct}%`;
+		progress = slot.prefillProgress ?? 0;
+	} else if (isGen) {
+		color = "var(--wc-accent-blue)";
+		label = slot.generatedTokens > 0 ? `gen ${slot.generatedTokens}` : "gen";
+		progress = 0;
+	} else {
+		color = "var(--wc-text-muted)";
+		label = `idle`;
+		progress = 0;
+	}
+
+	const msgCount = metadata?.messageCount ?? null;
+
+	if (!isGen && !isPrompt) return null;
+	return (
+		<Box
+			position="relative"
+			px="2"
+			py="1"
+			borderRadius="md"
+			bg={`color-mix(in srgb, ${color} 10%, transparent)`}
+			borderWidth="1px"
+			borderColor={`color-mix(in srgb, ${color} 20%, transparent)`}
+			minW="80px"
+			overflow="hidden"
+		>
+			<HStack gap="2" fontSize="10px" fontFamily='"Geist Mono", monospace' color={color}>
+				<Text fontWeight="600">S{slot?.slotId}</Text>
+				<Text>{label}</Text>
+				{msgCount !== null && (
+					<Text color="var(--wc-text-muted)" ml="auto">
+						{msgCount} msg
+					</Text>
+				)}
+			</HStack>
+			<Box
+				position="absolute"
+				left="0"
+				right="0"
+				bottom="0"
+				height="2px"
+				bg="var(--wc-bg-interactive)"
+			>
+				<Box
+					height="100%"
+					width={`${Math.min(100, Math.max(0, progress * 100))}%`}
+					bg={color}
+					transition="width 0.2s ease-out"
+				/>
+			</Box>
+		</Box>
+	);
+}

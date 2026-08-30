@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>warpdrv — annotations</title>
+<style>
+	:root {
+		--wc-bg-page: #0d0d0d;
+		--wc-bg-surface: rgba(255,255,255,0.03);
+		--wc-bg-hover: rgba(255,255,255,0.04);
+		--wc-bg-elevated: #080808;
+		--wc-bg-dialog: #141414;
+		--wc-border-subtle: rgba(255,255,255,0.06);
+		--wc-border-default: rgba(255,255,255,0.1);
+		--wc-border-overlay: rgba(255,255,255,0.14);
+		--wc-text-heading: #d4d4d4;
+		--wc-text-primary: #b0b0b0;
+		--wc-text-secondary: rgba(176,176,176,0.7);
+		--wc-text-tertiary: rgba(176,176,176,0.55);
+		--wc-text-muted: rgba(176,176,176,0.5);
+		--wc-text-faint: rgba(176,176,176,0.35);
+		--wc-text-placeholder: rgba(176,176,176,0.25);
+		--wc-accent-blue: #6ba3ff;
+		--wc-special-code-bg: #060606;
+		--wc-selection: rgba(255,255,255,0.22);
+		--wc-mode-default: rgba(255,255,255,0.1);
+		--wc-mode-plan: #FF9F38;
+		--wc-mode-build: #00B7FF;
+		--wc-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+	}
+
+	* { box-sizing: border-box; }
+
+	body {
+		margin: 0;
+		min-height: 100vh;
+		display: flex;
+		justify-content: center;
+		padding: 40px 24px;
+		background: var(--wc-bg-page);
+		font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+		color: var(--wc-text-primary);
+		-webkit-font-smoothing: antialiased;
+	}
+
+	svg { stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+	.stack { width: 100%; max-width: 830px; }
+
+	/* ---------- chat backdrop ---------- */
+
+	.transcript {
+		position: relative;
+		padding: 4px 4px 26px;
+	}
+
+	.codeblock {
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 9px;
+		background: var(--wc-special-code-bg);
+		padding: 12px 16px;
+		font-family: var(--wc-mono);
+		font-size: 12.5px;
+		line-height: 1.85;
+		color: var(--wc-text-secondary);
+		white-space: pre;
+		overflow-x: auto;
+	}
+
+	.codeblock .dim { color: var(--wc-text-faint); }
+
+	.h-fix {
+		margin: 22px 0 14px;
+		font-size: 15px;
+		font-weight: 700;
+		color: var(--wc-accent-blue);
+	}
+
+	.prose { font-size: 14px; line-height: 1.7; color: var(--wc-text-primary); }
+	.prose strong { color: var(--wc-text-heading); font-weight: 600; }
+	.prose ol { margin: 0; padding-left: 26px; }
+	.prose ol > li { margin: 14px 0; padding-left: 4px; }
+	.prose ul { margin: 8px 0; padding-left: 22px; list-style: none; }
+	.prose ul > li { position: relative; margin: 7px 0; }
+	.prose ul > li::before {
+		content: '';
+		position: absolute;
+		left: -14px;
+		top: 10px;
+		width: 4px;
+		height: 4px;
+		border-radius: 50%;
+		background: var(--wc-text-faint);
+	}
+	.prose li::marker { color: var(--wc-text-muted); }
+
+	code {
+		padding: 2px 6px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 5px;
+		background: var(--wc-special-code-bg);
+		font-family: var(--wc-mono);
+		font-size: 12px;
+		color: var(--wc-text-heading);
+	}
+
+	.sel {
+		background: var(--wc-selection);
+		color: #efefef;
+		border-radius: 2px;
+		box-decoration-break: clone;
+		-webkit-box-decoration-break: clone;
+	}
+
+	.sel code { background: rgba(0,0,0,0.35); border-color: rgba(255,255,255,0.18); color: #efefef; }
+
+	/* ---------- selection popover ---------- */
+
+	.annotate-pop {
+		position: absolute;
+		top: 148px;
+		left: 44px;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 7px 8px;
+		border: 1px solid var(--wc-border-overlay);
+		border-radius: 11px;
+		background: var(--wc-bg-dialog);
+		box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+		z-index: 5;
+	}
+
+	.pop-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border: none;
+		border-radius: 7px;
+		background: transparent;
+		color: var(--wc-text-muted);
+		cursor: pointer;
+	}
+
+	.pop-btn:hover { background: var(--wc-bg-hover); color: var(--wc-text-heading); }
+	.pop-btn svg { width: 15px; height: 15px; }
+
+	.pop-input {
+		width: 200px;
+		height: 30px;
+		padding: 0 11px;
+		border: 1px solid var(--wc-border-default);
+		border-radius: 8px;
+		background: var(--wc-bg-elevated);
+		color: var(--wc-text-primary);
+		font-family: inherit;
+		font-size: 13px;
+		outline: none;
+	}
+
+	.pop-input::placeholder { color: var(--wc-text-placeholder); }
+	.pop-input:focus { border-color: rgba(153,193,255,0.35); }
+
+	/* ---------- annotations panel ---------- */
+
+	.annotations {
+		display: flex;
+		flex-direction: column;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 12px;
+		background: var(--wc-bg-elevated);
+		padding: 12px 14px 14px;
+		box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+	}
+
+	.ann-head { display: flex; align-items: center; padding: 2px 4px 12px; }
+	.ann-head .label { font-size: 12px; font-weight: 500; color: var(--wc-text-secondary); }
+
+	.clear {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		margin-left: auto;
+		border: none;
+		background: transparent;
+		color: var(--wc-text-faint);
+		font-size: 12px;
+		font-family: inherit;
+		cursor: pointer;
+	}
+
+	.clear:hover { color: var(--wc-text-secondary); }
+	.clear svg { width: 12px; height: 12px; }
+
+	.ann-list {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		max-height: 226px;
+		overflow-y: auto;
+		padding-right: 8px;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(255,255,255,0.14) transparent;
+	}
+
+	.ann {
+		position: relative;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 9px;
+		background: var(--wc-bg-surface);
+		padding: 11px 34px 12px 13px;
+	}
+
+	.ann .quote {
+		display: block;
+		font-size: 12.5px;
+		font-style: italic;
+		line-height: 1.5;
+		color: var(--wc-text-tertiary);
+		margin-bottom: 5px;
+	}
+
+	.ann .quote .idx { font-style: normal; font-weight: 600; color: var(--wc-accent-blue); margin-right: 3px; }
+	.ann .note { font-size: 13px; line-height: 1.5; color: var(--wc-text-primary); }
+
+	.ann .dismiss {
+		position: absolute;
+		top: 9px;
+		right: 9px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+		height: 20px;
+		border: none;
+		border-radius: 5px;
+		background: transparent;
+		color: var(--wc-text-faint);
+		cursor: pointer;
+	}
+
+	.ann .dismiss:hover { background: var(--wc-bg-hover); color: var(--wc-text-secondary); }
+	.ann .dismiss svg { width: 12px; height: 12px; }
+
+	/* ---------- composer stub ---------- */
+
+	.composer-shell {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		margin-top: 14px;
+		border-radius: 12px;
+		padding: 8px;
+		background: var(--wc-bg-elevated);
+		box-shadow: 0px 10px 10px 10px rgba(0,0,0,0.15);
+	}
+
+	.composer-gradient-border { position: relative; border: none; }
+
+	.composer-gradient-border::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		padding: 2px;
+		background: radial-gradient(
+			ellipse 80% 150% at 50% 0%,
+			var(--composer-border-color) 0%,
+			transparent 75%
+		);
+		opacity: 1;
+		-webkit-mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		-webkit-mask-composite: xor;
+		mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		mask-composite: exclude;
+		pointer-events: none;
+		transition: background 200ms ease;
+	}
+
+	.row { display: flex; align-items: center; gap: 6px; }
+	.grow { flex: 1; }
+	.modes { display: flex; align-items: center; gap: 2px; }
+
+	.mode {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 30px;
+		padding: 0 10px;
+		border: none;
+		border-radius: 7px;
+		background: transparent;
+		color: var(--wc-text-tertiary);
+		font-size: 13px;
+		font-family: inherit;
+		cursor: pointer;
+		transition: background 140ms ease, color 140ms ease;
+	}
+
+	.mode:hover { background: var(--wc-bg-hover); color: var(--wc-text-secondary); }
+	.mode[aria-selected="true"] { background: color-mix(in srgb, var(--mode-color) 16%, transparent); color: var(--mode-color); }
+	.mode[data-mode="default"] { --mode-color: var(--wc-text-primary); }
+	.mode[data-mode="plan"] { --mode-color: var(--wc-mode-plan); }
+	.mode[data-mode="build"] { --mode-color: var(--wc-mode-build); }
+	.mode svg { width: 13px; height: 13px; }
+
+	.pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 30px;
+		padding: 0 10px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 8px;
+		background: transparent;
+		color: var(--wc-text-tertiary);
+		font-size: 12.5px;
+		font-family: inherit;
+		cursor: pointer;
+	}
+
+	.pill:hover { background: var(--wc-bg-hover); border-color: var(--wc-border-default); }
+	.pill svg { width: 15px; height: 15px; }
+
+	.editor-stub { min-height: 52px; }
+
+	::-webkit-scrollbar { width: 7px; }
+	::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 4px; }
+	::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+
+<div class="stack">
+
+	<div class="transcript">
+
+		<div class="codeblock"><span class="dim">        ↓</span>
+  For each guardrail:
+    <span class="dim">→</span> Call LLM via handlePureCompletion
+    <span class="dim">→</span> JSON.parse(text) <span class="dim">←</span> CAN THROW
+    <span class="dim">→</span> If success: guardrailResults[name] = parsed array
+    <span class="dim">→</span> If fail: console.error() <span class="dim">←</span> GUARDRAIL STUCK AS `false`</div>
+
+		<div class="h-fix">Plan to fix</div>
+
+		<div class="prose">
+			<ol>
+				<li>
+					<strong>Add defensive JSON parsing</strong> in the guardrail runner:
+					<ul>
+						<li><span class="sel">Wrap the <code>JSON.parse</code> call in a try/catch</span></li>
+						<li>Extract the first <code>[...]</code> array from the text using regex</li>
+						<li>Try parsing the extracted JSON</li>
+					</ul>
+				</li>
+				<li>
+					<strong>Update state on failure</strong> in the catch block:
+					<ul>
+						<li>Set the guardrail result to an empty array <code>[]</code> or a special error state</li>
+					</ul>
+				</li>
+			</ol>
+		</div>
+
+		<div class="annotate-pop">
+			<button class="pop-btn" title="Read aloud">
+				<svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+			</button>
+			<button class="pop-btn" title="Dictate note">
+				<svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>
+			</button>
+			<input class="pop-input" placeholder="Annotate…">
+		</div>
+
+	</div>
+
+	<div class="annotations">
+		<div class="ann-head">
+			<span class="label">Annotations (5)</span>
+			<button class="clear">
+				<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+				Clear all
+			</button>
+		</div>
+
+		<div class="ann-list">
+
+			<div class="ann">
+				<span class="quote"><span class="idx">1.</span> "Wrap the JSON.parse call in a try/catch"</span>
+				<div class="note">catch is fine but log the raw text too, we lose it otherwise</div>
+				<button class="dismiss"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+			</div>
+
+			<div class="ann">
+				<span class="quote"><span class="idx">2.</span> "Extract the first [...] array from the text using regex"</span>
+				<div class="note">no regex, the model already returns fenced json — strip the fence</div>
+				<button class="dismiss"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+			</div>
+
+			<div class="ann">
+				<span class="quote"><span class="idx">3.</span> "Set the guardrail result to an empty array [] or a special error state"</span>
+				<div class="note">empty array reads as "passed", use the error state</div>
+				<button class="dismiss"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+			</div>
+
+			<div class="ann">
+				<span class="quote"><span class="idx">4.</span> "GUARDRAIL STUCK AS `false`"</span>
+				<div class="note">this is the actual bug, surface it in the UI not just console</div>
+				<button class="dismiss"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+			</div>
+
+			<div class="ann">
+				<span class="quote"><span class="idx">5.</span> "Call LLM via handlePureCompletion"</span>
+				<div class="note">run these concurrently, they dont depend on each other</div>
+				<button class="dismiss"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+			</div>
+
+		</div>
+	</div>
+
+	<div class="composer-shell composer-gradient-border" id="shell" style="--composer-border-color: var(--wc-mode-plan);">
+		<div class="row">
+			<div class="modes" role="tablist">
+				<button class="mode" data-mode="default" role="tab" aria-selected="false">
+					<svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>
+					Default
+				</button>
+				<button class="mode" data-mode="plan" role="tab" aria-selected="true">
+					<svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>
+					Plan
+				</button>
+				<button class="mode" data-mode="build" role="tab" aria-selected="false">
+					<svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>
+					Build
+				</button>
+			</div>
+			<div class="grow"></div>
+			<button class="pill">
+				<svg viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 8.9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1 1 0 0 1 1.5 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+				Guardrails
+				<svg viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="m6 9 6 6 6-6"/></svg>
+			</button>
+		</div>
+		<div class="editor-stub"></div>
+	</div>
+
+</div>
+
+<script>
+	const colors = {
+		"default": "var(--wc-mode-default)",
+		"plan": "var(--wc-mode-plan)",
+		"build": "var(--wc-mode-build)"
+	};
+
+	const shell = document.getElementById("shell");
+	const tabs = Array.from(document.querySelectorAll(".mode"));
+
+	tabs.forEach((tab) => {
+		tab.addEventListener("click", () => {
+			tabs.forEach((t) => t.setAttribute("aria-selected", String(t === tab)));
+			shell.style.setProperty("--composer-border-color", colors[tab.dataset.mode]);
+		});
+	});
+</script>
+
+</body>
+</html>

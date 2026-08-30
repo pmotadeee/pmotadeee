@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>warpdrv — tool approval</title>
+<style>
+	:root {
+		--wc-bg-page: #0d0d0d;
+		--wc-bg-surface: rgba(255,255,255,0.03);
+		--wc-bg-hover: rgba(255,255,255,0.04);
+		--wc-bg-elevated: #080808;
+		--wc-border-subtle: rgba(255,255,255,0.06);
+		--wc-border-default: rgba(255,255,255,0.1);
+		--wc-text-heading: #d4d4d4;
+		--wc-text-primary: #b0b0b0;
+		--wc-text-secondary: rgba(176,176,176,0.7);
+		--wc-text-tertiary: rgba(176,176,176,0.55);
+		--wc-text-muted: rgba(176,176,176,0.5);
+		--wc-text-faint: rgba(176,176,176,0.35);
+		--wc-accent-green: #85b055;
+		--wc-accent-green-bg-8: rgba(133,176,85,0.1);
+		--wc-accent-green-border: rgba(133,176,85,0.3);
+		--wc-accent-yellow: #ffc845;
+		--wc-accent-yellow-bg-8: rgba(255,200,69,0.1);
+		--wc-accent-yellow-border: rgba(255,200,69,0.3);
+		--wc-accent-red: #ff7b7b;
+		--wc-accent-red-bg-8: rgba(255,123,123,0.1);
+		--wc-accent-red-border: rgba(255,123,123,0.3);
+		--wc-special-code-bg: #060606;
+		--wc-diff-add-bg: rgba(133,176,85,0.10);
+		--wc-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+	}
+
+	* { box-sizing: border-box; }
+
+	body {
+		margin: 0;
+		min-height: 100vh;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 48px 24px;
+		background: var(--wc-bg-page);
+		font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+		color: var(--wc-text-primary);
+		-webkit-font-smoothing: antialiased;
+	}
+
+	svg { stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+	.approval {
+		width: 100%;
+		max-width: 940px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 12px;
+		background: var(--wc-bg-elevated);
+		overflow: hidden;
+		box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+	}
+
+	.head {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		height: 42px;
+		padding: 0 14px;
+		border-bottom: 1px solid var(--wc-border-subtle);
+		font-size: 12px;
+		color: var(--wc-text-muted);
+	}
+
+	.head svg { width: 13px; height: 13px; }
+	.head .grow { flex: 1; }
+
+	.icon-sm {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
+		border: none;
+		border-radius: 6px;
+		background: transparent;
+		color: var(--wc-text-faint);
+		cursor: pointer;
+	}
+
+	.icon-sm:hover { background: var(--wc-bg-hover); color: var(--wc-text-secondary); }
+	.icon-sm svg { width: 14px; height: 14px; }
+
+	.title-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 14px 16px 12px;
+		font-size: 16px;
+	}
+
+	.title-row .verb { color: var(--wc-text-heading); }
+	.title-row .path { color: var(--wc-text-muted); }
+	.title-row .path b { color: var(--wc-text-heading); font-weight: 600; }
+	.title-row .warn { width: 14px; height: 14px; color: var(--wc-accent-yellow); }
+	.title-row .grow { flex: 1; }
+
+	/* ---------- diff ---------- */
+
+	.diff {
+		margin: 0 14px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 8px;
+		background: var(--wc-special-code-bg);
+		overflow: hidden;
+		font-family: var(--wc-mono);
+		font-size: 12.5px;
+	}
+
+	.diff-head {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		height: 30px;
+		padding: 0 10px;
+		border-bottom: 1px solid var(--wc-border-subtle);
+		color: var(--wc-text-faint);
+		font-size: 11.5px;
+	}
+
+	.diff-head svg { width: 12px; height: 12px; }
+
+	.stat { display: inline-flex; gap: 2px; }
+	.stat i { width: 8px; height: 8px; border-radius: 1px; background: var(--wc-accent-green); opacity: 0.75; }
+	.stat i.off { background: rgba(255,255,255,0.12); }
+
+	.diff-body { display: grid; grid-template-columns: 1fr 1fr; }
+	.diff-col { border-right: 1px solid var(--wc-border-subtle); }
+	.diff-col:last-child { border-right: none; }
+
+	.line {
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+		padding: 3px 12px;
+		white-space: pre;
+		line-height: 1.7;
+	}
+
+	.line .ln {
+		min-width: 16px;
+		text-align: right;
+		color: var(--wc-text-faint);
+		user-select: none;
+	}
+
+	.line .code { color: var(--wc-text-secondary); overflow: hidden; text-overflow: ellipsis; }
+	.line.add { background: var(--wc-diff-add-bg); }
+	.line.add .code { color: var(--wc-accent-green); }
+	.line.add .sign { color: var(--wc-accent-green); }
+	.line.blank { min-height: 26px; }
+
+	/* ---------- violations ---------- */
+
+	.violations {
+		margin: 14px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 9px;
+		overflow: hidden;
+	}
+
+	.viol-head {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		height: 42px;
+		padding: 0 12px;
+		cursor: pointer;
+	}
+
+	.viol-head > svg { width: 15px; height: 15px; color: var(--wc-accent-yellow); }
+	.viol-head .grow { flex: 1; }
+	.viol-head .caret { width: 14px; height: 14px; color: var(--wc-text-faint); }
+
+	.count {
+		display: inline-flex;
+		align-items: center;
+		height: 22px;
+		padding: 0 9px;
+		border: 1px solid var(--wc-accent-yellow-border);
+		border-radius: 6px;
+		background: var(--wc-accent-yellow-bg-8);
+		color: var(--wc-accent-yellow);
+		font-size: 11.5px;
+		font-weight: 500;
+	}
+
+	.viol {
+		display: flex;
+		align-items: flex-start;
+		gap: 11px;
+		margin: 0 10px 10px;
+		padding: 13px 12px 14px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 8px;
+		background: var(--wc-bg-surface);
+	}
+
+	.viol > .mark { flex-shrink: 0; width: 16px; height: 16px; color: var(--wc-accent-red); margin-top: 2px; }
+	.viol .body { flex: 1; min-width: 0; }
+
+	.rule {
+		display: inline-block;
+		padding: 2px 7px;
+		margin-right: 8px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 5px;
+		background: var(--wc-special-code-bg);
+		font-family: var(--wc-mono);
+		font-size: 11.5px;
+		color: var(--wc-text-muted);
+		vertical-align: 1px;
+	}
+
+	.viol .msg { font-size: 14px; line-height: 1.5; color: var(--wc-text-heading); }
+
+	.viol .excerpt {
+		display: block;
+		margin-top: 10px;
+		font-family: var(--wc-mono);
+		font-size: 12.5px;
+		font-style: italic;
+		line-height: 1.6;
+		color: var(--wc-text-faint);
+	}
+
+	/* ---------- actions ---------- */
+
+	.actions {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 0 14px 14px;
+	}
+
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 30px;
+		padding: 0 12px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 7px;
+		background: transparent;
+		font-size: 12.5px;
+		font-family: inherit;
+		cursor: pointer;
+	}
+
+	.btn svg { width: 13px; height: 13px; }
+	.btn.allow { border-color: var(--wc-accent-green-border); background: var(--wc-accent-green-bg-8); color: var(--wc-accent-green); }
+	.btn.always { border-color: var(--wc-accent-yellow-border); background: var(--wc-accent-yellow-bg-8); color: var(--wc-accent-yellow); }
+	.btn.deny { border-color: var(--wc-accent-red-border); background: var(--wc-accent-red-bg-8); color: var(--wc-accent-red); }
+	.btn:hover { filter: brightness(1.25); }
+</style>
+</head>
+<body>
+
+<div class="approval">
+
+	<div class="head">
+		<svg viewBox="0 0 24 24"><path d="M14.5 5.5a3.5 3.5 0 1 0 4 4L21 7l-2-2-2 2-2-2 2-2z"/><path d="m13.5 10.5-9 9 2 2 9-9"/></svg>
+		Tool Calls (1 Pending)
+		<div class="grow"></div>
+		<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+	</div>
+
+	<div class="title-row">
+		<span class="verb">Edit</span>
+		<span class="path">packages/app/src/<b>main.tsx</b></span>
+		<svg class="warn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+		<div class="grow"></div>
+		<button class="icon-sm"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.6 1.6 0 0 0-2.8 1.2 2 2 0 1 1-4 0 1.6 1.6 0 0 0-2.8-1.2 2 2 0 1 1-2.8-2.8A1.6 1.6 0 0 0 3.3 13a2 2 0 1 1 0-4 1.6 1.6 0 0 0 1.2-2.8 2 2 0 1 1 2.8-2.8A1.6 1.6 0 0 0 10.1 3.3a2 2 0 1 1 4 0 1.6 1.6 0 0 0 2.8 1.2 2 2 0 1 1 2.8 2.8A1.6 1.6 0 0 0 20.7 11a2 2 0 1 1 0 4z"/></svg></button>
+	</div>
+
+	<div class="diff">
+		<div class="diff-head">
+			<svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+			<span>1</span>
+			<span class="stat"><i></i><i></i><i></i><i class="off"></i><i class="off"></i><i class="off"></i></span>
+		</div>
+		<div class="diff-body">
+
+			<div class="diff-col">
+				<div class="line"><span class="ln">1</span><span class="code">import "./theme/theme-solarized-light.scss";</span></div>
+				<div class="line blank"><span class="ln">2</span><span class="code"></span></div>
+				<div class="line"><span class="ln">3</span><span class="code">// Global error reporting to server</span></div>
+			</div>
+
+			<div class="diff-col">
+				<div class="line"><span class="ln">1</span><span class="code">import "./theme/theme-solarized-light.scss";</span></div>
+				<div class="line add"><span class="ln">2</span><span class="code"><span class="sign">+ </span>import "./theme/theme-dark-violet.scss";</span></div>
+				<div class="line blank"><span class="ln">3</span><span class="code"></span></div>
+				<div class="line"><span class="ln">4</span><span class="code">// Global error reporting to server</span></div>
+			</div>
+
+		</div>
+	</div>
+
+	<div class="violations">
+		<div class="viol-head">
+			<svg viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 8.9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1 1 0 0 1 1.5 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+			<span class="count">1 Violations</span>
+			<div class="grow"></div>
+			<svg class="caret" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></svg>
+		</div>
+
+		<div class="viol">
+			<svg class="mark" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></svg>
+			<div class="body">
+				<div class="msg"><span class="rule">code_review</span>AI states intent to create a new file but only executes a patch, deviating from user instructions.</div>
+				<span class="excerpt">I'll start by adding the import to `main.tsx`, then create the new theme file.</span>
+			</div>
+			<button class="icon-sm"><svg viewBox="0 0 24 24"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></svg></button>
+		</div>
+	</div>
+
+	<div class="actions">
+		<button class="btn allow">
+			<svg viewBox="0 0 24 24"><path d="m4 12.5 5 5L20 6.5"/></svg>
+			Allow Once
+		</button>
+		<button class="btn always">
+			<svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+			Allow Always
+		</button>
+		<button class="btn deny">
+			<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+			Deny
+		</button>
+	</div>
+
+</div>
+
+</body>
+</html>

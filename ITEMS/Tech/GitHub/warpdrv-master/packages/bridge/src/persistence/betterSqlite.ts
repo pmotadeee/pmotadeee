@@ -1,0 +1,2510 @@
+// ============================================================
+// warpbridge/src/persistence/betterSqlite.ts
+// SQLite persistence using better-sqlite3. Node only.
+// Schema mirrors WarpCore's chat.db. Table prefix configurable.
+// ============================================================
+
+import type {
+	EReasoningEffort,
+	IAgent,
+	ICodeGraphEdge,
+	ICodeGraphFile,
+	ICodeGraphNode,
+	ICodeGraphSearchOptions,
+	INotification,
+	INotificationCreatePayload,
+	INotificationUpdatePayload,
+} from "@warpcore/shared";
+import { genNotificationId } from "@warpcore/shared";
+import Database from "better-sqlite3";
+import fs from "fs";
+import path from "path";
+import type {
+	IChatMessage,
+	IChatThread,
+	IFolder,
+	IListThreadsOptions,
+	IMessagePart,
+	IReorderFolderEntry,
+	ISearchOptions,
+	ISearchResult,
+	ISearchThreadResult,
+	IServerPermission,
+	IThreadConfig,
+	IThreadToolPermission,
+	IToolAttachment,
+	IToolCall,
+	IToolPermission,
+	IWorkspace,
+	TFolderId,
+	TMessageId,
+	TThreadId,
+	TToolCallId,
+} from "../types";
+import {
+	type EChatRole,
+	EMessagePartType,
+	type EToolApprovalMode,
+	EToolCallStatus,
+} from "../types";
+import type { IPersistence } from "../types/interfaces";
+import { folderNameToTopic } from "../util/topic";
+
+export interface IBetterSqlitePersistenceOptions {
+	// Prefix prepended to all table names. Default: '' (matches WarpCore).
+	tablePrefix?: string;
+}
+
+// ============================================================
+// Table name helpers
+// ============================================================
+function buildTableNames(prefix: string) {
+	return {
+		folders: `${prefix}folders`,
+		threads: `${prefix}threads`,
+		threadConfigs: `${prefix}thread_configs`,
+		messages: `${prefix}messages`,
+		messageParts: `${prefix}message_parts`,
+		toolCalls: `${prefix}tool_calls`,
+		serverPermissions: `${prefix}mcp_server_permissions`,
+		toolPermissions: `${prefix}mcp_tool_permissions`,
+		threadToolPermissions: `${prefix}thread_tool_permissions`,
+		threadAttachedTools: `${prefix}thread_attached_tools`,
+		embeddingIndex: `${prefix}embedding_index`,
+		workspaces: `${prefix}workspaces`,
+		workspaceStates: `${prefix}workspace_states`,
+		threadStates: `${prefix}thread_states`,
+		messageStates: `${prefix}message_states`,
+		threadFts: `${prefix}threads_fts`,
+		messagePartsFts: `${prefix}message_parts_fts`,
+		codeGraphFiles: `${prefix}code_graph_files`,
+		codeGraphNodes: `${prefix}code_graph_nodes`,
+		codeGraphEdges: `${prefix}code_graph_edges`,
+		codeGraphNodesFts: `${prefix}code_graph_nodes_fts`,
+		guardrails: `${prefix}guardrails`,
+		modes: `${prefix}modes`,
+		prompts: `${prefix}prompts`,
+		notifications: `${prefix}notifications`,
+		agents: `${prefix}agents`,
+	};
+}
+
+function buildSchema(t: ReturnType<typeof buildTableNames>): string {
+	return `
+		CREATE TABLE IF NOT EXISTS ${t.folders} (
+			id TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			topic TEXT NOT NULL DEFAULT '' UNIQUE,
+			parentId TEXT,
+			sortOrder INTEGER NOT NULL DEFAULT 0,
+			createdAt INTEGER NOT NULL
+		);
+		CREATE TABLE IF NOT EXISTS ${t.threads} (
+			id TEXT PRIMARY KEY,
+			title TEXT NOT NULL DEFAULT 'New Chat',
+			folderId TEXT,
+			parentId TEXT,
+			systemPrompt TEXT NOT NULL DEFAULT '',
+			meta TEXT NOT NULL DEFAULT '{}',
+			totalPromptTokens INTEGER NOT NULL DEFAULT 0,
+			totalCompletionTokens INTEGER NOT NULL DEFAULT 0,
+			createdAt INTEGER NOT NULL,
+			updatedAt INTEGER NOT NULL
+		);
+		CREATE TABLE IF NOT EXISTS ${t.threadConfigs} (
+			threadId TEXT PRIMARY KEY,
+			presetId TEXT,
+			systemPrompt TEXT NOT NULL DEFAULT '',
+			params TEXT NOT NULL DEFAULT '{}'
+		);
+		CREATE TABLE IF NOT EXISTS ${t.messages} (
+			id TEXT PRIMARY KEY,
+			parentId TEXT,
+			threadId TEXT NOT NULL,
+			role TEXT NOT NULL,
+			stats TEXT,
+			createdAt INTEGER NOT NULL
+		);
+		CREATE TABLE IF NOT EXISTS ${t.messageParts} (
+			id TEXT PRIMARY KEY,
+			messageId TEXT NOT NULL,
+			type TEXT NOT NULL,
+			orderIndex INTEGER NOT NULL,
+			text TEXT,
+			toolCallId TEXT,
+			data TEXT,
+			mimeType TEXT,
+			fileName TEXT,
+			fileSize INTEGER,
+			extractedText TEXT
+		);
+		CREATE TABLE IF NOT EXISTS ${t.toolCalls} (
+			id TEXT PRIMARY KEY,
+			messageId TEXT NOT NULL,
+			threadId TEXT NOT NULL,
+			serverName TEXT NOT NULL,
+			toolName TEXT NOT NULL,
+			arguments TEXT NOT NULL DEFAULT '{}',
+			result TEXT,
+			status TEXT NOT NULL DEFAULT 'PENDING',
+			error TEXT,
+			createdAt INTEGER NOT NULL,
+			resolvedAt INTEGER
+		);
+		CREATE TABLE IF NOT EXISTS ${t.serverPermissions} (
+			serverName TEXT PRIMARY KEY,
+			enabled INTEGER NOT NULL DEFAULT 1
+		);
+		CREATE TABLE IF NOT EXISTS ${t.toolPermissions} (
+			serverName TEXT NOT NULL,
+			toolName TEXT NOT NULL,
+			enabled INTEGER NOT NULL DEFAULT 1,
+			approvalMode TEXT NOT NULL DEFAULT 'ASK',
+			PRIMARY KEY (serverName, toolName)
+		);
+		CREATE TABLE IF NOT EXISTS ${t.threadToolPermissions} (
+			threadId TEXT NOT NULL,
+			serverName TEXT NOT NULL,
+			toolName TEXT NOT NULL,
+			enabled INTEGER NOT NULL DEFAULT 1,
+			approvalMode TEXT NOT NULL DEFAULT 'ASK',
+			PRIMARY KEY (threadId, serverName, toolName)
+		);
+		CREATE TABLE IF NOT EXISTS ${t.threadAttachedTools} (
+			threadId TEXT PRIMARY KEY,
+			attachAllTools INTEGER NOT NULL DEFAULT 1,
+			tools TEXT NOT NULL DEFAULT '[]'
+		);
+		CREATE TABLE IF NOT EXISTS ${t.embeddingIndex} (
+			messageId TEXT NOT NULL,
+			threadId TEXT NOT NULL,
+			modelId TEXT NOT NULL,
+			topic TEXT NOT NULL,
+			embeddedAt INTEGER NOT NULL,
+			PRIMARY KEY (messageId, modelId, topic)
+		);
+		CREATE INDEX IF NOT EXISTS idx_${t.embeddingIndex}_thread ON ${t.embeddingIndex}(threadId, modelId, topic);
+		CREATE INDEX IF NOT EXISTS idx_${t.threads}_folder ON ${t.threads}(folderId);
+		CREATE INDEX IF NOT EXISTS idx_${t.threads}_updated ON ${t.threads}(updatedAt);
+		CREATE INDEX IF NOT EXISTS idx_${t.messages}_thread ON ${t.messages}(threadId);
+		CREATE INDEX IF NOT EXISTS idx_${t.messages}_parent ON ${t.messages}(parentId);
+		CREATE INDEX IF NOT EXISTS idx_${t.messageParts}_message ON ${t.messageParts}(messageId, orderIndex);
+		CREATE INDEX IF NOT EXISTS idx_${t.toolCalls}_message ON ${t.toolCalls}(messageId);
+		CREATE INDEX IF NOT EXISTS idx_${t.toolCalls}_thread ON ${t.toolCalls}(threadId);
+		CREATE INDEX IF NOT EXISTS idx_${t.toolCalls}_status ON ${t.toolCalls}(status);
+		CREATE TABLE IF NOT EXISTS ${t.workspaces} (
+			folderId TEXT PRIMARY KEY REFERENCES folders(id),
+			data TEXT NOT NULL DEFAULT '{}'
+		);
+		CREATE TABLE IF NOT EXISTS ${t.workspaceStates} (
+			folderId TEXT PRIMARY KEY,
+			data TEXT NOT NULL DEFAULT '{}'
+		);
+		CREATE TABLE IF NOT EXISTS ${t.threadStates} (
+			threadId TEXT PRIMARY KEY,
+			data TEXT NOT NULL DEFAULT '{}'
+		);
+		CREATE TABLE IF NOT EXISTS ${t.messageStates} (
+			messageId TEXT PRIMARY KEY,
+			data TEXT NOT NULL DEFAULT '{}'
+		);
+
+		-- FTS5 — full-text search on thread titles and message content
+		-- External-content mode: snippet() reads from backing table, no storage duplication
+		-- NOTE: rowid stability assumed (better-sqlite3 does not auto-vacuum).
+		-- If VACUUM is ever run manually, re-initialize to re-backfill FTS tables.
+		CREATE VIRTUAL TABLE IF NOT EXISTS ${t.threadFts} USING fts5(
+			title,
+			tokenize = 'porter unicode61'
+		);
+		CREATE VIRTUAL TABLE IF NOT EXISTS ${t.messagePartsFts} USING fts5(
+			text,
+			tokenize = 'porter unicode61'
+		);
+
+		-- Triggers: threads_fts
+		CREATE TRIGGER IF NOT EXISTS threads_ai AFTER INSERT ON ${t.threads} BEGIN
+			INSERT INTO ${t.threadFts}(rowid, title) VALUES (new.rowid, new.title);
+		END;
+		CREATE TRIGGER IF NOT EXISTS threads_ad AFTER DELETE ON ${t.threads} BEGIN
+			DELETE FROM ${t.threadFts} WHERE rowid = old.rowid;
+		END;
+		CREATE TRIGGER IF NOT EXISTS threads_au AFTER UPDATE ON ${t.threads} BEGIN
+			DELETE FROM ${t.threadFts} WHERE rowid = old.rowid;
+			INSERT INTO ${t.threadFts}(rowid, title) VALUES (new.rowid, new.title);
+		END;
+
+		-- Triggers: message_parts_fts
+		-- Only index TEXT, REASONING, and ATTACHMENT.extractedText
+		CREATE TRIGGER IF NOT EXISTS mp_ai AFTER INSERT ON ${t.messageParts}
+		WHEN (new.type IN ('text','reasoning') AND new.text IS NOT NULL AND length(new.text) > 0)
+		   OR (new.type = 'attachment' AND new.extractedText IS NOT NULL AND length(new.extractedText) > 0)
+		BEGIN
+			INSERT INTO ${t.messagePartsFts}(rowid, text)
+			VALUES (new.rowid, CASE WHEN new.type = 'attachment' THEN new.extractedText ELSE new.text END);
+		END;
+		CREATE TRIGGER IF NOT EXISTS mp_ad AFTER DELETE ON ${t.messageParts} BEGIN
+			DELETE FROM ${t.messagePartsFts} WHERE rowid = old.rowid;
+		END;
+		CREATE TRIGGER IF NOT EXISTS mp_au AFTER UPDATE ON ${t.messageParts}
+		WHEN (old.type IN ('text','reasoning','attachment') OR new.type IN ('text','reasoning','attachment'))
+		BEGIN
+			DELETE FROM ${t.messagePartsFts} WHERE rowid = old.rowid;
+			INSERT INTO ${t.messagePartsFts}(rowid, text)
+			SELECT new.rowid, CASE WHEN new.type = 'attachment' THEN new.extractedText ELSE new.text END
+			WHERE (new.type IN ('text','reasoning') AND new.text IS NOT NULL AND length(new.text) > 0)
+			   OR (new.type = 'attachment' AND new.extractedText IS NOT NULL AND length(new.extractedText) > 0);
+		END;
+
+		CREATE TABLE IF NOT EXISTS ${t.codeGraphFiles} (
+			id TEXT PRIMARY KEY,
+			projectId TEXT NOT NULL,
+			filePath TEXT NOT NULL,
+			language TEXT NOT NULL,
+			mtime INTEGER NOT NULL,
+			contentHash TEXT NOT NULL,
+			indexedAt INTEGER NOT NULL,
+			UNIQUE(projectId, filePath)
+		);
+		CREATE INDEX IF NOT EXISTS idx_${t.codeGraphFiles}_project ON ${t.codeGraphFiles}(projectId);
+		CREATE INDEX IF NOT EXISTS idx_${t.codeGraphFiles}_hash ON ${t.codeGraphFiles}(projectId, contentHash);
+
+		CREATE TABLE IF NOT EXISTS ${t.codeGraphNodes} (
+			id TEXT NOT NULL,
+			filePath TEXT NOT NULL,
+			projectId TEXT NOT NULL,
+			symbol TEXT NOT NULL,
+			kind TEXT NOT NULL,
+			language TEXT NOT NULL,
+			startLine INTEGER NOT NULL,
+			endLine INTEGER NOT NULL,
+			startCol INTEGER NOT NULL,
+			endCol INTEGER NOT NULL,
+			signature TEXT,
+			isExported INTEGER DEFAULT 0,
+			PRIMARY KEY (projectId, id)
+		);
+		CREATE INDEX IF NOT EXISTS idx_${t.codeGraphNodes}_project ON ${t.codeGraphNodes}(projectId);
+		CREATE INDEX IF NOT EXISTS idx_${t.codeGraphNodes}_file ON ${t.codeGraphNodes}(filePath);
+		CREATE INDEX IF NOT EXISTS idx_${t.codeGraphNodes}_symbol ON ${t.codeGraphNodes}(symbol);
+		CREATE INDEX IF NOT EXISTS idx_${t.codeGraphNodes}_kind ON ${t.codeGraphNodes}(kind);
+
+		CREATE TABLE IF NOT EXISTS ${t.codeGraphEdges} (
+			id TEXT PRIMARY KEY,
+			projectId TEXT NOT NULL,
+			sourceId TEXT NOT NULL,
+			filePath TEXT NOT NULL,
+			targetSymbol TEXT NOT NULL,
+			edgeType TEXT NOT NULL
+		);
+		CREATE INDEX IF NOT EXISTS idx_${t.codeGraphEdges}_project ON ${t.codeGraphEdges}(projectId);
+		CREATE INDEX IF NOT EXISTS idx_${t.codeGraphEdges}_source ON ${t.codeGraphEdges}(sourceId);
+		CREATE INDEX IF NOT EXISTS idx_${t.codeGraphEdges}_target ON ${t.codeGraphEdges}(targetSymbol);
+		CREATE INDEX IF NOT EXISTS idx_${t.codeGraphEdges}_file ON ${t.codeGraphEdges}(filePath);
+
+		CREATE VIRTUAL TABLE IF NOT EXISTS ${t.codeGraphNodesFts} USING fts5(
+			nodeId, symbol, kind, signature
+		);
+
+		CREATE TABLE IF NOT EXISTS ${t.guardrails} (
+			id TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			serverId TEXT NOT NULL DEFAULT '',
+			promptId TEXT,
+			prompt TEXT,
+			triggerOnTools TEXT NOT NULL DEFAULT '[]',
+			inferenceParams TEXT NOT NULL DEFAULT '{}',
+			messagesCount INTEGER DEFAULT 0,
+			includeBaseMessage INTEGER DEFAULT 0
+		);
+
+			CREATE TABLE IF NOT EXISTS ${t.modes} (
+					id TEXT PRIMARY KEY,
+					name TEXT NOT NULL,
+					scope TEXT NOT NULL DEFAULT 'global',
+					color TEXT NOT NULL DEFAULT '#a78bfa',
+					promptId TEXT,
+					prompt TEXT,
+					allowedTools TEXT NOT NULL DEFAULT '[]',
+					allowedAgents TEXT NOT NULL DEFAULT '[]',
+					activeGuardrails TEXT NOT NULL DEFAULT '[]'
+				);
+
+				CREATE TABLE IF NOT EXISTS ${t.prompts} (
+					id TEXT PRIMARY KEY,
+					name TEXT NOT NULL,
+					content TEXT NOT NULL,
+					meta TEXT DEFAULT NULL,
+					created_at INTEGER NOT NULL,
+						updated_at INTEGER NOT NULL
+						);
+
+						-- Notifications
+						CREATE TABLE IF NOT EXISTS ${t.notifications} (
+							id TEXT PRIMARY KEY,
+							threadId TEXT NOT NULL,
+							notificationType TEXT NOT NULL,
+							notificationSubtype TEXT NOT NULL DEFAULT '',
+							senderType TEXT NOT NULL DEFAULT '',
+							senderId TEXT NOT NULL DEFAULT '',
+							payload TEXT NOT NULL DEFAULT '{}',
+							consumed INTEGER NOT NULL DEFAULT 0,
+							hidden INTEGER NOT NULL DEFAULT 0,
+							createdAt INTEGER NOT NULL
+						);
+							CREATE INDEX IF NOT EXISTS idx_${t.notifications}_thread ON ${t.notifications}(threadId);
+							CREATE INDEX IF NOT EXISTS idx_${t.notifications}_created ON ${t.notifications}(createdAt DESC);
+
+							-- Agents
+							CREATE TABLE IF NOT EXISTS ${t.agents} (
+								id TEXT PRIMARY KEY,
+								name TEXT NOT NULL UNIQUE,
+								description TEXT NOT NULL DEFAULT '',
+								meta TEXT NOT NULL DEFAULT '{}',
+								created_at INTEGER NOT NULL,
+								updated_at INTEGER NOT NULL
+							);
+						`;
+}
+
+// ============================================================
+// BetterSqlitePersistence
+// ============================================================
+interface IAgentMeta {
+	serverId: string;
+	promptId?: string;
+	tools: IToolAttachment[];
+	autoApproveTools: IToolAttachment[];
+	reasoningEffort?: EReasoningEffort;
+	guardrails: string[];
+}
+
+export class SqlitePersistence implements IPersistence {
+	private db: Database.Database | null = null;
+	private dbPath: string;
+	private t: ReturnType<typeof buildTableNames>;
+
+	constructor(dbPath: string, options: IBetterSqlitePersistenceOptions = {}) {
+		this.dbPath = dbPath;
+		this.t = buildTableNames(options.tablePrefix ?? "");
+	}
+
+	async init(): Promise<void> {
+		const dir = path.dirname(this.dbPath);
+		if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+		this.db = new Database(this.dbPath, {
+			nativeBinding: (process as any).pkg
+				? path.join(
+						process.env.WARPCORE_RESOURCE_DIR ?? path.dirname(process.execPath),
+						"binaries",
+						"better_sqlite3.node",
+					)
+				: undefined,
+		});
+
+		this.db.pragma("journal_mode = WAL");
+		this.db.pragma("foreign_keys = ON");
+		this.migrateCodeGraphSchema();
+		this.db.exec(buildSchema(this.t));
+		this.runMigrations();
+	}
+
+	private migrateCodeGraphSchema(): void {
+		try {
+			const cols = this.db!.prepare(
+				`PRAGMA table_info(${this.t.codeGraphEdges})`,
+			).all() as Array<{ name: string }>;
+			if (cols.length === 0) return;
+			if (cols.some((c) => c.name === "projectId")) return;
+			this.db!.exec(`
+					DROP TABLE IF EXISTS ${this.t.codeGraphNodesFts};
+					DROP TABLE IF EXISTS ${this.t.codeGraphEdges};
+					DROP TABLE IF EXISTS ${this.t.codeGraphNodes};
+					DROP TABLE IF EXISTS ${this.t.codeGraphFiles};
+				`);
+			console.log("[migration] Dropped code graph tables for multi-project rebuild");
+		} catch (err) {
+			console.error("[migration] Code graph rebuild failed:", err);
+		}
+	}
+	private runMigrations(): void {
+		const columnSchema = [
+			{ name: "data", type: "TEXT" },
+			{ name: "mimeType", type: "TEXT" },
+			{ name: "fileName", type: "TEXT" },
+			{ name: "fileSize", type: "INTEGER" },
+			{ name: "extractedText", type: "TEXT" },
+		];
+		for (const col of columnSchema) {
+			try {
+				this.db!.exec(
+					`ALTER TABLE ${this.t.messageParts} ADD COLUMN ${col.name} ${col.type}`,
+				);
+			} catch {
+				// Column already exists (SQLite returns error on duplicate ADD COLUMN)
+			}
+		}
+
+		// Add topic column to folders, populate from name
+		try {
+			this.db!.exec(
+				`ALTER TABLE ${this.t.folders} ADD COLUMN topic TEXT NOT NULL DEFAULT ''`,
+			);
+			const folders = this.db!.prepare(
+				`SELECT id, name FROM ${this.t.folders}`,
+			).all() as Array<{ id: string; name: string }>;
+			for (const f of folders) {
+				this.db!.prepare(`UPDATE ${this.t.folders} SET topic = ? WHERE id = ?`).run(
+					folderNameToTopic(f.name),
+					f.id,
+				);
+			}
+			console.log(`[migration] Added topic to ${folders.length} folders`);
+		} catch {
+			// Column already exists
+		}
+
+		// Add parentId column to threads (for nested/sub-threads)
+		try {
+			this.db!.exec(`ALTER TABLE ${this.t.threads} ADD COLUMN parentId TEXT DEFAULT NULL`);
+			console.log("[migration] Added parentId to threads table");
+		} catch {
+			// Column already exists
+		}
+
+		// FTS5 — standard mode, populate index via INSERT
+		try {
+			const txn = this.db!.transaction(() => {
+				this.db!.prepare(
+					`INSERT INTO ${this.t.threadFts}(rowid, title) SELECT rowid, title FROM ${this.t.threads}`,
+				).run();
+				this.db!.prepare(
+					`INSERT INTO ${this.t.messagePartsFts}(rowid, text)
+					 SELECT rowid, CASE WHEN type IN ('text','reasoning') THEN text ELSE extractedText END
+					 FROM ${this.t.messageParts}
+					 WHERE (type IN ('text','reasoning') AND text IS NOT NULL AND length(text) > 0)
+					    OR (type = 'attachment' AND extractedText IS NOT NULL AND length(extractedText) > 0)`,
+				).run();
+			});
+			txn();
+
+			const mpCount = this.db!.prepare(
+				`SELECT count(*) as c FROM ${this.t.messagePartsFts}`,
+			).get() as { c: number };
+			const thCount = this.db!.prepare(
+				`SELECT count(*) as c FROM ${this.t.threadFts}`,
+			).get() as { c: number };
+			console.log(`[FTS5] Indexed ${mpCount.c} message parts, ${thCount.c} threads`);
+		} catch (err) {
+			console.error("[FTS5] Index build failed:", err);
+		}
+
+		// State tables
+		try {
+			this.db!.exec(`
+					CREATE TABLE IF NOT EXISTS ${this.t.workspaceStates} (
+						folderId TEXT PRIMARY KEY,
+						data TEXT NOT NULL DEFAULT '{}'
+					);
+					CREATE TABLE IF NOT EXISTS ${this.t.threadStates} (
+						threadId TEXT PRIMARY KEY,
+						data TEXT NOT NULL DEFAULT '{}'
+					);
+					CREATE TABLE IF NOT EXISTS ${this.t.messageStates} (
+						messageId TEXT PRIMARY KEY,
+						data TEXT NOT NULL DEFAULT '{}'
+					);
+				`);
+		} catch (err) {
+			console.error("[migration] State tables creation failed:", err);
+		}
+
+		// Migration: guardrails table gets id column (name was PK, now id is PK)
+		try {
+			const cols = this.db!.prepare(
+				`PRAGMA table_info(${this.t.guardrails})`,
+			).all() as Array<{ name: string }>;
+			if (cols.some((c) => c.name === "id")) {
+				// Already migrated
+			} else {
+				const rows = this.db!.prepare(`SELECT * FROM ${this.t.guardrails}`).all() as Array<
+					Record<string, unknown>
+				>;
+				this.db!.exec(`DROP TABLE ${this.t.guardrails}`);
+				this.db!.exec(`
+					CREATE TABLE ${this.t.guardrails} (
+						id TEXT PRIMARY KEY,
+						name TEXT NOT NULL,
+						serverId TEXT NOT NULL DEFAULT '',
+						prompt TEXT,
+						triggerOnTools TEXT NOT NULL DEFAULT '[]',
+						inferenceParams TEXT NOT NULL DEFAULT '{}',
+						messagesCount INTEGER DEFAULT 0,
+						includeBaseMessage INTEGER DEFAULT 0
+					)
+				`);
+				for (const r of rows) {
+					this.db!.prepare(
+						`INSERT INTO ${this.t.guardrails} (id, name, serverId, prompt, triggerOnTools, inferenceParams, messagesCount, includeBaseMessage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+					).run(
+						r.name as string,
+						r.name as string,
+						r.serverId as string,
+						(r.prompt as string) ?? null,
+						r.triggerOnTools as string,
+						r.inferenceParams as string,
+						r.messagesCount as number,
+						(r.includeBaseMessage as number) ?? 0,
+					);
+				}
+				console.log(
+					`[migration] guardrails: added id column, migrated ${rows.length} rows`,
+				);
+			}
+		} catch (err) {
+			console.error("[migration] guardrails id migration failed:", err);
+		}
+
+		// Migration: add promptId column to guardrails and modes tables
+		try {
+			const grCols = this.db!.prepare(
+				`PRAGMA table_info(${this.t.guardrails})`,
+			).all() as Array<{ name: string }>;
+			if (!grCols.some((c) => c.name === "promptId")) {
+				this.db!.exec(
+					`ALTER TABLE ${this.t.guardrails} ADD COLUMN promptId TEXT DEFAULT NULL`,
+				);
+				console.log("[migration] Added promptId to guardrails table");
+			}
+		} catch (err) {
+			console.error("[migration] Failed to add promptId to guardrails table:", err);
+		}
+
+		try {
+			const modeCols = this.db!.prepare(`PRAGMA table_info(${this.t.modes})`).all() as Array<{
+				name: string;
+			}>;
+			if (!modeCols.some((c) => c.name === "promptId")) {
+				this.db!.exec(`ALTER TABLE ${this.t.modes} ADD COLUMN promptId TEXT DEFAULT NULL`);
+				console.log("[migration] Added promptId to modes table");
+			}
+		} catch (err) {
+			console.error("[migration] Failed to add promptId to modes table:", err);
+		}
+
+		// Migration: add allowedAgents column to modes table
+		try {
+			const modeCols2 = this.db!.prepare(
+				`PRAGMA table_info(${this.t.modes})`,
+			).all() as Array<{
+				name: string;
+			}>;
+			if (!modeCols2.some((c) => c.name === "allowedAgents")) {
+				this.db!.exec(
+					`ALTER TABLE ${this.t.modes} ADD COLUMN allowedAgents TEXT NOT NULL DEFAULT '[]'`,
+				);
+				console.log("[migration] Added allowedAgents to modes table");
+			}
+		} catch (err) {
+			console.error("[migration] Failed to add allowedAgents to modes table:", err);
+		}
+	}
+
+	// ============================================================
+	// Folders
+	// ============================================================
+	async createFolder(folder: IFolder): Promise<void> {
+		this.db!.prepare(
+			`INSERT INTO ${this.t.folders} (id, name, topic, parentId, sortOrder, createdAt) VALUES (?, ?, ?, ?, ?, ?)`,
+		).run(
+			folder.id,
+			folder.name,
+			folder.topic,
+			folder.parentId,
+			folder.sortOrder,
+			folder.createdAt,
+		);
+	}
+
+	async getFolder(id: TFolderId): Promise<IFolder | null> {
+		return (
+			(this.db!.prepare(`SELECT * FROM ${this.t.folders} WHERE id = ?`).get(id) as
+				| IFolder
+				| undefined) ?? null
+		);
+	}
+
+	async listFolders(): Promise<IFolder[]> {
+		return this.db!.prepare(
+			`SELECT * FROM ${this.t.folders} ORDER BY sortOrder ASC, createdAt ASC`,
+		).all() as IFolder[];
+	}
+
+	async getFolderByTopic(topic: string): Promise<IFolder | null> {
+		return (
+			(this.db!.prepare(`SELECT * FROM ${this.t.folders} WHERE topic = ?`).get(topic) as
+				| IFolder
+				| undefined) ?? null
+		);
+	}
+
+	async isTopicUnique(topic: string, excludeFolderId?: TFolderId): Promise<boolean> {
+		if (topic === "global") return false;
+		const existing = await this.getFolderByTopic(topic);
+		if (!existing) return true;
+		return existing.id !== excludeFolderId;
+	}
+
+	async updateFolder(id: TFolderId, updates: Partial<IFolder>): Promise<void> {
+		const sets: string[] = [];
+		const vals: unknown[] = [];
+		if (updates.name !== undefined) {
+			sets.push("name = ?");
+			vals.push(updates.name);
+		}
+		if (updates.topic !== undefined) {
+			sets.push("topic = ?");
+			vals.push(updates.topic);
+		}
+		if (updates.parentId !== undefined) {
+			sets.push("parentId = ?");
+			vals.push(updates.parentId);
+		}
+		if (updates.sortOrder !== undefined) {
+			sets.push("sortOrder = ?");
+			vals.push(updates.sortOrder);
+		}
+		if (sets.length === 0) return;
+		vals.push(id);
+		this.db!.prepare(`UPDATE ${this.t.folders} SET ${sets.join(", ")} WHERE id = ?`).run(
+			...vals,
+		);
+	}
+
+	async deleteFolder(id: TFolderId): Promise<void> {
+		return this.db!.transaction(() => {
+			// Delete dependent workspace row first to satisfy the FK constraint
+			this.db!.prepare(`DELETE FROM ${this.t.workspaces} WHERE folderId = ?`).run(id);
+			this.db!.prepare(`DELETE FROM ${this.t.folders} WHERE id = ?`).run(id);
+		})();
+	}
+
+	async reorderFolders(entries: IReorderFolderEntry[]): Promise<void> {
+		const stmt = this.db!.prepare(`UPDATE ${this.t.folders} SET sortOrder = ? WHERE id = ?`);
+		const txn = this.db!.transaction((items: IReorderFolderEntry[]) => {
+			for (const entry of items) {
+				stmt.run(entry.sortOrder, entry.id);
+			}
+		});
+		txn(entries);
+	}
+
+	// ============================================================
+	// Workspaces
+	// ============================================================
+	async createWorkspace(workspace: IWorkspace): Promise<void> {
+		this.db!.prepare(`INSERT INTO ${this.t.workspaces} (folderId, data) VALUES (?, ?)`).run(
+			workspace.folderId,
+			JSON.stringify(workspace.data),
+		);
+	}
+
+	async getWorkspace(folderId: TFolderId): Promise<IWorkspace | null> {
+		const row = this.db!.prepare(`SELECT * FROM ${this.t.workspaces} WHERE folderId = ?`).get(
+			folderId,
+		) as { folderId: string; data: string } | undefined;
+		if (!row) return null;
+		return { folderId: row.folderId, data: JSON.parse(row.data) };
+	}
+
+	async updateWorkspace(folderId: TFolderId, data: Record<string, unknown>): Promise<void> {
+		const existing = await this.getWorkspace(folderId);
+		if (existing) {
+			// Additive merge — new fields overlay onto existing data
+			this.db!.prepare(`UPDATE ${this.t.workspaces} SET data = ? WHERE folderId = ?`).run(
+				JSON.stringify({ ...existing.data, ...data }),
+				folderId,
+			);
+		} else {
+			await this.createWorkspace({ folderId, data });
+		}
+	}
+
+	async deleteWorkspace(folderId: TFolderId): Promise<void> {
+		this.db!.prepare(`DELETE FROM ${this.t.workspaces} WHERE folderId = ?`).run(folderId);
+	}
+
+	// ============================================================
+	// Threads
+	// ============================================================
+	async createThread(thread: IChatThread): Promise<void> {
+		this.db!.prepare(
+			`INSERT INTO ${this.t.threads} (id, title, folderId, parentId, systemPrompt, meta, totalPromptTokens, totalCompletionTokens, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		).run(
+			thread.id,
+			thread.title,
+			thread.folderId,
+			thread.parentId,
+			thread.systemPrompt,
+			thread.meta,
+			thread.totalPromptTokens,
+			thread.totalCompletionTokens,
+			thread.createdAt,
+			thread.updatedAt,
+		);
+	}
+
+	async getThread(id: TThreadId): Promise<IChatThread | null> {
+		return (
+			(this.db!.prepare(`SELECT * FROM ${this.t.threads} WHERE id = ?`).get(id) as
+				| IChatThread
+				| undefined) ?? null
+		);
+	}
+
+	async listThreads(options?: IListThreadsOptions): Promise<IChatThread[]> {
+		const conditions: string[] = [];
+		const vals: unknown[] = [];
+
+		if (options?.folderId !== undefined) {
+			if (options.folderId === null) {
+				conditions.push("folderId IS NULL");
+			} else {
+				conditions.push("folderId = ?");
+				vals.push(options.folderId);
+			}
+		}
+		if (options?.query) {
+			conditions.push("title LIKE ?");
+			vals.push(`%${options.query}%`);
+		}
+		if (options?.parentId !== undefined) {
+			if (options.parentId === null) {
+				conditions.push("parentId IS NULL");
+			} else {
+				conditions.push("parentId = ?");
+				vals.push(options.parentId);
+			}
+		}
+
+		const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+		const threads = this.db!.prepare(
+			`SELECT * FROM ${this.t.threads} ${where} ORDER BY updatedAt DESC`,
+		).all(...vals) as IChatThread[];
+		return threads;
+	}
+
+	async updateThread(id: TThreadId, updates: Partial<IChatThread>): Promise<void> {
+		const sets: string[] = [];
+		const vals: unknown[] = [];
+		if (updates.title !== undefined) {
+			sets.push("title = ?");
+			vals.push(updates.title);
+		}
+		if (updates.folderId !== undefined) {
+			sets.push("folderId = ?");
+			vals.push(updates.folderId);
+		}
+		if (updates.parentId !== undefined) {
+			sets.push("parentId = ?");
+			vals.push(updates.parentId);
+		}
+		if (updates.systemPrompt !== undefined) {
+			sets.push("systemPrompt = ?");
+			vals.push(updates.systemPrompt);
+		}
+		if (updates.meta !== undefined) {
+			sets.push("meta = ?");
+			vals.push(updates.meta);
+		}
+		sets.push("updatedAt = ?");
+		vals.push(Date.now());
+		vals.push(id);
+		this.db!.prepare(`UPDATE ${this.t.threads} SET ${sets.join(", ")} WHERE id = ?`).run(
+			...vals,
+		);
+	}
+
+	async deleteThread(id: TThreadId): Promise<void> {
+		this.db!.prepare(`DELETE FROM ${this.t.threads} WHERE id = ?`).run(id);
+	}
+
+	async deleteThreadCascade(
+		id: TThreadId,
+	): Promise<Array<{ messageId: string; modelId: string; topic: string }>> {
+		return this.db!.transaction(() => {
+			// 1. Get all embeddings before deleting
+			const embeddings = this.db!.prepare(
+				`SELECT messageId, modelId, topic FROM ${this.t.embeddingIndex} WHERE threadId = ?`,
+			).all(id) as Array<{ messageId: string; modelId: string; topic: string }>;
+
+			// 2. Delete embedding index entries
+			this.db!.prepare(`DELETE FROM ${this.t.embeddingIndex} WHERE threadId = ?`).run(id);
+
+			// 3. Get all messageIds
+			const messageIds = this.db!.prepare(
+				`SELECT id FROM ${this.t.messages} WHERE threadId = ?`,
+			).all(id) as Array<{ id: string }>;
+			const ids = messageIds.map((m) => m.id);
+
+			// 4. Delete message parts
+			if (ids.length) {
+				const placeholders = ids.map(() => "?").join(",");
+				this.db!.prepare(
+					`DELETE FROM ${this.t.messageParts} WHERE messageId IN (${placeholders})`,
+				).run(...ids);
+			}
+
+			// 5. Delete tool calls
+			this.db!.prepare(`DELETE FROM ${this.t.toolCalls} WHERE threadId = ?`).run(id);
+
+			// 6. Delete messages
+			this.db!.prepare(`DELETE FROM ${this.t.messages} WHERE threadId = ?`).run(id);
+
+			// 7. Delete thread configs
+			this.db!.prepare(`DELETE FROM ${this.t.threadConfigs} WHERE threadId = ?`).run(id);
+
+			// 8. Delete thread tool permissions
+			this.db!.prepare(`DELETE FROM ${this.t.threadToolPermissions} WHERE threadId = ?`).run(
+				id,
+			);
+
+			// 9. Delete thread attached tools
+			this.db!.prepare(`DELETE FROM ${this.t.threadAttachedTools} WHERE threadId = ?`).run(
+				id,
+			);
+
+			// 10. Delete thread states
+			this.db!.prepare(`DELETE FROM ${this.t.threadStates} WHERE threadId = ?`).run(id);
+
+			// 11. Delete message states
+			if (ids.length) {
+				const placeholders = ids.map(() => "?").join(",");
+				this.db!.prepare(
+					`DELETE FROM ${this.t.messageStates} WHERE messageId IN (${placeholders})`,
+				).run(...ids);
+			}
+
+			// 12. Delete notifications
+			this.db!.prepare(`DELETE FROM ${this.t.notifications} WHERE threadId = ?`).run(id);
+
+			// 13. Delete thread
+			this.db!.prepare(`DELETE FROM ${this.t.threads} WHERE id = ?`).run(id);
+
+			return embeddings;
+		})();
+	}
+
+	async incrementThreadTokens(
+		id: TThreadId,
+		promptDelta: number = 0,
+		completionDelta: number = 0,
+	): Promise<void> {
+		this.db!.prepare(
+			`UPDATE ${this.t.threads} SET totalPromptTokens = totalPromptTokens + ?, totalCompletionTokens = totalCompletionTokens + ?, updatedAt = ? WHERE id = ?`,
+		).run(promptDelta, completionDelta, Date.now(), id);
+	}
+
+	// ============================================================
+	// Thread Configs
+	// ============================================================
+	async getThreadConfig(threadId: TThreadId): Promise<IThreadConfig | null> {
+		return (
+			(this.db!.prepare(`SELECT * FROM ${this.t.threadConfigs} WHERE threadId = ?`).get(
+				threadId,
+			) as IThreadConfig | undefined) ?? null
+		);
+	}
+
+	async setThreadConfig(config: IThreadConfig): Promise<void> {
+		this.db!.prepare(
+			`INSERT INTO ${this.t.threadConfigs} (threadId, presetId, systemPrompt, params) VALUES (?, ?, ?, ?)
+			 ON CONFLICT(threadId) DO UPDATE SET presetId = excluded.presetId, systemPrompt = excluded.systemPrompt, params = excluded.params`,
+		).run(config.threadId, config.presetId, config.systemPrompt, config.params);
+	}
+
+	async deleteThreadConfig(threadId: TThreadId): Promise<void> {
+		this.db!.prepare(`DELETE FROM ${this.t.threadConfigs} WHERE threadId = ?`).run(threadId);
+	}
+
+	// ============================================================
+	// Messages (with parts)
+	// ============================================================
+	async createMessage(message: IChatMessage): Promise<void> {
+		const stats = message.stats ? JSON.stringify(message.stats) : null;
+		const txn = this.db!.transaction(() => {
+			this.db!.prepare(
+				`INSERT INTO ${this.t.messages} (id, parentId, threadId, role, stats, createdAt) VALUES (?, ?, ?, ?, ?, ?)`,
+			).run(
+				message.id,
+				message.parentId ?? null,
+				message.threadId,
+				message.role,
+				stats,
+				message.createdAt,
+			);
+			for (const part of message.content) {
+				this.insertPart(message.id, part);
+			}
+		});
+		txn();
+	}
+
+	async appendMessagePart(messageId: TMessageId, part: IMessagePart): Promise<void> {
+		this.insertPart(messageId, part);
+	}
+
+	async replaceMessageParts(messageId: TMessageId, parts: IMessagePart[]): Promise<void> {
+		const txn = this.db!.transaction(() => {
+			this.db!.prepare(`DELETE FROM ${this.t.messageParts} WHERE messageId = ?`).run(
+				messageId,
+			);
+			for (const part of parts) {
+				this.insertPart(messageId, part);
+			}
+		});
+		txn();
+	}
+
+	async deleteMessage(id: TMessageId): Promise<void> {
+		const msg = this.db!.prepare(`SELECT parentId FROM ${this.t.messages} WHERE id = ?`).get(
+			id,
+		) as { parentId?: string | null } | undefined;
+		if (!msg) return;
+
+		if (!msg.parentId) {
+			throw new Error("Cannot delete root message");
+		}
+
+		this.db!.transaction((() => {
+			this.db!.prepare(`UPDATE ${this.t.messages} SET parentId = ? WHERE parentId = ?`).run(
+				msg.parentId,
+				id,
+			);
+			this.db!.prepare(`DELETE FROM ${this.t.messages} WHERE id = ?`).run(id);
+			this.db!.prepare(`DELETE FROM ${this.t.messageStates} WHERE messageId = ?`).run(id);
+		}) as any)();
+	}
+
+	async getMessages(threadId: TThreadId): Promise<IChatMessage[]> {
+		const rows = this.db!.prepare(
+			`SELECT * FROM ${this.t.messages} WHERE threadId = ? ORDER BY createdAt ASC`,
+		).all(threadId) as Array<Record<string, unknown>>;
+		return rows.map((r) => this.hydrateMessage(r));
+	}
+
+	async getMessage(id: TMessageId): Promise<IChatMessage | null> {
+		const row = this.db!.prepare(`SELECT * FROM ${this.t.messages} WHERE id = ?`).get(id) as
+			| Record<string, unknown>
+			| undefined;
+		if (!row) return null;
+		return this.hydrateMessage(row);
+	}
+
+	async getHeadMessage(threadId: TThreadId): Promise<IChatMessage | null> {
+		const row = this.db!.prepare(
+			`SELECT * FROM ${this.t.messages} WHERE threadId = ? ORDER BY createdAt DESC LIMIT 1`,
+		).get(threadId) as Record<string, unknown> | undefined;
+		if (!row) return null;
+		return this.hydrateMessage(row);
+	}
+
+	async updateMessage(
+		id: TMessageId,
+		updates: Partial<Pick<IChatMessage, "stats">>,
+	): Promise<void> {
+		const sets: string[] = [];
+		const vals: unknown[] = [];
+		if (updates.stats !== undefined) {
+			sets.push("stats = ?");
+			vals.push(updates.stats ? JSON.stringify(updates.stats) : null);
+		}
+		if (sets.length === 0) return;
+		vals.push(id);
+		this.db!.prepare(`UPDATE ${this.t.messages} SET ${sets.join(", ")} WHERE id = ?`).run(
+			...vals,
+		);
+	}
+
+	private insertPart(messageId: TMessageId, part: IMessagePart): void {
+		const text =
+			part.type === EMessagePartType.TEXT || part.type === EMessagePartType.REASONING
+				? part.text
+				: null;
+		const toolCallId = part.type === EMessagePartType.TOOL_CALL ? part.toolCallId : null;
+		const data = part.type === EMessagePartType.ATTACHMENT ? part.data : null;
+		const mimeType = part.type === EMessagePartType.ATTACHMENT ? part.mimeType : null;
+		const fileName = part.type === EMessagePartType.ATTACHMENT ? part.fileName : null;
+		const fileSize = part.type === EMessagePartType.ATTACHMENT ? part.fileSize : null;
+		const extractedText =
+			part.type === EMessagePartType.ATTACHMENT ? (part.extractedText ?? null) : null;
+		this.db!.prepare(
+			`INSERT INTO ${this.t.messageParts} (id, messageId, type, orderIndex, text, toolCallId, data, mimeType, fileName, fileSize, extractedText) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		).run(
+			part.id,
+			messageId,
+			part.type,
+			part.orderIndex,
+			text,
+			toolCallId,
+			data,
+			mimeType,
+			fileName,
+			fileSize,
+			extractedText,
+		);
+	}
+
+	private hydrateMessage(row: Record<string, unknown>): IChatMessage {
+		const partRows = this.db!.prepare(
+			`SELECT * FROM ${this.t.messageParts} WHERE messageId = ? ORDER BY orderIndex ASC`,
+		).all(row.id as string) as Array<Record<string, unknown>>;
+
+		const content: IMessagePart[] = partRows.map((p) => {
+			if (p.type === EMessagePartType.TEXT) {
+				return {
+					id: p.id as string,
+					type: EMessagePartType.TEXT,
+					orderIndex: p.orderIndex as number,
+					text: (p.text as string) ?? "",
+				};
+			}
+			if (p.type === EMessagePartType.REASONING) {
+				return {
+					id: p.id as string,
+					type: EMessagePartType.REASONING,
+					orderIndex: p.orderIndex as number,
+					text: (p.text as string) ?? "",
+				};
+			}
+			if (p.type === EMessagePartType.ATTACHMENT) {
+				return {
+					id: p.id as string,
+					type: EMessagePartType.ATTACHMENT,
+					orderIndex: p.orderIndex as number,
+					data: (p.data as string) ?? "",
+					mimeType: (p.mimeType as string) ?? "",
+					fileName: (p.fileName as string) ?? "",
+					fileSize: (p.fileSize as number) ?? 0,
+					extractedText: (p.extractedText as string) ?? undefined,
+				};
+			}
+			return {
+				id: p.id as string,
+				type: EMessagePartType.TOOL_CALL,
+				orderIndex: p.orderIndex as number,
+				toolCallId: p.toolCallId as string,
+			};
+		});
+
+		const statsRaw = row.stats as string | null;
+		return {
+			id: row.id as string,
+			parentId: (row.parentId as string) ?? null,
+			threadId: row.threadId as string,
+			role: row.role as EChatRole,
+			content,
+			stats: statsRaw ? JSON.parse(statsRaw) : null,
+			createdAt: row.createdAt as number,
+		};
+	}
+
+	// ============================================================
+	// Tool Calls
+	// ============================================================
+	async createToolCall(toolCall: IToolCall): Promise<void> {
+		this.db!.prepare(
+			`INSERT INTO ${this.t.toolCalls} (id, messageId, threadId, serverName, toolName, arguments, result, status, error, createdAt, resolvedAt)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		).run(
+			toolCall.id,
+			toolCall.messageId,
+			toolCall.threadId,
+			toolCall.serverName,
+			toolCall.toolName,
+			toolCall.arguments,
+			toolCall.result,
+			toolCall.status,
+			toolCall.error,
+			toolCall.createdAt,
+			toolCall.resolvedAt,
+		);
+	}
+
+	async updateToolCall(id: TToolCallId, updates: Partial<IToolCall>): Promise<void> {
+		const sets: string[] = [];
+		const vals: unknown[] = [];
+		if (updates.status !== undefined) {
+			sets.push("status = ?");
+			vals.push(updates.status);
+		}
+		if (updates.result !== undefined) {
+			sets.push("result = ?");
+			vals.push(updates.result);
+		}
+		if (updates.error !== undefined) {
+			sets.push("error = ?");
+			vals.push(updates.error);
+		}
+		if (updates.resolvedAt !== undefined) {
+			sets.push("resolvedAt = ?");
+			vals.push(updates.resolvedAt);
+		}
+		if (sets.length === 0) return;
+		vals.push(id);
+		this.db!.prepare(`UPDATE ${this.t.toolCalls} SET ${sets.join(", ")} WHERE id = ?`).run(
+			...vals,
+		);
+	}
+
+	async getToolCall(id: TToolCallId): Promise<IToolCall | null> {
+		return (
+			(this.db!.prepare(`SELECT * FROM ${this.t.toolCalls} WHERE id = ?`).get(id) as
+				| IToolCall
+				| undefined) ?? null
+		);
+	}
+
+	async getToolCallsForThread(threadId: TThreadId): Promise<IToolCall[]> {
+		return this.db!.prepare(
+			`SELECT * FROM ${this.t.toolCalls} WHERE threadId = ? ORDER BY createdAt ASC`,
+		).all(threadId) as IToolCall[];
+	}
+
+	async getToolCallsForMessage(messageId: TMessageId): Promise<IToolCall[]> {
+		return this.db!.prepare(
+			`SELECT * FROM ${this.t.toolCalls} WHERE messageId = ? ORDER BY createdAt ASC`,
+		).all(messageId) as IToolCall[];
+	}
+
+	async getPendingToolCalls(): Promise<IToolCall[]> {
+		return this.db!.prepare(
+			`SELECT * FROM ${this.t.toolCalls} WHERE status = ? ORDER BY createdAt ASC`,
+		).all(EToolCallStatus.PENDING) as IToolCall[];
+	}
+
+	// ============================================================
+	// Permissions — servers
+	// ============================================================
+	async getServerPermission(serverName: string): Promise<IServerPermission | null> {
+		const row = this.db!.prepare(
+			`SELECT * FROM ${this.t.serverPermissions} WHERE serverName = ?`,
+		).get(serverName) as { serverName: string; enabled: number } | undefined;
+		if (!row) return null;
+		return { serverName: row.serverName, enabled: row.enabled === 1 };
+	}
+
+	async setServerPermission(serverName: string, enabled: boolean): Promise<void> {
+		this.db!.prepare(
+			`INSERT INTO ${this.t.serverPermissions} (serverName, enabled) VALUES (?, ?)
+			 ON CONFLICT(serverName) DO UPDATE SET enabled = excluded.enabled`,
+		).run(serverName, enabled ? 1 : 0);
+	}
+
+	async getAllServerPermissions(): Promise<IServerPermission[]> {
+		const rows = this.db!.prepare(`SELECT * FROM ${this.t.serverPermissions}`).all() as Array<{
+			serverName: string;
+			enabled: number;
+		}>;
+		return rows.map((r) => ({ serverName: r.serverName, enabled: r.enabled === 1 }));
+	}
+
+	// ============================================================
+	// Permissions — tools
+	// ============================================================
+	async getToolPermission(serverName: string, toolName: string): Promise<IToolPermission | null> {
+		const row = this.db!.prepare(
+			`SELECT * FROM ${this.t.toolPermissions} WHERE serverName = ? AND toolName = ?`,
+		).get(serverName, toolName) as
+			| { serverName: string; toolName: string; enabled: number; approvalMode: string }
+			| undefined;
+		if (!row) return null;
+		return {
+			serverName: row.serverName,
+			toolName: row.toolName,
+			enabled: row.enabled === 1,
+			approvalMode: row.approvalMode as EToolApprovalMode,
+		};
+	}
+
+	async setToolPermission(
+		serverName: string,
+		toolName: string,
+		enabled: boolean,
+		approvalMode: EToolApprovalMode,
+	): Promise<void> {
+		this.db!.prepare(
+			`INSERT INTO ${this.t.toolPermissions} (serverName, toolName, enabled, approvalMode) VALUES (?, ?, ?, ?)
+			 ON CONFLICT(serverName, toolName) DO UPDATE SET enabled = excluded.enabled, approvalMode = excluded.approvalMode`,
+		).run(serverName, toolName, enabled ? 1 : 0, approvalMode);
+	}
+
+	async getAllToolPermissions(): Promise<IToolPermission[]> {
+		const rows = this.db!.prepare(`SELECT * FROM ${this.t.toolPermissions}`).all() as Array<{
+			serverName: string;
+			toolName: string;
+			enabled: number;
+			approvalMode: string;
+		}>;
+		return rows.map((r) => ({
+			serverName: r.serverName,
+			toolName: r.toolName,
+			enabled: r.enabled === 1,
+			approvalMode: r.approvalMode as EToolApprovalMode,
+		}));
+	}
+
+	// ============================================================
+	// Permissions — thread-level tool overrides
+	// ============================================================
+	async getThreadToolPermission(
+		threadId: TThreadId,
+		serverName: string,
+		toolName: string,
+	): Promise<IThreadToolPermission | null> {
+		const row = this.db!.prepare(
+			`SELECT * FROM ${this.t.threadToolPermissions} WHERE threadId = ? AND serverName = ? AND toolName = ?`,
+		).get(threadId, serverName, toolName) as
+			| {
+					threadId: string;
+					serverName: string;
+					toolName: string;
+					enabled: number;
+					approvalMode: string;
+			  }
+			| undefined;
+		if (!row) return null;
+		return {
+			threadId: row.threadId,
+			serverName: row.serverName,
+			toolName: row.toolName,
+			enabled: row.enabled === 1,
+			approvalMode: row.approvalMode as EToolApprovalMode,
+		};
+	}
+
+	async setThreadToolPermission(
+		threadId: TThreadId,
+		serverName: string,
+		toolName: string,
+		enabled: boolean,
+		approvalMode: EToolApprovalMode,
+	): Promise<void> {
+		this.db!.prepare(
+			`INSERT INTO ${this.t.threadToolPermissions} (threadId, serverName, toolName, enabled, approvalMode) VALUES (?, ?, ?, ?, ?)
+			 ON CONFLICT(threadId, serverName, toolName) DO UPDATE SET enabled = excluded.enabled, approvalMode = excluded.approvalMode`,
+		).run(threadId, serverName, toolName, enabled ? 1 : 0, approvalMode);
+	}
+
+	async deleteThreadToolPermission(
+		threadId: TThreadId,
+		serverName: string,
+		toolName: string,
+	): Promise<void> {
+		this.db!.prepare(
+			`DELETE FROM ${this.t.threadToolPermissions} WHERE threadId = ? AND serverName = ? AND toolName = ?`,
+		).run(threadId, serverName, toolName);
+	}
+
+	async getAllThreadToolPermissions(threadId: TThreadId): Promise<IThreadToolPermission[]> {
+		const rows = this.db!.prepare(
+			`SELECT * FROM ${this.t.threadToolPermissions} WHERE threadId = ?`,
+		).all(threadId) as Array<{
+			threadId: string;
+			serverName: string;
+			toolName: string;
+			enabled: number;
+			approvalMode: string;
+		}>;
+		return rows.map((r) => ({
+			threadId: r.threadId,
+			serverName: r.serverName,
+			toolName: r.toolName,
+			enabled: r.enabled === 1,
+			approvalMode: r.approvalMode as EToolApprovalMode,
+		}));
+	}
+
+	// ============================================================
+	// Thread Attached Tools
+	// ============================================================
+	async saveThreadAttachedTools(
+		threadId: TThreadId,
+		attachAllTools: boolean,
+		tools: IToolAttachment[],
+	): Promise<void> {
+		this.db!.prepare(
+			`INSERT INTO ${this.t.threadAttachedTools} (threadId, attachAllTools, tools) VALUES (?, ?, ?)
+			 ON CONFLICT(threadId) DO UPDATE SET attachAllTools = excluded.attachAllTools, tools = excluded.tools`,
+		).run(threadId, attachAllTools ? 1 : 0, JSON.stringify(tools));
+	}
+
+	async getThreadAttachedTools(
+		threadId: TThreadId,
+	): Promise<{ attachAllTools: boolean; tools: IToolAttachment[] } | null> {
+		const row = this.db!.prepare(
+			`SELECT * FROM ${this.t.threadAttachedTools} WHERE threadId = ?`,
+		).get(threadId) as { threadId: string; attachAllTools: number; tools: string } | undefined;
+		if (!row) return null;
+		return {
+			attachAllTools: row.attachAllTools === 1,
+			tools: JSON.parse(row.tools) as IToolAttachment[],
+		};
+	}
+
+	// ============================================================
+	// FTS Search
+	// ============================================================
+
+	private preprocessQuery(q: string): string {
+		// Strip FTS5 special chars, split whitespace, append * for prefix matching
+		const stripped = q.replace(/["():^\-*]/g, " ");
+		return stripped
+			.split(/\s+/)
+			.map((t) => t.trim().toLowerCase())
+			.filter((t) => t.length > 0)
+			.map((t) => t + "*")
+			.join(" ");
+	}
+
+	async searchMessages(q: string, options: ISearchOptions): Promise<ISearchResult[]> {
+		const processed = this.preprocessQuery(q);
+		if (!processed) return [];
+		console.log(
+			`[FTS5] searchMessages: mode=${options.mode}, query="${q}" -> processed="${processed}"`,
+		);
+
+		const limit = Math.min(options.limit ?? 50, 200);
+		const offset = options.offset ?? 0;
+
+		if (options.mode === "thread") {
+			if (!options.threadId) return [];
+			const rows = this.db!.prepare(
+				`SELECT m.id as messageId, m.threadId, thr.title as threadTitle,
+				       snippet(${this.t.messagePartsFts}, 0, '<mark>', '</mark>', '...', 64) as snippet,
+				       m.role, m.createdAt
+				 FROM ${this.t.messagePartsFts}
+				 JOIN ${this.t.messageParts} mp ON mp.rowid = ${this.t.messagePartsFts}.rowid
+				 JOIN ${this.t.messages} m ON m.id = mp.messageId
+				 JOIN ${this.t.threads} thr ON thr.id = m.threadId
+				 WHERE ${this.t.messagePartsFts} MATCH ? AND m.threadId = ?
+				 ORDER BY bm25(${this.t.messagePartsFts}), m.createdAt DESC
+				 LIMIT ? OFFSET ?`,
+			).all(processed, options.threadId, limit, offset) as Array<Record<string, unknown>>;
+			console.log(`[FTS5] thread mode: ${rows.length} results`);
+			return rows.map((r) => ({
+				type: "message" as const,
+				threadId: r.threadId as string,
+				threadTitle: r.threadTitle as string,
+				messageId: r.messageId as string,
+				snippet: r.snippet as string,
+				role: r.role as string,
+				createdAt: r.createdAt as number,
+			}));
+		}
+
+		if (options.mode === "everywhere") {
+			const halfLimit = Math.ceil(limit / 2);
+
+			// Thread branch
+			const threadRows = this.db!.prepare(
+				`SELECT t.id as threadId, t.title as threadTitle, t.updatedAt as createdAt
+				 FROM ${this.t.threadFts}
+				 JOIN ${this.t.threads} t ON t.rowid = ${this.t.threadFts}.rowid
+				 WHERE ${this.t.threadFts} MATCH ?
+				 ORDER BY bm25(${this.t.threadFts}), t.updatedAt DESC
+				 LIMIT ?`,
+			).all(processed, halfLimit) as Array<Record<string, unknown>>;
+			console.log(`[FTS5] everywhere: ${threadRows.length} thread results`);
+
+			// Message branch
+			const msgRows = this.db!.prepare(
+				`SELECT m.id as messageId, m.threadId, thr.title as threadTitle,
+				       snippet(${this.t.messagePartsFts}, 0, '<mark>', '</mark>', '...', 64) as snippet,
+				       m.role, m.createdAt
+				 FROM ${this.t.messagePartsFts}
+				 JOIN ${this.t.messageParts} mp ON mp.rowid = ${this.t.messagePartsFts}.rowid
+				 JOIN ${this.t.messages} m ON m.id = mp.messageId
+				 JOIN ${this.t.threads} thr ON thr.id = m.threadId
+				 WHERE ${this.t.messagePartsFts} MATCH ?
+				 ORDER BY bm25(${this.t.messagePartsFts}), m.createdAt DESC
+				 LIMIT ?`,
+			).all(processed, halfLimit) as Array<Record<string, unknown>>;
+			console.log(`[FTS5] everywhere: ${msgRows.length} message results`);
+
+			const results: ISearchResult[] = [];
+
+			results.push(
+				...threadRows.map((r) => ({
+					type: "thread" as const,
+					threadId: r.threadId as string,
+					threadTitle: r.threadTitle as string,
+					createdAt: r.createdAt as number,
+				})),
+			);
+
+			results.push(
+				...msgRows.map((r) => ({
+					type: "message" as const,
+					threadId: r.threadId as string,
+					threadTitle: r.threadTitle as string,
+					messageId: r.messageId as string,
+					snippet: r.snippet as string,
+					role: r.role as string,
+					createdAt: r.createdAt as number,
+				})),
+			);
+
+			return results;
+		}
+
+		// Default: return empty (shouldn't reach here with valid enum)
+		return [];
+	}
+
+	async searchThreads(
+		q: string,
+		options?: { limit?: number; offset?: number },
+	): Promise<ISearchThreadResult[]> {
+		const processed = this.preprocessQuery(q);
+		if (!processed) return [];
+
+		const limit = Math.min(options?.limit ?? 50, 200);
+		const offset = options?.offset ?? 0;
+
+		const rows = this.db!.prepare(
+			`SELECT m.threadId, thr.title as threadTitle, COUNT(DISTINCT m.id) as matchCount, MAX(m.createdAt) as lastMatchAt, 0 as sortPriority
+			 FROM ${this.t.messagePartsFts}
+			 JOIN ${this.t.messageParts} mp ON mp.rowid = ${this.t.messagePartsFts}.rowid
+			 JOIN ${this.t.messages} m ON m.id = mp.messageId
+			 JOIN ${this.t.threads} thr ON thr.id = m.threadId
+			 WHERE ${this.t.messagePartsFts} MATCH ?
+			 GROUP BY m.threadId
+
+			 UNION ALL
+
+			 SELECT t.id, t.title, 0 as matchCount, t.updatedAt as lastMatchAt, 1 as sortPriority
+			 FROM ${this.t.threadFts}
+			 JOIN ${this.t.threads} t ON t.rowid = ${this.t.threadFts}.rowid
+			 WHERE ${this.t.threadFts} MATCH ?
+			   AND NOT EXISTS (
+				 SELECT 1 FROM ${this.t.messagePartsFts}
+				 JOIN ${this.t.messageParts} mp2 ON mp2.rowid = ${this.t.messagePartsFts}.rowid
+				 JOIN ${this.t.messages} m2 ON m2.id = mp2.messageId AND m2.threadId = t.id
+				 WHERE ${this.t.messagePartsFts} MATCH ?
+			 )
+
+			 ORDER BY sortPriority DESC, matchCount DESC, lastMatchAt DESC
+			 LIMIT ? OFFSET ?`,
+		).all(processed, processed, processed, limit, offset) as Array<Record<string, unknown>>;
+
+		return rows.map((r) => ({
+			threadId: r.threadId as string,
+			threadTitle: r.threadTitle as string,
+			matchCount: Number(r.matchCount),
+			lastMatchAt: r.lastMatchAt as number,
+		}));
+	}
+
+	// ============================================================
+	// Embedding Index
+	// ============================================================
+	async insertEmbeddingStatus(
+		messageId: string,
+		threadId: string,
+		modelId: string,
+		topic: string,
+	): Promise<void> {
+		this.db!.prepare(
+			`INSERT OR IGNORE INTO ${this.t.embeddingIndex} (messageId, threadId, modelId, topic, embeddedAt)
+			 VALUES (?, ?, ?, ?, ?)`,
+		).run(messageId, threadId, modelId, topic, Date.now());
+	}
+
+	async getThreadEmbeddingStatuses(
+		threadId: TThreadId,
+		modelId: string,
+		topic: string,
+	): Promise<Set<string>> {
+		const rows = this.db!.prepare(
+			`SELECT messageId FROM ${this.t.embeddingIndex} WHERE threadId = ? AND modelId = ? AND topic = ?`,
+		).all(threadId, modelId, topic) as Array<{ messageId: string }>;
+		return new Set(rows.map((r) => r.messageId));
+	}
+
+	async deleteEmbeddingStatus(messageId: string, modelId: string, topic: string): Promise<void> {
+		this.db!.prepare(
+			`DELETE FROM ${this.t.embeddingIndex} WHERE messageId = ? AND modelId = ? AND topic = ?`,
+		).run(messageId, modelId, topic);
+	}
+
+	async getMessageIdsByThreadId(threadId: TThreadId): Promise<string[]> {
+		const rows = this.db!.prepare(`SELECT id FROM ${this.t.messages} WHERE threadId = ?`).all(
+			threadId,
+		) as Array<{ id: string }>;
+		return rows.map((r) => r.id);
+	}
+
+	// ============================================================
+	// Persisted States
+	// ============================================================
+	async getWorkspaceState(folderId: TFolderId): Promise<Record<string, unknown> | null> {
+		const row = this.db!.prepare(
+			`SELECT data FROM ${this.t.workspaceStates} WHERE folderId = ?`,
+		).get(folderId) as { data: string } | undefined;
+		if (!row) return null;
+		return JSON.parse(row.data);
+	}
+
+	async updateWorkspaceState(folderId: TFolderId, data: Record<string, unknown>): Promise<void> {
+		const existing = await this.getWorkspaceState(folderId);
+		const merged = { ...(existing || {}), ...data };
+		this.db!.prepare(
+			`INSERT INTO ${this.t.workspaceStates} (folderId, data) VALUES (?, ?)
+			 ON CONFLICT(folderId) DO UPDATE SET data = excluded.data`,
+		).run(folderId, JSON.stringify(merged));
+	}
+
+	async getThreadState(threadId: TThreadId): Promise<Record<string, unknown> | null> {
+		const row = this.db!.prepare(
+			`SELECT data FROM ${this.t.threadStates} WHERE threadId = ?`,
+		).get(threadId) as { data: string } | undefined;
+		if (!row) return null;
+		return JSON.parse(row.data);
+	}
+
+	async updateThreadState(threadId: TThreadId, data: Record<string, unknown>): Promise<void> {
+		const existing = await this.getThreadState(threadId);
+		const merged = { ...(existing || {}), ...data };
+		this.db!.prepare(
+			`INSERT INTO ${this.t.threadStates} (threadId, data) VALUES (?, ?)
+			 ON CONFLICT(threadId) DO UPDATE SET data = excluded.data`,
+		).run(threadId, JSON.stringify(merged));
+	}
+
+	async getMessageState(messageId: TMessageId): Promise<Record<string, unknown> | null> {
+		const row = this.db!.prepare(
+			`SELECT data FROM ${this.t.messageStates} WHERE messageId = ?`,
+		).get(messageId) as { data: string } | undefined;
+		if (!row) return null;
+		return JSON.parse(row.data);
+	}
+
+	async updateMessageState(messageId: TMessageId, data: Record<string, unknown>): Promise<void> {
+		const existing = await this.getMessageState(messageId);
+		const merged = { ...(existing || {}), ...data };
+		this.db!.prepare(
+			`INSERT INTO ${this.t.messageStates} (messageId, data) VALUES (?, ?)
+			 ON CONFLICT(messageId) DO UPDATE SET data = excluded.data`,
+		).run(messageId, JSON.stringify(merged));
+	}
+
+	async getMessageStatesByThreadId(
+		threadId: TThreadId,
+	): Promise<Array<{ messageId: string; data: Record<string, unknown> }>> {
+		const messageIds = this.db!.prepare(
+			`SELECT m.id FROM ${this.t.messages} m WHERE m.threadId = ?`,
+		).all(threadId) as Array<{ id: string }>;
+
+		const result: Array<{ messageId: string; data: Record<string, unknown> }> = [];
+		for (const { id } of messageIds) {
+			const row = this.db!.prepare(
+				`SELECT data FROM ${this.t.messageStates} WHERE messageId = ?`,
+			).get(id) as { data: string } | undefined;
+			if (row) {
+				result.push({ messageId: id, data: JSON.parse(row.data) });
+			}
+		}
+		return result;
+	}
+
+	// ============================================================
+	// Code graph
+	// ============================================================
+
+	async codeGraphFindProjectRoot(filePath: string): Promise<string | null> {
+		const absPath = path.resolve(filePath);
+		const row = this.db!.prepare(
+			`SELECT DISTINCT projectId FROM ${this.t.codeGraphFiles}
+			 WHERE ? LIKE projectId || '/%'
+			 ORDER BY LENGTH(projectId) DESC
+			 LIMIT 1`,
+		).get(absPath) as { projectId: string } | undefined;
+		return row?.projectId ?? null;
+	}
+
+	async codeGraphGetFile(projectId: string, filePath: string): Promise<ICodeGraphFile | null> {
+		const row = this.db!.prepare(
+			`SELECT * FROM ${this.t.codeGraphFiles} WHERE projectId = ? AND filePath = ?`,
+		).get(projectId, filePath) as ICodeGraphFile | undefined;
+		return row ?? null;
+	}
+
+	async codeGraphListFiles(projectId: string): Promise<ICodeGraphFile[]> {
+		return this.db!.prepare(`SELECT * FROM ${this.t.codeGraphFiles} WHERE projectId = ?`).all(
+			projectId,
+		) as ICodeGraphFile[];
+	}
+
+	async codeGraphUpsertFile(file: ICodeGraphFile): Promise<void> {
+		this.db!.prepare(
+			`INSERT INTO ${this.t.codeGraphFiles} (id, projectId, filePath, language, mtime, contentHash, indexedAt)
+			 VALUES (?, ?, ?, ?, ?, ?, ?)
+			 ON CONFLICT(projectId, filePath) DO UPDATE SET
+				language = excluded.language,
+				mtime = excluded.mtime,
+				contentHash = excluded.contentHash,
+				indexedAt = excluded.indexedAt`,
+		).run(
+			file.id,
+			file.projectId,
+			file.filePath,
+			file.language,
+			file.mtime,
+			file.contentHash,
+			file.indexedAt,
+		);
+	}
+
+	async codeGraphDeleteByFile(projectId: string, filePath: string): Promise<void> {
+		const txn = this.db!.transaction(() => {
+			this.db!.prepare(
+				`DELETE FROM ${this.t.codeGraphNodes} WHERE projectId = ? AND filePath = ?`,
+			).run(projectId, filePath);
+			this.db!.prepare(`DELETE FROM ${this.t.codeGraphEdges} WHERE filePath = ?`).run(
+				filePath,
+			);
+			this.db!.prepare(
+				`DELETE FROM ${this.t.codeGraphFiles} WHERE projectId = ? AND filePath = ?`,
+			).run(projectId, filePath);
+		});
+		txn();
+	}
+
+	async codeGraphUpsertNodes(
+		projectId: string,
+		filePath: string,
+		nodes: ICodeGraphNode[],
+	): Promise<void> {
+		const txn = this.db!.transaction(() => {
+			this.db!.prepare(
+				`DELETE FROM ${this.t.codeGraphNodes} WHERE projectId = ? AND filePath = ?`,
+			).run(projectId, filePath);
+			const insert = this.db!.prepare(
+				`INSERT INTO ${this.t.codeGraphNodes} (id, filePath, projectId, symbol, kind, language, startLine, endLine, startCol, endCol, signature, isExported)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			);
+			for (const n of nodes) {
+				insert.run(
+					n.id,
+					n.filePath,
+					n.projectId,
+					n.symbol,
+					n.kind,
+					n.language,
+					n.startLine,
+					n.endLine,
+					n.startCol,
+					n.endCol,
+					n.signature ?? null,
+					n.isExported ? 1 : 0,
+				);
+			}
+			this.db!.prepare(
+				`DELETE FROM ${this.t.codeGraphNodesFts} WHERE nodeId IN (SELECT id FROM ${this.t.codeGraphNodes} WHERE projectId = ? AND filePath = ?)`,
+			).run(projectId, filePath);
+			const ftsInsert = this.db!.prepare(
+				`INSERT INTO ${this.t.codeGraphNodesFts} (nodeId, symbol, kind, signature) VALUES (?, ?, ?, ?)`,
+			);
+			for (const n of nodes) {
+				ftsInsert.run(n.id, n.symbol, n.kind, n.signature ?? "");
+			}
+		});
+		txn();
+	}
+
+	async codeGraphUpsertEdges(
+		projectId: string,
+		filePath: string,
+		edges: ICodeGraphEdge[],
+	): Promise<void> {
+		const txn = this.db!.transaction(() => {
+			this.db!.prepare(
+				`DELETE FROM ${this.t.codeGraphEdges} WHERE projectId = ? AND filePath = ?`,
+			).run(projectId, filePath);
+			const insert = this.db!.prepare(
+				`INSERT INTO ${this.t.codeGraphEdges} (id, projectId, sourceId, filePath, targetSymbol, edgeType)
+				 VALUES (?, ?, ?, ?, ?, ?)`,
+			);
+			for (const e of edges) {
+				insert.run(e.id, projectId, e.sourceId, e.filePath, e.targetSymbol, e.edgeType);
+			}
+		});
+		txn();
+	}
+
+	async codeGraphSearchNodes(
+		projectId: string,
+		query: string,
+		options?: ICodeGraphSearchOptions,
+	): Promise<ICodeGraphNode[]> {
+		const limit = options?.limit ?? 20;
+		const clauses: string[] = [`n.projectId = ?`];
+		const params: unknown[] = [projectId];
+
+		if (options?.kind) {
+			clauses.push(`n.kind = ?`);
+			params.push(options.kind);
+		}
+		if (options?.filePath) {
+			clauses.push(`n.filePath = ?`);
+			params.push(options.filePath);
+		}
+
+		const where = clauses.join(" AND ");
+
+		if (options?.fuzzy) {
+			const ftsResults = this.db!.prepare(
+				`SELECT nodeId FROM ${this.t.codeGraphNodesFts} WHERE ${this.t.codeGraphNodesFts} MATCH ?`,
+			).all(query) as Array<{ nodeId: string }>;
+			if (ftsResults.length === 0) return [];
+			const nodeIds = ftsResults.map((r) => r.nodeId);
+			const placeholders = nodeIds.map(() => "?").join(",");
+			const rows = this.db!.prepare(
+				`SELECT * FROM ${this.t.codeGraphNodes} WHERE id IN (${placeholders}) LIMIT ?`,
+			).all(...nodeIds, limit) as ICodeGraphNode[];
+			return rows;
+		}
+
+		const rows = this.db!.prepare(
+			`SELECT * FROM ${this.t.codeGraphNodes} n WHERE ${where} AND (n.symbol LIKE ? OR n.symbol LIKE ?) ORDER BY n.symbol LIMIT ?`,
+		).all(...params, `%${query}%`, `${query}.%`, limit) as ICodeGraphNode[];
+		return rows;
+	}
+
+	async codeGraphGetNode(projectId: string, nodeId: string): Promise<ICodeGraphNode | null> {
+		const row = this.db!.prepare(
+			`SELECT * FROM ${this.t.codeGraphNodes} WHERE id = ? AND projectId = ?`,
+		).get(nodeId, projectId) as ICodeGraphNode | undefined;
+		return row ?? null;
+	}
+
+	async codeGraphGetNodesByFile(projectId: string, filePath: string): Promise<ICodeGraphNode[]> {
+		return this.db!.prepare(
+			`SELECT * FROM ${this.t.codeGraphNodes} WHERE projectId = ? AND filePath = ? ORDER BY startLine, startCol`,
+		).all(projectId, filePath) as ICodeGraphNode[];
+	}
+
+	async codeGraphGetAllNodes(projectId: string): Promise<ICodeGraphNode[]> {
+		return this.db!.prepare(
+			`SELECT * FROM ${this.t.codeGraphNodes} WHERE projectId = ? ORDER BY filePath, startLine, startCol`,
+		).all(projectId) as ICodeGraphNode[];
+	}
+
+	async codeGraphGetCallers(
+		projectId: string,
+		symbolName: string,
+		depth: number = 1,
+	): Promise<ICodeGraphNode[]> {
+		if (depth === 1) {
+			const rows = this.db!.prepare(`
+				SELECT DISTINCT n.* FROM ${this.t.codeGraphNodes} n
+				JOIN ${this.t.codeGraphEdges} e ON n.id = e.sourceId
+				WHERE e.targetSymbol = ? AND n.projectId = ?
+			`).all(symbolName, projectId) as ICodeGraphNode[];
+			return rows;
+		}
+		const withClause = `WITH RECURSIVE callers AS (
+			SELECT DISTINCT n.id, n.symbol, n.kind, n.language, n.filePath,
+				n.startLine, n.endLine, n.startCol, n.endCol, n.signature, n.isExported, 1 as d
+			FROM ${this.t.codeGraphNodes} n
+			JOIN ${this.t.codeGraphEdges} e ON n.id = e.sourceId
+			WHERE e.targetSymbol = ? AND n.projectId = ?
+			UNION
+			SELECT DISTINCT n.id, n.symbol, n.kind, n.language, n.filePath,
+				n.startLine, n.endLine, n.startCol, n.endCol, n.signature, n.isExported, c.d + 1
+			FROM callers c
+			JOIN ${this.t.codeGraphEdges} e ON c.symbol = e.targetSymbol
+			JOIN ${this.t.codeGraphNodes} n ON e.sourceId = n.id
+			WHERE c.d < ? AND n.projectId = ?
+		)`;
+		const rows = this.db!.prepare(`${withClause} SELECT * FROM callers ORDER BY d, symbol`).all(
+			symbolName,
+			projectId,
+			depth,
+			projectId,
+		) as ICodeGraphNode[];
+		return rows;
+	}
+
+	async codeGraphGetCallees(
+		projectId: string,
+		nodeId: string,
+		depth: number = 1,
+	): Promise<ICodeGraphNode[]> {
+		if (depth === 1) {
+			const rows = this.db!.prepare(`
+				SELECT DISTINCT n.* FROM ${this.t.codeGraphNodes} n
+				JOIN ${this.t.codeGraphEdges} e ON e.targetSymbol = n.symbol
+				WHERE e.sourceId = ? AND n.projectId = ?
+			`).all(nodeId, projectId) as ICodeGraphNode[];
+			return rows;
+		}
+		const withClause = `WITH RECURSIVE callees AS (
+			SELECT DISTINCT n.id, n.symbol, n.kind, n.language, n.filePath,
+				n.startLine, n.endLine, n.startCol, n.endCol, n.signature, n.isExported, 1 as d
+			FROM ${this.t.codeGraphNodes} n
+			JOIN ${this.t.codeGraphEdges} e ON e.targetSymbol = n.symbol
+			WHERE e.sourceId = ? AND n.projectId = ?
+			UNION
+			SELECT DISTINCT n.id, n.symbol, n.kind, n.language, n.filePath,
+				n.startLine, n.endLine, n.startCol, n.endCol, n.signature, n.isExported, c.d + 1
+			FROM callees c
+			JOIN ${this.t.codeGraphEdges} e ON c.id = e.sourceId
+			JOIN ${this.t.codeGraphNodes} n ON e.targetSymbol = n.symbol
+			WHERE c.d < ? AND n.projectId = ?
+		)`;
+		const rows = this.db!.prepare(`${withClause} SELECT * FROM callees ORDER BY d, symbol`).all(
+			nodeId,
+			projectId,
+			depth,
+			projectId,
+		) as ICodeGraphNode[];
+		return rows;
+	}
+
+	async codeGraphGetAmbiguousSymbols(projectId: string): Promise<Set<string>> {
+		const rows = this.db!.prepare(`
+			SELECT symbol FROM ${this.t.codeGraphNodes}
+			WHERE projectId = ?
+			GROUP BY symbol
+			HAVING COUNT(*) > 1
+		`).all(projectId) as Array<{ symbol: string }>;
+		return new Set(rows.map((r) => r.symbol));
+	}
+
+	async codeGraphClearProject(projectId: string): Promise<void> {
+		const files = this.db!.prepare(
+			`SELECT filePath FROM ${this.t.codeGraphFiles} WHERE projectId = ?`,
+		).all(projectId) as Array<{ filePath: string }>;
+		const txn = this.db!.transaction(() => {
+			for (const f of files) {
+				this.db!.prepare(
+					`DELETE FROM ${this.t.codeGraphNodes} WHERE projectId = ? AND filePath = ?`,
+				).run(projectId, f.filePath);
+				this.db!.prepare(`DELETE FROM ${this.t.codeGraphEdges} WHERE filePath = ?`).run(
+					f.filePath,
+				);
+			}
+			this.db!.prepare(`DELETE FROM ${this.t.codeGraphFiles} WHERE projectId = ?`).run(
+				projectId,
+			);
+			this.db!.prepare(
+				`DELETE FROM ${this.t.codeGraphNodesFts} WHERE nodeId IN (SELECT id FROM ${this.t.codeGraphNodes} WHERE projectId = ?)`,
+			).run(projectId);
+		});
+		txn();
+	}
+
+	// ============================================================
+	// Guardrails
+	// ============================================================
+
+	async listGuardrails(): Promise<
+		Record<
+			string,
+			{
+				id: string;
+				name: string;
+				serverId: string;
+				promptId?: string;
+				prompt?: string;
+				triggerOnTools: IToolAttachment[];
+				inferenceParams: Record<string, unknown>;
+				messagesCount: number;
+				includeBaseMessage: boolean;
+			}
+		>
+	> {
+		const rows = this.db!.prepare(`SELECT * FROM ${this.t.guardrails}`).all() as Array<
+			Record<string, unknown>
+		>;
+		const result: Record<
+			string,
+			{
+				id: string;
+				name: string;
+				serverId: string;
+				promptId?: string;
+				prompt?: string;
+				triggerOnTools: IToolAttachment[];
+				inferenceParams: Record<string, unknown>;
+				messagesCount: number;
+				includeBaseMessage: boolean;
+			}
+		> = {};
+		for (const r of rows) {
+			result[r.id as string] = {
+				id: r.id as string,
+				name: r.name as string,
+				serverId: r.serverId as string,
+				promptId: (r.promptId as string) || undefined,
+				prompt: (r.prompt as string) || undefined,
+				triggerOnTools: JSON.parse(r.triggerOnTools as string) as IToolAttachment[],
+				inferenceParams: JSON.parse(r.inferenceParams as string) as Record<string, unknown>,
+				messagesCount: r.messagesCount as number,
+				includeBaseMessage: (r.includeBaseMessage as number) === 1,
+			};
+		}
+		return result;
+	}
+
+	async upsertGuardrail(guardrail: {
+		id: string;
+		name: string;
+		serverId: string;
+		promptId?: string;
+		prompt?: string;
+		triggerOnTools?: IToolAttachment[];
+		inferenceParams?: Record<string, unknown>;
+		messagesCount?: number;
+		includeBaseMessage?: boolean;
+	}): Promise<void> {
+		this.db!.prepare(
+			`INSERT INTO ${this.t.guardrails} (id, name, serverId, promptId, prompt, triggerOnTools, inferenceParams, messagesCount, includeBaseMessage)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		 ON CONFLICT(id) DO UPDATE SET
+			name = excluded.name,
+			serverId = excluded.serverId,
+			promptId = excluded.promptId,
+			prompt = excluded.prompt,
+			triggerOnTools = excluded.triggerOnTools,
+			inferenceParams = excluded.inferenceParams,
+			messagesCount = excluded.messagesCount,
+			includeBaseMessage = excluded.includeBaseMessage`,
+		).run(
+			guardrail.id,
+			guardrail.name,
+			guardrail.serverId,
+			guardrail.promptId ?? null,
+			guardrail.prompt ?? null,
+			JSON.stringify(guardrail.triggerOnTools || []),
+			JSON.stringify(guardrail.inferenceParams || {}),
+			guardrail.messagesCount ?? 0,
+			guardrail.includeBaseMessage ? 1 : 0,
+		);
+	}
+
+	async deleteGuardrail(id: string): Promise<void> {
+		this.db!.prepare(`DELETE FROM ${this.t.guardrails} WHERE id = ?`).run(id);
+	}
+
+	// ============================================================
+	// Modes
+	// ============================================================
+
+	async listModes(): Promise<
+		Array<{
+			id: string;
+			name: string;
+			scope: string;
+			color: string;
+			promptId?: string;
+			prompt?: string;
+			allowedTools: IToolAttachment[];
+			allowedAgents: string[];
+			activeGuardrails: string[];
+		}>
+	> {
+		const rows = this.db!.prepare(`SELECT * FROM ${this.t.modes}`).all() as Array<
+			Record<string, unknown>
+		>;
+		return rows.map((r) => ({
+			id: r.id as string,
+			name: r.name as string,
+			scope: r.scope as string,
+			color: r.color as string,
+			promptId: (r.promptId as string) || undefined,
+			prompt: (r.prompt as string) || undefined,
+			allowedTools: JSON.parse(r.allowedTools as string) as IToolAttachment[],
+			allowedAgents: JSON.parse(r.allowedAgents as string) as string[],
+			activeGuardrails: JSON.parse(r.activeGuardrails as string) as string[],
+		}));
+	}
+
+	async getMode(id: string): Promise<{
+		id: string;
+		name: string;
+		scope: string;
+		color: string;
+		promptId?: string;
+		prompt?: string;
+		allowedTools: IToolAttachment[];
+		allowedAgents: string[];
+		activeGuardrails: string[];
+	} | null> {
+		const row = this.db!.prepare(`SELECT * FROM ${this.t.modes} WHERE id = ?`).get(id) as
+			| Record<string, unknown>
+			| undefined;
+		if (!row) return null;
+		return {
+			id: row.id as string,
+			name: row.name as string,
+			scope: row.scope as string,
+			color: row.color as string,
+			promptId: (row.promptId as string) || undefined,
+			prompt: (row.prompt as string) || undefined,
+			allowedTools: JSON.parse(row.allowedTools as string) as IToolAttachment[],
+			allowedAgents: JSON.parse(row.allowedAgents as string) as string[],
+			activeGuardrails: JSON.parse(row.activeGuardrails as string) as string[],
+		};
+	}
+
+	async upsertMode(mode: {
+		id: string;
+		name: string;
+		scope: string;
+		color: string;
+		promptId?: string;
+		prompt?: string;
+		allowedTools: IToolAttachment[];
+		allowedAgents: string[];
+		activeGuardrails: string[];
+	}): Promise<void> {
+		this.db!.prepare(
+			`INSERT INTO ${this.t.modes} (id, name, scope, color, promptId, prompt, allowedTools, allowedAgents, activeGuardrails)
+	 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+	 ON CONFLICT(id) DO UPDATE SET
+		name = excluded.name,
+		scope = excluded.scope,
+		color = excluded.color,
+		promptId = excluded.promptId,
+		prompt = excluded.prompt,
+		allowedTools = excluded.allowedTools,
+		allowedAgents = excluded.allowedAgents,
+		activeGuardrails = excluded.activeGuardrails`,
+		).run(
+			mode.id,
+			mode.name,
+			mode.scope,
+			mode.color,
+			mode.promptId ?? null,
+			mode.prompt ?? null,
+			JSON.stringify(mode.allowedTools),
+			JSON.stringify(mode.allowedAgents),
+			JSON.stringify(mode.activeGuardrails),
+		);
+	}
+
+	async deleteMode(id: string): Promise<void> {
+		this.db!.prepare(`DELETE FROM ${this.t.modes} WHERE id = ?`).run(id);
+	}
+
+	// ============================================================
+	// Chat Prompts
+	// ============================================================
+
+	async listChatPrompts(): Promise<
+		Array<{
+			id: string;
+			name: string;
+			content: string;
+			meta: Record<string, unknown> | null;
+			createdAt: number;
+			updatedAt: number;
+		}>
+	> {
+		const rows = this.db!.prepare(
+			`SELECT id, name, content, meta, created_at, updated_at FROM ${this.t.prompts} ORDER BY updated_at DESC`,
+		).all() as Array<{
+			id: string;
+			name: string;
+			content: string;
+			meta: string | null;
+			created_at: number;
+			updated_at: number;
+		}>;
+		return rows.map((r) => ({
+			id: r.id,
+			name: r.name,
+			content: r.content,
+			meta: r.meta ? JSON.parse(r.meta) : null,
+			createdAt: r.created_at,
+			updatedAt: r.updated_at,
+		}));
+	}
+
+	async getChatPrompt(id: string): Promise<{
+		id: string;
+		name: string;
+		content: string;
+		meta: Record<string, unknown> | null;
+		createdAt: number;
+		updatedAt: number;
+	} | null> {
+		const row = this.db!.prepare(
+			`SELECT id, name, content, meta, created_at, updated_at FROM ${this.t.prompts} WHERE id = ?`,
+		).get(id) as
+			| {
+					id: string;
+					name: string;
+					content: string;
+					meta: string | null;
+					created_at: number;
+					updated_at: number;
+			  }
+			| undefined;
+		if (!row) return null;
+		return {
+			id: row.id,
+			name: row.name,
+			content: row.content,
+			meta: row.meta ? JSON.parse(row.meta) : null,
+			createdAt: row.created_at,
+			updatedAt: row.updated_at,
+		};
+	}
+
+	async createChatPrompt(prompt: {
+		id: string;
+		name: string;
+		content: string;
+		meta?: Record<string, unknown>;
+		createdAt: number;
+		updatedAt: number;
+	}): Promise<void> {
+		this.db!.prepare(
+			`INSERT INTO ${this.t.prompts} (id, name, content, meta, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
+		).run(
+			prompt.id,
+			prompt.name,
+			prompt.content,
+			prompt.meta ? JSON.stringify(prompt.meta) : null,
+			prompt.createdAt,
+			prompt.updatedAt,
+		);
+	}
+
+	async updateChatPrompt(
+		id: string,
+		updates: {
+			name?: string;
+			content?: string;
+			meta?: Record<string, unknown> | null;
+		},
+	): Promise<void> {
+		const sets: string[] = [];
+		const values: unknown[] = [];
+		if (updates.name !== undefined) {
+			sets.push("name = ?");
+			values.push(updates.name);
+		}
+		if (updates.content !== undefined) {
+			sets.push("content = ?");
+			values.push(updates.content);
+		}
+		if (updates.meta !== undefined) {
+			sets.push("meta = ?");
+			values.push(updates.meta ? JSON.stringify(updates.meta) : null);
+		}
+		if (sets.length > 0) {
+			sets.push("updated_at = ?");
+			values.push(Date.now());
+			this.db!.prepare(`UPDATE ${this.t.prompts} SET ${sets.join(", ")} WHERE id = ?`).run(
+				...values,
+				id,
+			);
+		}
+	}
+
+	async deleteChatPrompt(id: string): Promise<void> {
+		this.db!.prepare(`DELETE FROM ${this.t.prompts} WHERE id = ?`).run(id);
+	}
+
+	// ============================================================
+	// Notifications
+	// ============================================================
+
+	async notificationCreate(payload: INotificationCreatePayload): Promise<INotification> {
+		const id = genNotificationId();
+		const now = Date.now();
+		const notification: INotification = {
+			id,
+			threadId: payload.threadId,
+			notificationType: payload.notificationType,
+			notificationSubtype: payload.notificationSubtype ?? "",
+			senderType: payload.senderType ?? "",
+			senderId: payload.senderId ?? "",
+			payload: payload.payload ?? {},
+			consumed: false,
+			hidden: false,
+			createdAt: now,
+		};
+		this.db!.prepare(
+			`INSERT INTO ${this.t.notifications} (id, threadId, notificationType, notificationSubtype, senderType, senderId, payload, consumed, hidden, createdAt)
+					 VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, ?)`,
+		).run(
+			notification.id,
+			notification.threadId,
+			notification.notificationType,
+			notification.notificationSubtype,
+			notification.senderType,
+			notification.senderId,
+			JSON.stringify(notification.payload),
+			notification.createdAt,
+		);
+		return notification;
+	}
+
+	async notificationGet(id: string): Promise<INotification | null> {
+		const row = this.db!.prepare(`SELECT * FROM ${this.t.notifications} WHERE id = ?`).get(
+			id,
+		) as Record<string, unknown> | undefined;
+		if (!row) return null;
+		return this.hydrateNotification(row);
+	}
+
+	async notificationList(
+		threadId: string,
+		includeConsumed?: boolean,
+		includeHidden?: boolean,
+	): Promise<INotification[]> {
+		const conditions: string[] = [`threadId = ?`];
+		const params: unknown[] = [threadId];
+
+		if (!includeConsumed) conditions.push(`consumed = 0`);
+		if (!includeHidden) conditions.push(`hidden = 0`);
+
+		const where = conditions.join(` AND `);
+		const rows = this.db!.prepare(
+			`SELECT * FROM ${this.t.notifications} WHERE ${where} ORDER BY createdAt DESC`,
+		).all(...params) as Array<Record<string, unknown>>;
+		return rows.map((r) => this.hydrateNotification(r));
+	}
+
+	async notificationConsume(id: string): Promise<INotification> {
+		this.db!.prepare(`UPDATE ${this.t.notifications} SET consumed = 1 WHERE id = ?`).run(id);
+		const notification = await this.notificationGet(id);
+		if (!notification) throw new Error(`Notification ${id} not found`);
+		return notification;
+	}
+
+	async notificationHide(id: string): Promise<INotification> {
+		this.db!.prepare(`UPDATE ${this.t.notifications} SET hidden = 1 WHERE id = ?`).run(id);
+		const notification = await this.notificationGet(id);
+		if (!notification) throw new Error(`Notification ${id} not found`);
+		return notification;
+	}
+
+	async notificationUpdatePayload(
+		id: string,
+		payload: INotificationUpdatePayload,
+	): Promise<INotification> {
+		this.db!.prepare(`UPDATE ${this.t.notifications} SET payload = ? WHERE id = ?`).run(
+			JSON.stringify(payload.payload),
+			id,
+		);
+		const notification = await this.notificationGet(id);
+		if (!notification) throw new Error(`Notification ${id} not found`);
+		return notification;
+	}
+
+	async notificationDelete(id: string): Promise<void> {
+		this.db!.prepare(`DELETE FROM ${this.t.notifications} WHERE id = ?`).run(id);
+	}
+
+	async notificationDeleteByThreadId(threadId: string): Promise<void> {
+		this.db!.prepare(`DELETE FROM ${this.t.notifications} WHERE threadId = ?`).run(threadId);
+	}
+
+	async addMessageNotification(
+		threadId: string,
+		subThreadId: string,
+		message: string,
+	): Promise<INotification> {
+		return this.notificationCreate({
+			threadId,
+			notificationType: "agent",
+			notificationSubtype: "message",
+			senderType: "thread",
+			senderId: subThreadId,
+			payload: { message },
+		});
+	}
+
+	async addToolNotification(
+		threadId: string,
+		subThreadId: string,
+		assistantMessageId: string,
+		toolCallId: string,
+	): Promise<INotification> {
+		return this.notificationCreate({
+			threadId,
+			notificationType: "agent",
+			notificationSubtype: "tool",
+			senderType: "thread",
+			senderId: subThreadId,
+			payload: { assistantMessageId, toolCallId },
+		});
+	}
+
+	private hydrateNotification(row: Record<string, unknown>): INotification {
+		return {
+			id: row.id as string,
+			threadId: row.threadId as string,
+			notificationType: row.notificationType as string,
+			notificationSubtype: row.notificationSubtype as string,
+			senderType: row.senderType as string,
+			senderId: row.senderId as string,
+			payload: JSON.parse(row.payload as string) as Record<string, unknown>,
+			consumed: (row.consumed as number) === 1,
+			hidden: (row.hidden as number) === 1,
+			createdAt: row.createdAt as number,
+		};
+	}
+
+	// ============================================================
+	// Agents
+	// ============================================================
+
+	async listAgents(): Promise<IAgent[]> {
+		const rows = this.db!.prepare(
+			`SELECT * FROM ${this.t.agents} ORDER BY updated_at DESC`,
+		).all() as Array<Record<string, unknown>>;
+		return rows.map((r) => this.hydrateAgent(r));
+	}
+
+	async getAgent(id: string): Promise<IAgent | null> {
+		const row = this.db!.prepare(`SELECT * FROM ${this.t.agents} WHERE id = ?`).get(id) as
+			| Record<string, unknown>
+			| undefined;
+		if (!row) return null;
+		return this.hydrateAgent(row);
+	}
+
+	async getAgentByName(name: string): Promise<IAgent | null> {
+		const row = this.db!.prepare(`SELECT * FROM ${this.t.agents} WHERE name = ?`).get(name) as
+			| Record<string, unknown>
+			| undefined;
+		if (!row) return null;
+		return this.hydrateAgent(row);
+	}
+
+	async createAgent(agent: IAgent): Promise<void> {
+		const meta: IAgentMeta = {
+			serverId: agent.serverId,
+			promptId: agent.promptId,
+			tools: agent.tools,
+			autoApproveTools: agent.autoApproveTools,
+			reasoningEffort: agent.reasoningEffort,
+			guardrails: agent.guardrails,
+		};
+		this.db!.prepare(
+			`INSERT INTO ${this.t.agents} (id, name, description, meta, created_at, updated_at)
+				 VALUES (?, ?, ?, ?, ?, ?)`,
+		).run(
+			agent.id,
+			agent.name,
+			agent.description,
+			JSON.stringify(meta),
+			agent.createdAt,
+			agent.updatedAt,
+		);
+	}
+
+	async updateAgent(
+		id: string,
+		updates: Partial<
+			Pick<
+				IAgent,
+				| "name"
+				| "serverId"
+				| "promptId"
+				| "tools"
+				| "autoApproveTools"
+				| "description"
+				| "reasoningEffort"
+				| "guardrails"
+			>
+		>,
+	): Promise<void> {
+		const sets: string[] = [];
+		const values: unknown[] = [];
+		if (updates.name !== undefined) {
+			sets.push("name = ?");
+			values.push(updates.name);
+		}
+		if (updates.description !== undefined) {
+			sets.push("description = ?");
+			values.push(updates.description);
+		}
+
+		const hasMetaField =
+			updates.serverId !== undefined ||
+			updates.promptId !== undefined ||
+			updates.tools !== undefined ||
+			updates.autoApproveTools !== undefined ||
+			updates.reasoningEffort !== undefined ||
+			updates.guardrails !== undefined;
+		if (hasMetaField) {
+			const existing = this.db!.prepare(`SELECT meta FROM ${this.t.agents} WHERE id = ?`).get(
+				id,
+			) as { meta?: string } | undefined;
+			const meta: IAgentMeta = existing?.meta
+				? {
+						serverId: "",
+						tools: [],
+						autoApproveTools: [],
+						guardrails: [],
+						...(JSON.parse(existing.meta) as Partial<IAgentMeta>),
+					}
+				: { serverId: "", tools: [], autoApproveTools: [], guardrails: [] };
+			if (updates.serverId !== undefined) meta.serverId = updates.serverId;
+			if (updates.promptId !== undefined) meta.promptId = updates.promptId ?? undefined;
+			if (updates.tools !== undefined) meta.tools = updates.tools;
+			if (updates.autoApproveTools !== undefined)
+				meta.autoApproveTools = updates.autoApproveTools;
+			if (updates.reasoningEffort !== undefined)
+				meta.reasoningEffort = updates.reasoningEffort;
+			if (updates.guardrails !== undefined) meta.guardrails = updates.guardrails;
+			sets.push("meta = ?");
+			values.push(JSON.stringify(meta));
+		}
+
+		if (sets.length === 0) return;
+		sets.push("updated_at = ?");
+		values.push(Date.now());
+		values.push(id);
+		this.db!.prepare(`UPDATE ${this.t.agents} SET ${sets.join(", ")} WHERE id = ?`).run(
+			...values,
+		);
+	}
+
+	async deleteAgent(id: string): Promise<void> {
+		this.db!.prepare(`DELETE FROM ${this.t.agents} WHERE id = ?`).run(id);
+	}
+
+	private hydrateAgent(row: Record<string, unknown>): IAgent {
+		const meta: IAgentMeta = {
+			serverId: "",
+			tools: [],
+			autoApproveTools: [],
+			guardrails: [],
+			...(JSON.parse((row.meta as string) || "{}") as Partial<IAgentMeta>),
+		};
+		return {
+			id: row.id as string,
+			name: row.name as string,
+			serverId: meta.serverId,
+			promptId: meta.promptId,
+			tools: meta.tools,
+			autoApproveTools: meta.autoApproveTools,
+			description: row.description as string,
+			reasoningEffort: meta.reasoningEffort,
+			guardrails: meta.guardrails,
+			createdAt: row.created_at as number,
+			updatedAt: row.updated_at as number,
+		};
+	}
+}

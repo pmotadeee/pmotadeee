@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>warpdrv — there's no place like localhost</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+	:root {
+		--black: #000000;
+		--near: #050505;
+		--line: rgba(255,255,255,0.08);
+		--line-strong: rgba(255,255,255,0.14);
+		--white: #f2f2f2;
+		--grey-1: #a8a8a8;
+		--grey-2: #6e6e6e;
+		--grey-3: #4a4a4a;
+		--sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+		--mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+		--flame-1: #4fd6e8;
+		--flame-2: #9d7de8;
+		--flame-3: #ff6fb5;
+		--flame-4: #ffb340;
+		--nav-h: 60px;
+	}
+
+	* { box-sizing: border-box; }
+
+	html { scroll-behavior: smooth; }
+
+	body {
+		margin: 0;
+		background: var(--black);
+		color: var(--grey-1);
+		font-family: var(--sans);
+		-webkit-font-smoothing: antialiased;
+		overflow-x: hidden;
+	}
+
+	svg { stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+	a { color: inherit; text-decoration: none; }
+
+	.wrap { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 32px; }
+
+	/* ---------- nav ---------- */
+
+	.nav {
+		position: sticky;
+		top: 0;
+		z-index: 50;
+		height: var(--nav-h);
+		border-bottom: 1px solid var(--line);
+		background: rgba(0,0,0,0.72);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
+	}
+
+	.nav .wrap { display: flex; align-items: center; gap: 28px; height: 100%; }
+
+	.logo { display: flex; align-items: center; gap: 9px; }
+	.logo svg { stroke: none; }
+	.logo span { font-size: 15px; font-weight: 600; color: var(--white); letter-spacing: -0.01em; }
+
+	.nav .grow { flex: 1; }
+
+	.nav a.link {
+		font-size: 13.5px;
+		color: var(--grey-2);
+		transition: color 140ms ease;
+	}
+
+	.nav a.link:hover { color: var(--white); }
+
+	.nav .gh {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		height: 32px;
+		padding: 0 13px;
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		font-size: 13px;
+		color: var(--grey-1);
+		transition: border-color 140ms ease, color 140ms ease;
+	}
+
+	.nav .gh:hover { border-color: var(--line-strong); color: var(--white); }
+	.nav .gh svg { width: 15px; height: 15px; }
+
+	/* ---------- hero ---------- */
+
+	.hero { position: relative; padding: 56px 0 0; text-align: center; }
+
+	.alpha {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		height: 28px;
+		padding: 0 14px;
+		margin-bottom: 26px;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+		background: rgba(255,255,255,0.02);
+		font-size: 12px;
+		color: var(--grey-2);
+	}
+
+	.alpha .pip {
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--flame-4);
+		box-shadow: 0 0 8px var(--flame-4);
+	}
+
+	h1 {
+		margin: 0;
+		font-size: clamp(38px, 6.4vw, 78px);
+		font-weight: 700;
+		line-height: 1.06;
+		letter-spacing: -0.035em;
+		color: var(--white);
+	}
+
+	.localhost {
+		background: linear-gradient(96deg,
+			var(--flame-1) 0%,
+			var(--flame-2) 34%,
+			var(--flame-3) 64%,
+			var(--flame-4) 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+
+	.tagline {
+		max-width: 660px;
+		margin: 24px auto 0;
+		font-size: 17px;
+		line-height: 1.65;
+		color: var(--grey-2);
+	}
+
+	.chip {
+		display: inline-block;
+		padding: 2px 9px;
+		margin: 0 1px;
+		border: 1px solid var(--line);
+		border-radius: 7px;
+		background: rgba(255,255,255,0.03);
+		font-family: var(--mono);
+		font-size: 13.5px;
+		color: var(--grey-1);
+		vertical-align: 1px;
+	}
+
+	.cta { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 30px; }
+
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 9px;
+		height: 46px;
+		padding: 0 24px;
+		border-radius: 10px;
+		font-size: 14.5px;
+		font-weight: 600;
+		transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+	}
+
+	.btn svg { width: 16px; height: 16px; }
+	.btn:hover { transform: translateY(-1px); }
+
+	.btn.primary { background: var(--white); color: #000; border: 1px solid var(--white); }
+	.btn.primary:hover { background: #fff; }
+	.btn.ghost { border: 1px solid var(--line-strong); color: var(--grey-1); }
+	.btn.ghost:hover { border-color: rgba(255,255,255,0.28); color: var(--white); }
+
+	.fineprint { margin-top: 22px; font-size: 12.5px; line-height: 1.9; color: var(--grey-3); }
+	.fineprint a { color: var(--grey-2); border-bottom: 1px solid var(--line); }
+	.fineprint a:hover { color: var(--white); }
+
+	/* ---------- visual frames ---------- */
+
+	.hero-visual {
+		position: relative;
+		margin-top: 52px;
+		padding: 0 32px;
+	}
+
+	.hero-visual .mask {
+		position: relative;
+		max-width: 1240px;
+		margin: 0 auto;
+		height: 620px;
+		overflow: hidden;
+		border-radius: 16px 16px 0 0;
+	}
+
+	.hero-visual .mask::after {
+		content: '';
+		position: absolute;
+		inset: auto 0 0 0;
+		height: 200px;
+		background: linear-gradient(to bottom, transparent, var(--black));
+		pointer-events: none;
+		z-index: 2;
+	}
+
+	.placeholder {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+		border: 1px dashed var(--line-strong);
+		border-radius: 14px;
+		background: rgba(255,255,255,0.015);
+		font-family: var(--mono);
+		font-size: 13px;
+		color: var(--grey-3);
+	}
+
+	/* ---------- feature sections ---------- */
+
+	.feature {
+		border-top: 1px solid var(--line);
+		padding: 96px 0;
+		overflow: hidden;
+	}
+
+	.feature .inner {
+		display: grid;
+		grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+		gap: 72px;
+		align-items: center;
+		width: 100%;
+		max-width: 1240px;
+		margin: 0 auto;
+		padding-left: 32px;
+	}
+
+	.feature.flip .inner {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+		padding-left: 0;
+		padding-right: 32px;
+	}
+
+	.feature.flip .copy { order: 2; }
+	.feature.flip .visual { order: 1; }
+
+	.eyebrow {
+		display: block;
+		margin-bottom: 18px;
+		font-family: var(--mono);
+		font-size: 11.5px;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--grey-3);
+	}
+
+	.feature h2 {
+		margin: 0;
+		font-size: clamp(28px, 3.2vw, 40px);
+		font-weight: 600;
+		line-height: 1.16;
+		letter-spacing: -0.028em;
+		color: var(--white);
+	}
+
+	.feature h2 .dim { color: var(--grey-3); }
+
+	.links-label {
+		display: block;
+		margin: 36px 0 14px;
+		font-size: 13px;
+		color: var(--grey-3);
+	}
+
+	.links { display: flex; flex-direction: column; gap: 11px; }
+
+	.links a {
+		display: inline-flex;
+		align-items: center;
+		gap: 9px;
+		width: fit-content;
+		font-size: 15px;
+		font-weight: 500;
+		color: var(--grey-1);
+		transition: color 140ms ease, gap 140ms ease;
+	}
+
+	.links a:hover { color: var(--white); gap: 13px; }
+	.links a svg { width: 13px; height: 13px; opacity: 0; transition: opacity 140ms ease; }
+	.links a:hover svg { opacity: 1; }
+
+	.visual { position: relative; }
+
+	.visual .frame {
+		position: relative;
+		height: 520px;
+		border: 1px solid var(--line);
+		border-radius: 14px 0 0 14px;
+		background: rgba(255,255,255,0.015);
+		overflow: hidden;
+	}
+
+	.feature.flip .visual .frame { border-radius: 0 14px 14px 0; }
+
+	/* ---------- footer ---------- */
+
+	.footer { border-top: 1px solid var(--line); padding: 52px 0 64px; }
+	.footer .wrap { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+	.footer .grow { flex: 1; }
+	.footer .note { font-size: 12.5px; color: var(--grey-3); }
+	.footer a { font-size: 13px; color: var(--grey-2); }
+	.footer a:hover { color: var(--white); }
+
+	@media (max-width: 900px) {
+		.feature .inner,
+		.feature.flip .inner {
+			grid-template-columns: 1fr;
+			gap: 44px;
+			padding: 0 24px;
+		}
+		.feature.flip .copy { order: 1; }
+		.feature.flip .visual { order: 2; }
+		.visual .frame,
+		.feature.flip .visual .frame { border-radius: 14px; height: 380px; }
+		.hero-visual .mask { height: 380px; }
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		* { animation: none !important; transition: none !important; }
+	}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+	<div class="wrap">
+		<a class="logo" href="/">
+			<svg viewBox="0 0 24 24" width="21" height="21">
+				<defs>
+					<linearGradient id="mark" x1="0" y1="1" x2="1" y2="0">
+						<stop offset="0" stop-color="#9d7de8"/>
+						<stop offset="1" stop-color="#ffb340"/>
+					</linearGradient>
+				</defs>
+				<path d="M20.5 3.2 6.4 11.1l3.6 1.3 1.3 3.6z" fill="url(#mark)"/>
+				<path d="M9.4 14.6 4.2 19.8" stroke="#9d7de8" stroke-width="1.6" stroke-linecap="round"/>
+			</svg>
+			<span>warpdrv</span>
+		</a>
+
+		<div class="grow"></div>
+
+		<a class="link" href="/docs">Docs</a>
+		<a class="link" href="https://github.com/mikjee/warpdrv/releases">Releases</a>
+		<a class="gh" href="https://github.com/mikjee/warpdrv">
+			<svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 4a4.9 4.9 0 0 0-.1-3.6s-1.1-.3-3.7 1.4a12.7 12.7 0 0 0-6.8 0C6.7.1 5.6.4 5.6.4A4.9 4.9 0 0 0 5.5 4a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7a3.4 3.4 0 0 0-.9 2.6V21"/></svg>
+			GitHub
+		</a>
+	</div>
+</nav>
+
+<header class="hero">
+	<div class="wrap">
+		<span class="alpha"><span class="pip"></span>Alpha — under active development</span>
+
+		<h1>
+			There's no place like <span class="localhost">localhost</span>
+		</h1>
+
+		<p class="tagline">
+			Run AI like <span class="chip">qwen</span> <span class="chip">deepseek</span> <span class="chip">gpt-oss</span> <span class="chip">gemma</span> on your own hardware — locally and privately.
+		</p>
+
+		<div class="cta">
+			<a class="btn primary" href="https://github.com/mikjee/warpdrv/releases">
+				<svg viewBox="0 0 24 24"><path d="M12 3v13M7 11l5 5 5-5M4 20h16"/></svg>
+				Download
+			</a>
+			<a class="btn ghost" href="https://github.com/mikjee/warpdrv">
+				<svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 4a4.9 4.9 0 0 0-.1-3.6s-1.1-.3-3.7 1.4a12.7 12.7 0 0 0-6.8 0C6.7.1 5.6.4 5.6.4A4.9 4.9 0 0 0 5.5 4a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7a3.4 3.4 0 0 0-.9 2.6V21"/></svg>
+				Check the project
+			</a>
+		</div>
+
+		<p class="fineprint">
+			warpdrv is available for Windows and Linux. Coming soon for Mac.<br>
+			warpdrv is free and open-source. Read our <a href="https://github.com/mikjee/warpdrv/blob/main/LICENSE">license (AGPL)</a>.
+		</p>
+	</div>
+
+	<div class="hero-visual">
+		<div class="mask">
+			<div class="placeholder">chat.html</div>
+		</div>
+	</div>
+</header>
+
+<section class="feature">
+	<div class="inner">
+		<div class="copy">
+			<span class="eyebrow">Servers</span>
+			<h2>Every model you run, <span class="dim">on one bench.</span></h2>
+			<span class="links-label">Features</span>
+			<div class="links">
+				<a href="/docs/servers/router">Request Router <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+				<a href="/docs/servers/models">Model Manager <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+				<a href="/docs/servers/config">Advanced Config <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+				<a href="/docs/servers/lifecycle">Process Lifecycle <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+			</div>
+		</div>
+		<div class="visual"><div class="frame"><div class="placeholder">servers.html</div></div></div>
+	</div>
+</section>
+
+<section class="feature flip">
+	<div class="inner">
+		<div class="copy">
+			<span class="eyebrow">Rich chat</span>
+			<h2>Correct the model <span class="dim">without retyping the prompt.</span></h2>
+			<span class="links-label">Features</span>
+			<div class="links">
+				<a href="/docs/chat/annotations">Inline Annotations <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+				<a href="/docs/chat/voice">Voice &amp; Dictation <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+				<a href="/docs/chat/graphs">Diagrams &amp; Graphs <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+				<a href="/docs/chat/threads">Threads &amp; Folders <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+			</div>
+		</div>
+		<div class="visual"><div class="frame"><div class="placeholder">annotations.html</div></div></div>
+	</div>
+</section>
+
+<section class="feature">
+	<div class="inner">
+		<div class="copy">
+			<span class="eyebrow">Workflow</span>
+			<h2>Nothing touches your disk <span class="dim">until you say so.</span></h2>
+			<span class="links-label">Features</span>
+			<div class="links">
+				<a href="/docs/workflow/tools">Built-in Tools <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+				<a href="/docs/workflow/guardrails">Guardrails <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+				<a href="/docs/workflow/modes">Modes <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+				<a href="/docs/workflow/rag">Code Graph &amp; RAG <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+			</div>
+		</div>
+		<div class="visual"><div class="frame"><div class="placeholder">approval.html</div></div></div>
+	</div>
+</section>
+
+<section class="feature flip">
+	<div class="inner">
+		<div class="copy">
+			<span class="eyebrow">Custom llama.cpp</span>
+			<h2>Build it yourself, <span class="dim">swap it in a click.</span></h2>
+			<span class="links-label">Features</span>
+			<div class="links">
+				<a href="/docs/backends/compiling">Compile Your Own <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+				<a href="/docs/backends/groups">Backend Groups <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+				<a href="/docs/backends/acceleration">CUDA, ROCm &amp; Vulkan <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+				<a href="/docs/backends/recipes">Recipes <svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></a>
+			</div>
+		</div>
+		<div class="visual"><div class="frame"><div class="placeholder">backends.html</div></div></div>
+	</div>
+</section>
+
+<footer class="footer">
+	<div class="wrap">
+		<a class="logo" href="/">
+			<svg viewBox="0 0 24 24" width="19" height="19">
+				<path d="M20.5 3.2 6.4 11.1l3.6 1.3 1.3 3.6z" fill="url(#mark)"/>
+				<path d="M9.4 14.6 4.2 19.8" stroke="#9d7de8" stroke-width="1.6" stroke-linecap="round"/>
+			</svg>
+			<span>warpdrv</span>
+		</a>
+		<div class="grow"></div>
+		<a href="/docs">Docs</a>
+		<a href="https://github.com/mikjee/warpdrv/releases">Releases</a>
+		<a href="https://github.com/mikjee/warpdrv">GitHub</a>
+		<a href="https://github.com/mikjee/warpdrv/blob/main/LICENSE">License</a>
+	</div>
+	<div class="wrap" style="margin-top:26px;">
+		<span class="note">AGPL-3.0 — free and open-source.</span>
+	</div>
+</footer>
+
+</body>
+</html>

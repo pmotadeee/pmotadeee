@@ -1,0 +1,590 @@
+<div class="subagents">
+
+	<div class="monitor">
+		<div class="mon-head">
+			<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2" /><path d="M8 21h8M12 17v4" /></svg>
+			Agent Monitor
+			<div class="grow"></div>
+			<button class="x-btn"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
+		</div>
+
+		<div class="agent">
+			<div class="agent-line">
+				<svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
+				<span class="aname">test</span>
+				<span class="task">Summarize guardrails feature</span>
+			</div>
+			<div class="agent-status">
+				<svg class="spin" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9" /></svg>
+				Running…
+				<div class="grow"></div>
+				<button class="stop-sq"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1" /></svg></button>
+			</div>
+		</div>
+
+		<div class="mon-foot">
+			<span class="checkbox"></span>
+			<span class="count">0 selected</span>
+			<div class="grow"></div>
+			<button class="foot-btn off">Ignore selected</button>
+			<button class="foot-btn send">
+				<svg viewBox="0 0 24 24"><path d="M4.5 12.5 20 5l-7.5 15.5-2-7z" /></svg>
+				Send through selected
+			</button>
+		</div>
+	</div>
+
+	<div class="composer-root">
+		<div class="composer-shell composer-gradient-border" id="subagents-shell" style="--composer-border-color: var(--wc-mode-plan);">
+
+			<div class="row">
+				<div class="modes" role="tablist">
+					<button class="mode" data-mode="default" role="tab" aria-selected="false">
+						<svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18" /></svg>
+						Default
+					</button>
+					<button class="mode" data-mode="plan" role="tab" aria-selected="true">
+						<svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18" /></svg>
+						Plan
+					</button>
+					<button class="mode" data-mode="build" role="tab" aria-selected="false">
+						<svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18" /></svg>
+						Build
+					</button>
+				</div>
+				<div class="grow"></div>
+				<button class="pill">
+					<svg viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.7 8.9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1 1 0 0 1 1.5 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z" /></svg>
+					1 Guardrail
+					<svg class="caret" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg>
+				</button>
+				<button class="icon-btn">
+					<svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
+				</button>
+			</div>
+
+			<div class="editor" contenteditable="true" data-placeholder="Send a message, or type / to use slash-commands..."></div>
+
+			<div class="row">
+				<button class="icon-btn" title="Attach">
+					<svg viewBox="0 0 24 24"><path d="M13.2 20.5 20.6 13a5 5 0 0 0-7-7l-8.5 8.5a3 3 0 0 0 4.2 4.3l7.8-7.9" /></svg>
+				</button>
+				<button class="pill green">Effort Low</button>
+				<button class="pill blue">11 Tool(s)</button>
+				<button class="pill blue">1 Agent(s)</button>
+				<button class="icon-btn" title="Checkpoints">
+					<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="8" ry="3" /><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13" /><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" /></svg>
+				</button>
+				<div class="grow"></div>
+				<button class="icon-btn" title="Dictate">
+					<svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v4" /></svg>
+				</button>
+				<button class="icon-btn" title="Voice">
+					<svg viewBox="0 0 24 24"><path d="M2 12h2M7 6v12M12 3v18M17 7v10M22 12h-2" /></svg>
+				</button>
+				<span class="split">
+					<button class="main" title="Push to talk"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v4" /></svg></button>
+					<button class="caret-btn"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg></button>
+				</span>
+				<button class="pill model">
+					<span class="dot"></span>
+					Qwen 3.8 27…
+					<svg class="caret" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg>
+				</button>
+				<button class="icon-btn send" title="Send">
+					<svg viewBox="0 0 24 24"><path d="M4.5 12.5 20 5l-7.5 15.5-2-7z" /></svg>
+				</button>
+			</div>
+
+			<div class="context">
+				<div class="track"><div class="fill"></div></div>
+				<span>124 / 262k</span>
+			</div>
+
+		</div>
+	</div>
+
+</div>
+
+<style>
+	.subagents svg {
+		stroke: currentColor;
+		fill: none;
+		stroke-width: 1.7;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.subagents {
+		width: 100%;
+		max-width: 845px;
+	}
+
+	/* ---------- agent monitor ---------- */
+
+	.monitor {
+		display: flex;
+		flex-direction: column;
+		margin-bottom: 22px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 11px;
+		background: var(--wc-bg-elevated);
+		box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+		overflow: hidden;
+	}
+
+	.mon-head {
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		height: 40px;
+		padding: 0 14px;
+		border-bottom: 1px solid var(--wc-border-subtle);
+		font-size: 12px;
+		font-weight: 500;
+		color: var(--wc-text-secondary);
+	}
+
+	.mon-head > svg {
+		width: 14px;
+		height: 14px;
+		color: var(--wc-text-muted);
+	}
+	.mon-head .grow {
+		flex: 1;
+	}
+
+	.x-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
+		border: none;
+		border-radius: 6px;
+		background: transparent;
+		color: var(--wc-text-faint);
+		cursor: pointer;
+	}
+
+	.x-btn:hover {
+		background: var(--wc-bg-hover);
+		color: var(--wc-text-secondary);
+	}
+	.x-btn svg {
+		width: 13px;
+		height: 13px;
+	}
+
+	.agent {
+		padding: 12px 14px 14px;
+	}
+
+	.agent-line {
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		font-size: 13px;
+	}
+
+	.agent-line > svg {
+		width: 13px;
+		height: 13px;
+		color: var(--wc-text-muted);
+		flex-shrink: 0;
+	}
+	.agent-line .aname {
+		font-weight: 600;
+		color: var(--wc-text-heading);
+	}
+	.agent-line .task {
+		color: var(--wc-text-secondary);
+	}
+
+	.agent-status {
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		margin-top: 9px;
+		font-size: 12.5px;
+		color: var(--wc-accent-yellow);
+	}
+
+	.agent-status .spin {
+		width: 13px;
+		height: 13px;
+		flex-shrink: 0;
+		animation: subagents-spin 1.6s linear infinite;
+	}
+
+	@keyframes subagents-spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.agent-status .grow {
+		flex: 1;
+	}
+
+	.stop-sq {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 22px;
+		height: 22px;
+		border: none;
+		border-radius: 5px;
+		background: transparent;
+		color: var(--wc-text-secondary);
+		cursor: pointer;
+	}
+
+	.stop-sq svg {
+		width: 11px;
+		height: 11px;
+		fill: currentColor;
+		stroke: none;
+	}
+
+	.mon-foot {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		height: 44px;
+		padding: 0 14px;
+		border-top: 1px solid var(--wc-border-subtle);
+		background: var(--wc-bg-surface);
+	}
+
+	.checkbox {
+		width: 14px;
+		height: 14px;
+		border: 1px solid var(--wc-border-default);
+		border-radius: 3px;
+		flex-shrink: 0;
+	}
+
+	.mon-foot .count {
+		font-size: 12.5px;
+		color: var(--wc-text-muted);
+	}
+	.mon-foot .grow {
+		flex: 1;
+	}
+
+	.foot-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		height: 28px;
+		padding: 0 12px;
+		border: 1px solid transparent;
+		border-radius: 7px;
+		background: transparent;
+		font-size: 12.5px;
+		font-family: inherit;
+		cursor: pointer;
+	}
+
+	.foot-btn svg {
+		width: 13px;
+		height: 13px;
+	}
+	.foot-btn.off {
+		color: var(--wc-text-disabled);
+		cursor: default;
+	}
+	.foot-btn.send {
+		background: var(--wc-accent-green-bg-8);
+		color: var(--wc-accent-green);
+		font-weight: 500;
+	}
+	.foot-btn.send:hover {
+		filter: brightness(1.25);
+	}
+
+	/* ---------- composer ---------- */
+
+	.composer-root {
+		position: relative;
+		display: flex;
+		width: 100%;
+		flex-direction: column;
+	}
+
+	.composer-shell {
+		display: flex;
+		width: 100%;
+		flex-direction: column;
+		gap: 10px;
+		border-radius: 12px;
+		padding: var(--composer-padding);
+		background: var(--wc-bg-elevated);
+		box-shadow: 0px 10px 10px 10px rgba(0, 0, 0, 0.15);
+		color: var(--wc-text-primary);
+	}
+
+	.composer-gradient-border {
+		position: relative;
+		border: none;
+	}
+
+	.composer-gradient-border::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		padding: 2px;
+		background: radial-gradient(
+			ellipse 80% 150% at 50% 0%,
+			var(--composer-border-color) 0%,
+			transparent 75%
+		);
+		opacity: 1;
+		-webkit-mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		-webkit-mask-composite: xor;
+		mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		mask-composite: exclude;
+		pointer-events: none;
+		transition: background 200ms ease;
+	}
+
+	.row {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.grow {
+		flex: 1;
+	}
+
+	.modes {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+	}
+
+	.mode {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 32px;
+		padding: 0 11px;
+		border: none;
+		border-radius: 7px;
+		background: transparent;
+		color: var(--wc-text-tertiary);
+		font-size: 13px;
+		font-family: inherit;
+		cursor: pointer;
+		transition:
+			background 140ms ease,
+			color 140ms ease;
+	}
+
+	.mode:hover {
+		background: var(--wc-bg-hover);
+		color: var(--wc-text-secondary);
+	}
+	.mode[aria-selected="true"] {
+		background: color-mix(in srgb, var(--mode-color) 16%, transparent);
+		color: var(--mode-color);
+	}
+	.mode[data-mode="default"] {
+		--mode-color: var(--wc-text-primary);
+	}
+	.mode[data-mode="plan"] {
+		--mode-color: var(--wc-mode-plan);
+	}
+	.mode[data-mode="build"] {
+		--mode-color: var(--wc-mode-build);
+	}
+	.mode svg {
+		width: 13px;
+		height: 13px;
+	}
+
+	.pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		height: 34px;
+		padding: 0 12px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 9px;
+		background: transparent;
+		color: var(--wc-text-tertiary);
+		font-size: 12.5px;
+		font-family: inherit;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+
+	.pill:hover {
+		background: var(--wc-bg-hover);
+		border-color: var(--wc-border-default);
+	}
+	.pill svg {
+		width: 15px;
+		height: 15px;
+	}
+	.pill .caret {
+		width: 12px;
+		height: 12px;
+	}
+
+	.pill.green {
+		border-color: var(--wc-accent-green-border);
+		background: var(--wc-accent-green-bg-8);
+		color: var(--wc-accent-green);
+	}
+	.pill.blue {
+		border-color: var(--wc-accent-blue-border);
+		background: var(--wc-accent-blue-bg-8);
+		color: var(--wc-accent-blue);
+	}
+
+	.pill.model {
+		border-color: color-mix(in srgb, var(--composer-border-color) 45%, transparent);
+		background: color-mix(in srgb, var(--composer-border-color) 12%, transparent);
+		color: var(--wc-text-secondary);
+	}
+
+	.icon-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 34px;
+		height: 34px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 9px;
+		background: transparent;
+		color: var(--wc-text-tertiary);
+		cursor: pointer;
+	}
+
+	.icon-btn:hover {
+		background: var(--wc-bg-hover);
+		color: var(--wc-text-secondary);
+	}
+	.icon-btn svg {
+		width: 15px;
+		height: 15px;
+	}
+	.icon-btn.send {
+		border-color: var(--wc-accent-blue-border);
+		background: var(--wc-accent-blue-bg-8);
+		color: var(--wc-accent-blue);
+	}
+
+	.split {
+		display: inline-flex;
+		align-items: center;
+		height: 34px;
+		border: 1px solid var(--wc-border-subtle);
+		border-radius: 9px;
+		overflow: hidden;
+	}
+
+	.split button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+		border: none;
+		background: transparent;
+		color: var(--wc-accent-green);
+		cursor: pointer;
+	}
+
+	.split .main {
+		width: 30px;
+	}
+	.split .caret-btn {
+		width: 20px;
+		color: var(--wc-text-faint);
+		border-left: 1px solid var(--wc-border-subtle);
+	}
+	.split button:hover {
+		background: var(--wc-bg-hover);
+	}
+	.split svg {
+		width: 14px;
+		height: 14px;
+	}
+	.split .caret-btn svg {
+		width: 11px;
+		height: 11px;
+	}
+
+	.editor {
+		min-height: 62px;
+		padding: 6px 8px;
+		font-size: 14px;
+		line-height: 1.5;
+		outline: none;
+	}
+
+	.editor:empty::before {
+		content: attr(data-placeholder);
+		color: var(--wc-text-placeholder);
+	}
+
+	.dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--wc-accent-green);
+		flex-shrink: 0;
+	}
+
+	.context {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 0 4px 2px;
+	}
+	.track {
+		position: relative;
+		flex: 1;
+		height: 3px;
+		border-radius: 2px;
+		background: var(--wc-border-subtle);
+		overflow: hidden;
+	}
+	.fill {
+		position: absolute;
+		inset: 0 auto 0 0;
+		width: 0.05%;
+		border-radius: 2px;
+		background: var(--wc-text-muted);
+	}
+	.context span {
+		font-size: 11.5px;
+		color: var(--wc-text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+</style>
+
+<script>
+	const colors = {
+		default: "var(--wc-mode-default)",
+		plan: "var(--wc-mode-plan)",
+		build: "var(--wc-mode-build)",
+	};
+
+	const shell = document.getElementById("subagents-shell");
+	const tabs = Array.from(shell?.querySelectorAll(".mode") ?? []);
+
+	tabs.forEach((tab) => {
+		tab.addEventListener("click", () => {
+			tabs.forEach((t) => t.setAttribute("aria-selected", String(t === tab)));
+			shell.style.setProperty("--composer-border-color", colors[tab.dataset.mode]);
+		});
+	});
+</script>

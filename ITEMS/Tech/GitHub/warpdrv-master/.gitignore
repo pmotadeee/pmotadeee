@@ -1,0 +1,36 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+.warpcore-db
+
+landing/node_modules
+landing/dist
+
+packages/desktop/target/
+packages/desktop/target/
+packages/desktop/binaries/
+packages/desktop/app-dist/
+packages/server/dist/
+
+node_modules
+dist
+dist-ssr
+*.local
+.data
+
+# Editor directories and files
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+CLAUDE.md

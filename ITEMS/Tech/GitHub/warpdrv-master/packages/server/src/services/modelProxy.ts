@@ -1,0 +1,536 @@
+import type { IServer, ISettings, IWhisperServer } from "@warpcore/shared";
+import { DEFAULT_SETTINGS, EServerStatus, EWhisperServerStatus } from "@warpcore/shared";
+import busboy from "busboy";
+import cors from "cors";
+import express from "express";
+import http from "http";
+import { proxyAuthMiddleware } from "../middleware/auth";
+import { store } from "../util/store";
+import { sseManager } from "./sseManagerInstance";
+
+const SERVERS_PREFIX = "servers:";
+const WHISPER_SERVERS_PREFIX = "whisperServers:";
+const SETTINGS_KEY = "settings:general";
+
+// Sticky routing: alias -> serverId
+const stickyRoutes = new Map<string, string>();
+
+// Store the proxy server instance for dynamic start/stop
+let proxyServerInstance: http.Server | null = null;
+let proxyError: string | null = null; // in-memory error state
+
+// Find a running server for the given alias
+async function resolveServer(alias: string): Promise<IServer | null> {
+	const servers = await store.list<IServer>(SERVERS_PREFIX);
+
+	// Filter to servers that have this alias
+	const candidates = servers.filter((s) => (s.serverAlias ?? []).includes(alias));
+
+	if (candidates.length === 0) return null;
+
+	// Check sticky route first
+	const stickyId = stickyRoutes.get(alias);
+	if (stickyId) {
+		const sticky = candidates.find(
+			(s) => s.id === stickyId && s.status === EServerStatus.RUNNING,
+		);
+		if (sticky) return sticky;
+		// Sticky server is gone, clear it
+		stickyRoutes.delete(alias);
+		getStickyRoutesResolved()
+			.then((routes) => {
+				sseManager.emit("proxy:routes", { routes });
+			})
+			.catch(() => {});
+	}
+
+	// Find a running server without error state
+	const running = candidates.filter((s) => s.status === EServerStatus.RUNNING);
+	if (running.length === 0) return null;
+
+	// Prefer servers without recent errors
+	const healthy = running.filter((s) => !s.error);
+	const chosen = healthy.length > 0 ? healthy[0]! : running[0]!;
+
+	// Set sticky route
+	const oldServerId = stickyRoutes.get(alias);
+	if (oldServerId !== chosen.id) {
+		stickyRoutes.set(alias, chosen.id);
+		getStickyRoutesResolved()
+			.then((routes) => {
+				sseManager.emit("proxy:routes", { routes });
+			})
+			.catch(() => {});
+	}
+	return chosen;
+}
+
+// Get all unique aliases from all servers
+async function getAllAliases(): Promise<string[]> {
+	const servers = await store.list<IServer>(SERVERS_PREFIX);
+	const aliases = new Set<string>();
+	for (const s of servers) {
+		for (const a of s.serverAlias ?? []) aliases.add(a);
+	}
+	return [...aliases];
+}
+
+// Whisper server resolution
+async function resolveWhisperServer(alias: string): Promise<IWhisperServer | null> {
+	const servers = await store.list<IWhisperServer>(WHISPER_SERVERS_PREFIX);
+	const candidates = servers.filter((s) => (s.serverAlias ?? []).includes(alias));
+	if (candidates.length === 0) return null;
+
+	const running = candidates.filter((s) => s.status === EWhisperServerStatus.RUNNING);
+	if (running.length === 0) return null;
+
+	const healthy = running.filter((s) => !s.error);
+	return healthy.length > 0 ? healthy[0]! : running[0]!;
+}
+
+async function getAllWhisperAliases(): Promise<string[]> {
+	const servers = await store.list<IWhisperServer>(WHISPER_SERVERS_PREFIX);
+	const aliases = new Set<string>();
+	for (const s of servers) {
+		for (const a of s.serverAlias ?? []) aliases.add(a);
+	}
+	return [...aliases];
+}
+
+// Extract model field from multipart form-data
+function extractModelFromMultipart(req: express.Request): Promise<string | null> {
+	return new Promise((resolve) => {
+		const bb = busboy({ headers: req.headers });
+		let model: string | null = null;
+		let consumed = 0;
+		const maxConsume = 1024 * 1024; // 1MB max for parsing
+
+		bb.on("field", (name, value) => {
+			if (name === "model") model = value;
+		});
+
+		bb.on("file", (_name, _file) => {
+			_consume(_file);
+		});
+
+		bb.on("finish", () => resolve(model));
+
+		// Consume the request body but limit to avoid buffering large files
+		req.on("data", (chunk: Buffer) => {
+			consumed += chunk.length;
+			if (consumed <= maxConsume) {
+				bb.write(chunk);
+			}
+		});
+		req.on("end", () => {
+			if (consumed <= maxConsume) bb.end();
+			else bb.end();
+		});
+
+		function _consume(stream: NodeJS.ReadableStream) {
+			stream.on("data", () => {});
+			stream.resume();
+		}
+	});
+}
+
+// Proxy a request to a llama-server, streaming the response through
+function proxyRequest(targetPort: number, req: express.Request, res: express.Response): void {
+	const options: http.RequestOptions = {
+		hostname: "127.0.0.1",
+		port: targetPort,
+		path: req.originalUrl,
+		method: req.method,
+		headers: {
+			...req.headers,
+			host: `127.0.0.1:${targetPort}`,
+		},
+	};
+
+	const proxyReq = http.request(options, (proxyRes) => {
+		res.writeHead(proxyRes.statusCode ?? 200, proxyRes.headers);
+		proxyRes.pipe(res, { end: true });
+	});
+
+	proxyReq.on("error", (err) => {
+		if (!res.headersSent) {
+			res.status(502).json({
+				error: {
+					message: `Failed to reach model server: ${err.message}`,
+					type: "proxy_error",
+					code: 502,
+				},
+			});
+		}
+	});
+
+	// Pipe request body through for POST requests
+	req.pipe(proxyReq, { end: true });
+}
+
+// Extract model name from request body (for POST requests)
+// Needs raw body parsing since we also pipe it through
+function extractModelFromBody(req: express.Request): string | null {
+	const body = req.body;
+	if (body && typeof body === "object" && typeof body.model === "string") {
+		return body.model;
+	}
+	return null;
+}
+
+export interface IStickyRouteInfo {
+	alias: string;
+	serverId: string;
+	serverName: string | null; // null if server no longer exists
+}
+
+// Get sticky routes with resolved server names from store
+export async function getStickyRoutesResolved(): Promise<IStickyRouteInfo[]> {
+	const servers = await store.list<IServer>(SERVERS_PREFIX);
+	const serverMap = new Map(servers.map((s) => [s.id, s.serverName]));
+
+	const routes: IStickyRouteInfo[] = [];
+	for (const [alias, serverId] of stickyRoutes.entries()) {
+		routes.push({
+			alias,
+			serverId,
+			serverName: serverMap.get(serverId) || null,
+		});
+	}
+	return routes;
+}
+
+// Clear a specific sticky route by alias
+export function clearStickyRoute(alias: string): boolean {
+	const deleted = stickyRoutes.delete(alias);
+	if (deleted) {
+		getStickyRoutesResolved()
+			.then((routes) => {
+				sseManager.emit("proxy:routes", { routes });
+			})
+			.catch(() => {});
+	}
+	return deleted;
+}
+
+// Clear all sticky routes
+export function clearAllStickyRoutes(): void {
+	stickyRoutes.clear();
+	getStickyRoutesResolved()
+		.then((routes) => {
+			sseManager.emit("proxy:routes", { routes });
+		})
+		.catch(() => {});
+}
+
+// Create the proxy app (shared between start and restart)
+function createProxyApp(): express.Express {
+	const app = express();
+
+	// Enable CORS for browser clients
+	app.use(cors());
+
+	// Parse JSON body but keep it available for piping
+	app.use((req, res, next) => {
+		let rawBody = "";
+		req.on("data", (chunk: Buffer) => {
+			rawBody += chunk.toString();
+		});
+		req.on("end", () => {
+			try {
+				if (rawBody) (req as any)._rawBody = rawBody;
+				if (rawBody) req.body = JSON.parse(rawBody);
+			} catch {
+				req.body = {};
+			}
+			next();
+		});
+	});
+
+	// Apply auth middleware to all /v1/* routes
+	app.use("/v1/", proxyAuthMiddleware);
+
+	// POST /v1/audio/transcriptions — route to whisper server via multipart model field
+	app.post("/v1/audio/transcriptions", async (req, res) => {
+		// Buffer the entire request body first
+		const chunks: Buffer[] = [];
+		await new Promise<void>((resolve, reject) => {
+			req.on("data", (chunk: Buffer) => chunks.push(chunk));
+			req.on("end", resolve);
+			req.on("error", reject);
+		});
+		const body = Buffer.concat(chunks);
+
+		// Parse model field from buffered body using busboy
+		const model = await new Promise<string | null>((resolve) => {
+			const bb = busboy({ headers: req.headers });
+			let found: string | null = null;
+			bb.on("field", (name, value) => {
+				if (name === "model") found = value;
+			});
+			bb.on("file", (_name, stream) => {
+				stream.resume();
+			});
+			bb.on("finish", () => resolve(found));
+			bb.write(body);
+			bb.end();
+		});
+
+		if (!model) {
+			res.status(400).json({
+				error: {
+					message: 'Missing "model" field in form data',
+					type: "invalid_request_error",
+					code: 400,
+				},
+			});
+			return;
+		}
+
+		const server = await resolveWhisperServer(model);
+
+		if (!server) {
+			const allAliases = await getAllWhisperAliases();
+			const aliasExists = allAliases.includes(model);
+
+			res.status(aliasExists ? 503 : 404).json({
+				error: {
+					message: aliasExists
+						? `No running whisper server for model "${model}"`
+						: `Unknown whisper model "${model}". Available: ${allAliases.join(", ") || "none"}`,
+					type: aliasExists ? "server_unavailable" : "model_not_found",
+					code: aliasExists ? 503 : 404,
+				},
+			});
+			return;
+		}
+
+		// Forward buffered body to whisper server
+		const options: http.RequestOptions = {
+			hostname: "127.0.0.1",
+			port: server.port,
+			path: req.originalUrl,
+			method: req.method,
+			headers: {
+				"content-type": req.headers["content-type"] ?? "multipart/form-data",
+				"content-length": String(body.length),
+				accept: req.headers.accept ?? "*/*",
+			},
+		};
+
+		const proxyReq = http.request(options, (proxyRes) => {
+			const headers = { ...proxyRes.headers };
+			res.writeHead(proxyRes.statusCode ?? 200, headers);
+			proxyRes.pipe(res, { end: true });
+		});
+
+		proxyReq.on("error", (err) => {
+			if (!res.headersSent) {
+				res.status(502).json({
+					error: {
+						message: `Whisper server not responding: ${err.message}`,
+						type: "proxy_error",
+						code: 502,
+					},
+				});
+			}
+		});
+
+		proxyReq.write(body);
+		proxyReq.end();
+	});
+
+	// GET /v1/models — list all available aliases (llama + whisper)
+	app.get("/v1/models", async (_req, res) => {
+		const [llamaAliases, whisperAliases] = await Promise.all([
+			getAllAliases(),
+			getAllWhisperAliases(),
+		]);
+		const seen: Record<string, boolean> = {};
+		const uniqueWhisper = whisperAliases.filter((a) =>
+			seen[a] ? false : ((seen[a] = true) as any),
+		);
+		const all = [...llamaAliases, ...uniqueWhisper];
+		res.json({
+			object: "list",
+			data: all.map((alias) => ({
+				id: alias,
+				object: "model",
+				created: 0,
+				owned_by: "warpcore",
+			})),
+		});
+	});
+
+	// Catch-all for /v1/* — route by model alias
+	// Express 5 router uses different syntax - use a middleware approach
+	app.use("/v1/", async (req, res, next) => {
+		// Skip the /models endpoint which is handled separately
+		if (req.path === "/models" || req.path.startsWith("/models")) {
+			return next();
+		}
+		const model = extractModelFromBody(req);
+
+		if (!model) {
+			res.status(400).json({
+				error: {
+					message: 'Missing "model" field in request body',
+					type: "invalid_request_error",
+					code: 400,
+				},
+			});
+			return;
+		}
+
+		const server = await resolveServer(model);
+
+		if (!server) {
+			const allAliases = await getAllAliases();
+			const aliasExists = allAliases.includes(model);
+
+			res.status(aliasExists ? 503 : 404).json({
+				error: {
+					message: aliasExists
+						? `No running server for model "${model}". Start a server with this alias first.`
+						: `Unknown model "${model}". Available: ${allAliases.join(", ") || "none"}`,
+					type: aliasExists ? "server_unavailable" : "model_not_found",
+					code: aliasExists ? 503 : 404,
+				},
+			});
+			return;
+		}
+
+		// Re-create the request with raw body for piping
+		// Since we consumed the body for parsing, we need to create a new request
+		const rawBody = (req as any)._rawBody as string | undefined;
+
+		const options: http.RequestOptions = {
+			hostname: "127.0.0.1",
+			port: server.port,
+			path: req.originalUrl,
+			method: req.method,
+			headers: {
+				"content-type": "application/json",
+				accept: req.headers.accept ?? "*/*",
+			},
+		};
+
+		const proxyReq = http.request(options, (proxyRes) => {
+			// Copy all response headers
+			const headers = { ...proxyRes.headers };
+			res.writeHead(proxyRes.statusCode ?? 200, headers);
+			// Stream response directly — no buffering
+			proxyRes.pipe(res, { end: true });
+		});
+
+		proxyReq.on("error", (err) => {
+			// Server might have died — clear sticky route
+			stickyRoutes.delete(model);
+			if (!res.headersSent) {
+				res.status(502).json({
+					error: {
+						message: `Model server not responding: ${err.message}`,
+						type: "proxy_error",
+						code: 502,
+					},
+				});
+			}
+		});
+
+		// Write the raw body and end
+		if (rawBody) {
+			proxyReq.write(rawBody);
+		}
+		proxyReq.end();
+	});
+
+	// Health endpoint for the proxy itself
+	app.get("/health", (_req, res) => {
+		res.json({ status: "ok", service: "warpcore-proxy" });
+	});
+
+	return app;
+}
+
+export interface StartProxyResult {
+	success: boolean;
+	server?: http.Server;
+	error?: string;
+}
+
+export async function startModelProxy(): Promise<StartProxyResult> {
+	const settings = (await store.get<ISettings>(SETTINGS_KEY)) ?? DEFAULT_SETTINGS;
+
+	const app = createProxyApp();
+	const port = settings.proxyPort ?? 1234;
+
+	return new Promise((resolve) => {
+		const server = app.listen(port, "0.0.0.0", async () => {
+			console.log(`[WarpCore] Model proxy listening on 0.0.0.0:${port}`);
+			proxyServerInstance = server;
+			proxyError = null;
+			const status = await getProxyStatus();
+			sseManager.emit("proxy:update", status);
+			resolve({ success: true, server });
+		});
+
+		server.on("error", async (err) => {
+			const errorMsg = err.message || "Unknown error";
+			console.error(`[WarpCore] Model proxy failed to start: ${errorMsg}`);
+			proxyError = errorMsg;
+			const status = await getProxyStatus();
+			sseManager.emit("proxy:update", status);
+			resolve({ success: false, error: errorMsg });
+		});
+	});
+}
+
+export async function stopModelProxy(): Promise<void> {
+	if (!proxyServerInstance) {
+		proxyError = null;
+		console.log("[WarpCore] Model proxy not running");
+		return;
+	}
+
+	const server = proxyServerInstance;
+	proxyServerInstance = null;
+	proxyError = null;
+
+	return new Promise(async (resolve) => {
+		server.close(async () => {
+			console.log("[WarpCore] Model proxy stopped");
+			const status = await getProxyStatus();
+			sseManager.emit("proxy:update", status);
+			resolve();
+		});
+	});
+}
+
+export function getModelProxyInstance(): http.Server | null {
+	return proxyServerInstance;
+}
+
+export function getProxyError(): string | null {
+	return proxyError;
+}
+
+export function isProxyOnline(): boolean {
+	return proxyServerInstance !== null && proxyError === null;
+}
+
+export async function getProxyStatus(): Promise<{ status: any; routes: IStickyRouteInfo[] }> {
+	const settings = (await store.get<ISettings>(SETTINGS_KEY)) ?? DEFAULT_SETTINGS;
+	const running = !!proxyServerInstance;
+	const routes = await getStickyRoutesResolved();
+
+	return {
+		status: {
+			enabled: settings.proxyEnabled,
+			port: settings.proxyPort,
+			running,
+			healthy: running && proxyError === null,
+			error: proxyError,
+		},
+		routes,
+	};
+}

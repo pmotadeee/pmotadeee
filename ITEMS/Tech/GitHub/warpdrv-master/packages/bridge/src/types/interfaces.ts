@@ -1,0 +1,434 @@
+// ============================================================
+// warpbridge/src/types/interfaces.ts
+// Contracts for replaceable components.
+// Universal — no Node or browser dependencies.
+// ============================================================
+
+import type {
+	IAgent,
+	ICodeGraphEdge,
+	ICodeGraphFile,
+	ICodeGraphNode,
+	ICodeGraphSearchOptions,
+	INotification,
+	INotificationCreatePayload,
+	INotificationUpdatePayload,
+} from "@warpcore/shared";
+import type {
+	EToolApprovalMode,
+	EToolCallStatus,
+	IBridgeEvent,
+	IChatMessage,
+	IChatThread,
+	ICompletionRequest,
+	IFolder,
+	IListThreadsOptions,
+	IMcpConfigFile,
+	IMcpServerEntry,
+	IMcpServerState,
+	IMessagePart,
+	IReorderFolderEntry,
+	ISearchOptions,
+	ISearchResult,
+	ISearchThreadResult,
+	IServerPermission,
+	ISSEChunk,
+	IThreadConfig,
+	IThreadToolPermission,
+	IToolAttachment,
+	IToolCall,
+	IToolDefinition,
+	IToolPermission,
+	IWorkspace,
+	TFolderId,
+	TMessageId,
+	TThreadId,
+	TToolCallId,
+} from "./index";
+
+// ============================================================
+// Persistence — storage for folders, threads, messages, tool calls, permissions
+// ============================================================
+export interface IPersistence {
+	// Lifecycle
+	init(): Promise<void>;
+
+	// Folders
+	createFolder(folder: IFolder): Promise<void>;
+	getFolder(id: TFolderId): Promise<IFolder | null>;
+	getFolderByTopic(topic: string): Promise<IFolder | null>;
+	listFolders(): Promise<IFolder[]>;
+	updateFolder(id: TFolderId, updates: Partial<IFolder>): Promise<void>;
+	deleteFolder(id: TFolderId): Promise<void>;
+	reorderFolders(entries: IReorderFolderEntry[]): Promise<void>;
+	isTopicUnique(topic: string, excludeFolderId?: TFolderId): Promise<boolean>;
+
+	// Workspaces
+	createWorkspace(workspace: IWorkspace): Promise<void>;
+	getWorkspace(folderId: TFolderId): Promise<IWorkspace | null>;
+	updateWorkspace(folderId: TFolderId, data: Record<string, unknown>): Promise<void>;
+	deleteWorkspace(folderId: TFolderId): Promise<void>;
+
+	// Threads
+	createThread(thread: IChatThread): Promise<void>;
+	getThread(id: TThreadId): Promise<IChatThread | null>;
+	listThreads(options?: IListThreadsOptions): Promise<IChatThread[]>;
+	updateThread(id: TThreadId, updates: Partial<IChatThread>): Promise<void>;
+	deleteThread(id: TThreadId): Promise<void>;
+	deleteThreadCascade(
+		id: TThreadId,
+	): Promise<Array<{ messageId: string; modelId: string; topic: string }>>;
+	incrementThreadTokens(
+		id: TThreadId,
+		promptDelta: number,
+		completionDelta: number,
+	): Promise<void>;
+
+	// Thread Configs
+	getThreadConfig(threadId: TThreadId): Promise<IThreadConfig | null>;
+	setThreadConfig(config: IThreadConfig): Promise<void>;
+	deleteThreadConfig(threadId: TThreadId): Promise<void>;
+
+	// Messages (content persisted as ordered parts)
+	createMessage(message: IChatMessage): Promise<void>;
+	getMessages(threadId: TThreadId): Promise<IChatMessage[]>;
+	getMessage(id: TMessageId): Promise<IChatMessage | null>;
+	getHeadMessage(threadId: TThreadId): Promise<IChatMessage | null>;
+	updateMessage(id: TMessageId, updates: Partial<Pick<IChatMessage, "stats">>): Promise<void>;
+	replaceMessageParts(messageId: TMessageId, parts: IMessagePart[]): Promise<void>;
+	appendMessagePart(messageId: TMessageId, part: IMessagePart): Promise<void>;
+	deleteMessage(id: TMessageId): Promise<void>;
+
+	// Tool calls
+	createToolCall(toolCall: IToolCall): Promise<void>;
+	updateToolCall(id: TToolCallId, updates: Partial<IToolCall>): Promise<void>;
+	getToolCall(id: TToolCallId): Promise<IToolCall | null>;
+	getToolCallsForThread(threadId: TThreadId): Promise<IToolCall[]>;
+	getToolCallsForMessage(messageId: TMessageId): Promise<IToolCall[]>;
+	getPendingToolCalls(): Promise<IToolCall[]>;
+
+	// Permissions — servers
+	getServerPermission(serverName: string): Promise<IServerPermission | null>;
+	setServerPermission(serverName: string, enabled: boolean): Promise<void>;
+	getAllServerPermissions(): Promise<IServerPermission[]>;
+
+	// Permissions — tools
+	getToolPermission(serverName: string, toolName: string): Promise<IToolPermission | null>;
+	setToolPermission(
+		serverName: string,
+		toolName: string,
+		enabled: boolean,
+		approvalMode: EToolApprovalMode,
+	): Promise<void>;
+	getAllToolPermissions(): Promise<IToolPermission[]>;
+
+	// Permissions — thread-level tool overrides
+	getThreadToolPermission(
+		threadId: TThreadId,
+		serverName: string,
+		toolName: string,
+	): Promise<IThreadToolPermission | null>;
+	setThreadToolPermission(
+		threadId: TThreadId,
+		serverName: string,
+		toolName: string,
+		enabled: boolean,
+		approvalMode: EToolApprovalMode,
+	): Promise<void>;
+	deleteThreadToolPermission(
+		threadId: TThreadId,
+		serverName: string,
+		toolName: string,
+	): Promise<void>;
+	getAllThreadToolPermissions(threadId: TThreadId): Promise<IThreadToolPermission[]>;
+
+	// Thread attached tools
+	saveThreadAttachedTools(
+		threadId: TThreadId,
+		attachAllTools: boolean,
+		tools: IToolAttachment[],
+	): Promise<void>;
+	getThreadAttachedTools(
+		threadId: TThreadId,
+	): Promise<{ attachAllTools: boolean; tools: IToolAttachment[] } | null>;
+
+	// FTS search
+	searchMessages(q: string, options: ISearchOptions): Promise<ISearchResult[]>;
+	searchThreads(
+		q: string,
+		options?: { limit?: number; offset?: number },
+	): Promise<ISearchThreadResult[]>;
+
+	// Persisted states — free-form JSON blobs per entity
+	getWorkspaceState(folderId: TFolderId): Promise<Record<string, unknown> | null>;
+	updateWorkspaceState(folderId: TFolderId, data: Record<string, unknown>): Promise<void>;
+	getThreadState(threadId: TThreadId): Promise<Record<string, unknown> | null>;
+	updateThreadState(threadId: TThreadId, data: Record<string, unknown>): Promise<void>;
+	getMessageState(messageId: TMessageId): Promise<Record<string, unknown> | null>;
+	updateMessageState(messageId: TMessageId, data: Record<string, unknown>): Promise<void>;
+	getMessageStatesByThreadId(
+		threadId: TThreadId,
+	): Promise<Array<{ messageId: string; data: Record<string, unknown> }>>;
+
+	// Code graph
+	codeGraphFindProjectRoot(filePath: string): Promise<string | null>;
+	codeGraphGetFile(projectId: string, filePath: string): Promise<ICodeGraphFile | null>;
+	codeGraphListFiles(projectId: string): Promise<ICodeGraphFile[]>;
+	codeGraphUpsertFile(file: ICodeGraphFile): Promise<void>;
+	codeGraphDeleteByFile(projectId: string, filePath: string): Promise<void>;
+	codeGraphUpsertNodes(
+		projectId: string,
+		filePath: string,
+		nodes: ICodeGraphNode[],
+	): Promise<void>;
+	codeGraphUpsertEdges(
+		projectId: string,
+		filePath: string,
+		edges: ICodeGraphEdge[],
+	): Promise<void>;
+	codeGraphSearchNodes(
+		projectId: string,
+		query: string,
+		options?: ICodeGraphSearchOptions,
+	): Promise<ICodeGraphNode[]>;
+	codeGraphGetNode(projectId: string, nodeId: string): Promise<ICodeGraphNode | null>;
+	codeGraphGetNodesByFile(projectId: string, filePath: string): Promise<ICodeGraphNode[]>;
+	codeGraphGetAllNodes(projectId: string): Promise<ICodeGraphNode[]>;
+	codeGraphGetCallers(
+		projectId: string,
+		symbolName: string,
+		depth?: number,
+	): Promise<ICodeGraphNode[]>;
+	codeGraphGetCallees(
+		projectId: string,
+		nodeId: string,
+		depth?: number,
+	): Promise<ICodeGraphNode[]>;
+	codeGraphGetAmbiguousSymbols(projectId: string): Promise<Set<string>>;
+	codeGraphClearProject(projectId: string): Promise<void>;
+
+	// Guardrails
+	listGuardrails(): Promise<
+		Record<
+			string,
+			{
+				id: string;
+				name: string;
+				serverId: string;
+				promptId?: string;
+				prompt?: string;
+				triggerOnTools: IToolAttachment[];
+				inferenceParams: Record<string, unknown>;
+				messagesCount: number;
+				includeBaseMessage: boolean;
+			}
+		>
+	>;
+	upsertGuardrail(guardrail: {
+		id: string;
+		name: string;
+		serverId: string;
+		promptId?: string;
+		prompt?: string;
+		triggerOnTools?: IToolAttachment[];
+		inferenceParams?: Record<string, unknown>;
+		messagesCount?: number;
+		includeBaseMessage?: boolean;
+	}): Promise<void>;
+	deleteGuardrail(id: string): Promise<void>;
+
+	// Modes
+	listModes(): Promise<
+		Array<{
+			id: string;
+			name: string;
+			scope: string;
+			color: string;
+			promptId?: string;
+			prompt?: string;
+			allowedTools: IToolAttachment[];
+			activeGuardrails: string[];
+		}>
+	>;
+	getMode(id: string): Promise<{
+		id: string;
+		name: string;
+		scope: string;
+		color: string;
+		promptId?: string;
+		prompt?: string;
+		allowedTools: IToolAttachment[];
+		activeGuardrails: string[];
+	} | null>;
+	upsertMode(mode: {
+		id: string;
+		name: string;
+		scope: string;
+		color: string;
+		promptId?: string;
+		prompt?: string;
+		allowedTools: IToolAttachment[];
+		activeGuardrails: string[];
+	}): Promise<void>;
+	deleteMode(id: string): Promise<void>;
+
+	// Chat Prompts
+	listChatPrompts(): Promise<
+		Array<{
+			id: string;
+			name: string;
+			content: string;
+			meta: Record<string, unknown> | null;
+			createdAt: number;
+			updatedAt: number;
+		}>
+	>;
+	getChatPrompt(id: string): Promise<{
+		id: string;
+		name: string;
+		content: string;
+		meta: Record<string, unknown> | null;
+		createdAt: number;
+		updatedAt: number;
+	} | null>;
+	createChatPrompt(prompt: {
+		id: string;
+		name: string;
+		content: string;
+		meta?: Record<string, unknown>;
+		createdAt: number;
+		updatedAt: number;
+	}): Promise<void>;
+	updateChatPrompt(
+		id: string,
+		updates: {
+			name?: string;
+			content?: string;
+			meta?: Record<string, unknown> | null;
+		},
+	): Promise<void>;
+	deleteChatPrompt(id: string): Promise<void>;
+
+	// Notifications
+	notificationCreate(payload: INotificationCreatePayload): Promise<INotification>;
+	notificationGet(id: string): Promise<INotification | null>;
+	notificationList(
+		threadId: string,
+		includeConsumed?: boolean,
+		includeHidden?: boolean,
+	): Promise<INotification[]>;
+	notificationConsume(id: string): Promise<INotification>;
+	notificationHide(id: string): Promise<INotification>;
+	notificationUpdatePayload(
+		id: string,
+		payload: INotificationUpdatePayload,
+	): Promise<INotification>;
+	notificationDelete(id: string): Promise<void>;
+	notificationDeleteByThreadId(threadId: string): Promise<void>;
+	addMessageNotification(
+		threadId: string,
+		subThreadId: string,
+		message: string,
+	): Promise<INotification>;
+	addToolNotification(
+		threadId: string,
+		subThreadId: string,
+		assistantMessageId: string,
+		toolCallId: string,
+	): Promise<INotification>;
+
+	// Agents
+	listAgents(): Promise<IAgent[]>;
+	getAgent(id: string): Promise<IAgent | null>;
+	getAgentByName(name: string): Promise<IAgent | null>;
+	createAgent(agent: IAgent): Promise<void>;
+	updateAgent(id: string, updates: Partial<IAgent>): Promise<void>;
+	deleteAgent(id: string): Promise<void>;
+}
+
+// ============================================================
+// Transport — how the frontend talks to the backend
+// ============================================================
+export interface ITransport {
+	startCompletion(request: ICompletionRequest): AsyncIterable<ISSEChunk>;
+	cancelCompletion(threadId: TThreadId): void;
+	approveToolCall(id: TToolCallId): Promise<{ status: EToolCallStatus; result?: string }>;
+	denyToolCall(id: TToolCallId): Promise<{ status: EToolCallStatus }>;
+}
+
+// ============================================================
+// MCP Client — connects to MCP servers and executes tools
+// ============================================================
+export interface IMcpClient {
+	connect(name: string, entry: IMcpServerEntry): Promise<void>;
+	disconnect(name: string): Promise<void>;
+	reconnect(name: string): Promise<void>;
+	disconnectAll(): Promise<void>;
+	getServerState(name: string): IMcpServerState | null;
+	getAllServerStates(): Record<string, IMcpServerState>;
+	getTools(name: string): IToolDefinition[];
+	getAllTools(): IToolDefinition[];
+	executeToolCall(
+		serverName: string,
+		toolName: string,
+		args: Record<string, unknown>,
+		threadId?: string,
+	): Promise<{ content: unknown; isError: boolean }>;
+	findToolServer(toolName: string): string | null;
+}
+
+// ============================================================
+// MCP Config — reads/writes the mcp.json file
+// ============================================================
+export interface IMcpConfig {
+	read(): IMcpConfigFile;
+	write(config: IMcpConfigFile): void;
+	getPath(): string;
+	addServer(name: string, entry: IMcpServerEntry): IMcpConfigFile;
+	removeServer(name: string): IMcpConfigFile;
+	updateServer(name: string, entry: IMcpServerEntry): IMcpConfigFile;
+}
+
+// ============================================================
+// Permissions Manager — combines persistence + tool filtering
+// ============================================================
+export interface IPermissions {
+	isServerEnabled(serverName: string): Promise<boolean>;
+	getToolApprovalMode(
+		threadId: TThreadId | undefined,
+		serverName: string,
+		toolName: string,
+	): Promise<EToolApprovalMode>;
+	getEnabledTools(
+		threadId: TThreadId | undefined,
+		allTools: IToolDefinition[],
+	): Promise<IToolDefinition[]>;
+	setServerEnabled(serverName: string, enabled: boolean): Promise<void>;
+	setToolPermission(
+		serverName: string,
+		toolName: string,
+		enabled: boolean,
+		approvalMode: EToolApprovalMode,
+	): Promise<void>;
+}
+
+// ============================================================
+// Events — push-based state sync (MCP status, tool call updates)
+// ============================================================
+export interface IBridgeEvents {
+	onMcpServersChanged(callback: (servers: Record<string, IMcpServerState>) => void): () => void;
+	onToolCallUpdated(callback: (toolCall: IToolCall) => void): () => void;
+	onPendingApproval(callback: (toolCall: IToolCall) => void): () => void;
+}
+
+// ============================================================
+// Bridge Broadcaster — fan out state changes to subscribers
+// ============================================================
+export interface IBridgeBroadcaster {
+	emit(event: IBridgeEvent): void;
+	subscribe(handler: (event: IBridgeEvent) => void): () => void;
+	// Optional native handle for transport-specific implementations
+	// (e.g. better-sse Channel) — consumers can use this to register
+	// HTTP sessions directly without going through subscribe.
+	getNative?(): unknown;
+}

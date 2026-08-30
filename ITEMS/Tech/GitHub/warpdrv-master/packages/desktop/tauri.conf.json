@@ -1,0 +1,53 @@
+{
+	"$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-config-schema/schema.json",
+	"productName": "warpdrv",
+	"version": "0.6.17",
+	"identifier": "com.warpcore.desktop",
+	"build": {
+		"devUrl": "http://localhost:3000",
+		"frontendDist": "http://localhost:4400"
+	},
+	"app": {
+		"windows": [
+			{
+				"title": "warpdrv",
+				"width": 1100,
+				"height": 750,
+				"minWidth": 800,
+				"minHeight": 600,
+				"visible": false,
+				"shadow": true,
+				"decorations": false,
+				"resizable": true,
+				"useHttpsScheme": true,
+				"transparent": true,
+				"devtools": true
+			}
+		],
+		"security": {
+			"csp": null
+		}
+	},
+	"bundle": {
+		"active": true,
+		"targets": ["appimage", "deb"],
+		"icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico", "icons/icon.png"],
+		"externalBin": ["binaries/warpcore-server"],
+		"resources": [
+			"binaries/better_sqlite3.node",
+			"binaries/node_modules/**/*",
+			"app-dist/**/*",
+			"../../release.json"
+		],
+		"linux": {
+			"deb": {
+				"depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0", "libayatana-appindicator3-1"]
+			}
+		}
+	},
+	"plugins": {
+		"shell": {
+			"open": true
+		}
+	}
+}
