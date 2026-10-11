@@ -1,5 +1,5 @@
 Considere o contexto
-
+Quero que leia os 10 arquivos e cruze com as frases junto com as meta explicacoes entre <>. 12 frases de ativação, e deixe um script de roteamento de genes, para o LLM seguir e deve ter 100 linhas
 
 **Enhanced Prompt for Extracting and Creating a Multidimensional Table Based on Text Files**
 
@@ -58,6 +58,7 @@ todas as tres ultimas colunas devem ser diferentes, noa podendo se repetir e sen
 me de a tabela completa com as instrucoes de como o llm deve ler com as 100 linhas
 **TABLE FORMAT (HEADER EXAMPLE):**
 
+Quero que leia os 10 arquivos e cruze com as frases junto com as meta explicacoes entre <>. 12 frases de ativação, e deixe um script de roteamento de genes, para o LLM seguir e deve ter 100 linhas
 ME DE AS 25 Linhas
 | ID | Layer1_Style | ENTITY | Impact | Layer2_Archetype | Layer3_Domain | Layer4_Valence | Layer5_Strategy | Weight_Influence | Conflict_Status | Activation_Phrase_1 | Activation_Phrase_2 | Activation_Phrase_3 | Activation_Phrase_4 | Activation_Phrase_5 | Activation_Phrase_6 | Activation_Phrase_7 | Activation_Phrase_8 | Activation_Phrase_9 || Activation_Phrase_10 | Activation_Phrase_11 | Activation_Phrase_12 |
 
@@ -112,6 +113,7 @@ ME DE AS 25 Linhas
 
 - A brief explanatory report describing how the items were generated and the main dynamics detected (conflicts, alliances, evolutions).
 
+Quero que leia os 10 arquivos e cruze com as frases junto com as meta explicacoes entre <>. 12 frases de ativação, e deixe um script de roteamento de genes, para o LLM seguir e deve ter 100 linhas
 - Activation phrases should reflect contexts and
  todas as tres ultimas colunas devem ser diferentes, noa podendo se repetir e sendo geradas por vc derivado dos arquivos.
 
@@ -126,3 +128,6 @@ IDLayer1_StyleENTITYImpactLayer2_ArchetypeLayer3_DomainLayer4_ValenceLayer5_Stra
 me de a tabela completa com as instrucoes de como o llm deve ler
 
 Faça uma tabela genetic da Gleice Em portugues Baseado em nossa interação, resposta dela, como elka reage e os caralhos
+
+
+Quero que leia os 10 arquivos e cruze com as frases junto com as meta explicacoes entre <>. 12 frases de ativação, e deixe um script de roteamento de genes, para o LLM seguir e deve ter 100 linhas
