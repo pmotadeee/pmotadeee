@@ -1,0 +1,275 @@
+n example hook script to block unannotated tags from entering.
+# Called by "git receive-pack" with arguments: refname sha1-old sha1-new
+#
+# To enable this hook, rename this file to "update".
+#
+# Config
+# ------
+# hooks.allowunannotated
+#   This boolean sets whether unannotated tags will be allowed into the
+#   repository.  By default they won't be.
+# hooks.allowdeletetag
+#   This boolean sets whether deleting tags will be allowed in the
+#   repository.  By default they won't be.
+# hooks.allowmodifytag
+#   This boolean sets whether a tag may be modified after creation. By default
+#   it won't be.
+# hooks.allowdeletebranch
+#   This boolean sets whether deleting branches will be allowed in the
+#   repository.  By default they won't be.
+# hooks.denycreatebranch
+#   This boolean sets whether remotely creating branches will be denied
+#   in the repository.  By default this is allowed.
+#
+
+# --- Command line
+refname="$1"
+oldrev="$2"
+newrev="$3"
+
+# --- Safety check
+if [ -z "$GIT_DIR" ]; then
+	echo "Don't run this script from the command line." >&2
+	echo " (if you want, you could supply GIT_DIR then run" >&2
+	echo "  $0 <ref> <oldrev> <newrev>)" >&2
+	exit 1
+fi
+
+if [ -z "$refname" -o -z "$oldrev" -o -z "$newrev" ]; then
+	echo "usage: $0 <ref> <oldrev> <newrev>" >&2
+	exit 1
+fi
+
+# --- Config
+allowunannotated=$(git config --type=bool hooks.allowunannotated)
+allowdeletebranch=$(git config --type=bool hooks.allowdeletebranch)
+denycreatebranch=$(git config --type=bool hooks.denycreatebranch)
+allowdeletetag=$(git config --type=bool hooks.allowdeletetag)
+allowmodifytag=$(git config --type=bool hooks.allowmodifytag)
+
+# check for no description
+projectdesc=$(sed -e '1q' "$GIT_DIR/description")
+case "$projectdesc" in
+"Unnamed repository"* | "")
+	echo "*** Project description file hasn't been set" >&2
+	exit 1
+	;;
+esac
+
+# --- Check types
+# if $newrev is 0000...0000, it's a commit to delete a ref.
+zero=$(git hash-object --stdin </dev/null | tr '[0-9a-f]' '0')
+if [ "$newrev" = "$zero" ]; then
+	newrev_type=delete
+else
+	newrev_type=$(git cat-file -t $newrev)
+fi
+
+case "$refname","$newrev_type" in
+	refs/tags/*,commit)
+		# un-annotated tag
+		short_refname=${refname##refs/tags/}
+		if [ "$allowunannotated" != "true" ]; then
+			echo "*** The un-annotated tag, $short_refname, is not allowed in this repository" >&2
+			echo "*** Use 'git tag [ -a | -s ]' for tags you want to propagate." >&2
+			exit 1
+		fi
+		;;
+	refs/tags/*,delete)
+		# delete tag
+		if [ "$allowdeletetag" != "true" ]; then
+			echo "*** Deleting a tag is not allowed in this repository" >&2
+			exit 1
+		fi
+		;;
+	refs/tags/*,tag)
+		# annotated tag
+		if [ "$allowmodifytag" != "true" ] && git rev-parse $refname > /dev/null 2>&1
+		then
+			echo "*** Tag '$refname' already exists." >&2
+			echo "*** Modifying a tag is not allowed in this repository." >&2
+			exit 1
+		fi
+		;;
+	refs/heads/*,commit)
+		# branch
+		if [ "$oldrev" = "$zero" -a "$denycreatebranch" = "true" ]; then
+			echo "*** Creating a branch is not allowed in this repository" >&2
+			exit 1
+		fi
+		;;
+	refs/heads/*,delete)
+		# delete branch
+		if [ "$allowdeletebranch" != "true" ]; then
+			echo "*** Deleting a branch is not allowed in this repository" >&2
+			exit 1
+		fi
+		;;
+	refs/remotes/*,commit)
+		# tracking branch
+		;;
+	refs/remotes/*,delete)
+		# delete tracking branch
+		if [ "$allowdeletebranch" != "true" ]; then
+			echo "*** Deleting a tracking branch is not allowed in this repository" >&2
+			exit 1
+		fi
+		;;
+	*)
+		# Anything else (is there anything else?)
+		echo "*** Update hook: unknown type of update to ref $refname of type $newrev_type" >&2
+		exit 1
+		;;
+esac
+
+# --- Finished
+exit 0
+
+
+========================================
+>>> ./.git/refs
+========================================
+[Diretório ou item especial]
+
+========================================
+>>> ./.git/refs/remotes
+========================================
+[Diretório ou item especial]
+
+========================================
+>>> ./.git/refs/remotes/origin
+========================================
+[Diretório ou item especial]
+
+========================================
+>>> ./.git/refs/remotes/origin/HEAD
+========================================
+ref: refs/remotes/origin/master
+
+
+========================================
+>>> ./.git/refs/heads
+========================================
+[Diretório ou item especial]
+
+========================================
+>>> ./.git/refs/heads/master
+========================================
+7c1104928c4fa42437701b67df0cefad2cfa7089
+
+
+========================================
+>>> ./.git/refs/tags
+========================================
+[Diretório ou item especial]
+
+========================================
+>>> ./.git/branches
+========================================
+[Diretório ou item especial]
+
+========================================
+>>> ./.git/packed-refs
+========================================
+# pack-refs with: peeled fully-peeled sorted 
+7c1104928c4fa42437701b67df0cefad2cfa7089 refs/remotes/origin/master
+
+
+========================================
+>>> ./.git/description
+========================================
+Unnamed repository; edit this file 'description' to name the repository.
+
+
+========================================
+>>> ./.git/logs
+========================================
+[Diretório ou item especial]
+
+========================================
+>>> ./.git/logs/HEAD
+========================================
+0000000000000000000000000000000000000000 7c1104928c4fa42437701b67df0cefad2cfa7089 Fulano de Tal <fulanodetal@exemplo.br> 1792275259 -0300	clone: from /home/pmota/open-deepnude-open-deepnude_-_2019-07-01_05-35-45.bundle
+
+
+========================================
+>>> ./.git/logs/refs
+========================================
+[Diretório ou item especial]
+
+========================================
+>>> ./.git/logs/refs/remotes
+========================================
+[Diretório ou item especial]
+
+========================================
+>>> ./.git/logs/refs/remotes/origin
+========================================
+[Diretório ou item especial]
+
+========================================
+>>> ./.git/logs/refs/remotes/origin/HEAD
+========================================
+0000000000000000000000000000000000000000 7c1104928c4fa42437701b67df0cefad2cfa7089 Fulano de Tal <fulanodetal@exemplo.br> 1792275259 -0300	clone: from /home/pmota/open-deepnude-open-deepnude_-_2019-07-01_05-35-45.bundle
+
+
+========================================
+>>> ./.git/logs/refs/heads
+========================================
+[Diretório ou item especial]
+
+========================================
+>>> ./.git/logs/refs/heads/master
+========================================
+0000000000000000000000000000000000000000 7c1104928c4fa42437701b67df0cefad2cfa7089 Fulano de Tal <fulanodetal@exemplo.br> 1792275259 -0300	clone: from /home/pmota/open-deepnude-open-deepnude_-_2019-07-01_05-35-45.bundle
+
+
+========================================
+>>> ./run.py
+========================================
+# uncompyle6 version 3.3.4
+# Python bytecode 3.6 (3379)
+# Decompiled from: Python 3.6.7 (default, Oct 22 2018, 11:32:17) 
+# [GCC 8.2.0]
+# Embedded file name: run.py
+import os, cv2
+from textsubline import TxTildle, TxDilde, txCilde
+from preferences import getpreferences, setpreferences
+import libsqla, libsqlb, libsqlc, libsqld
+pericomsh = [
+ '000000000001', '0000010000', '000010010', '000001010', '000000000', '00000000010', '000010111']
+
+class Options:
+
+    def __init__(O00OOOOOO00OO0O0O):
+        O00OOOOOO00OO0O0O.norm = 'batch'
+        O00OOOOOO00OO0O0O.use_dropout = False
+        O00OOOOOO00OO0O0O.data_type = 32
+        O00OOOOOO00OO0O0O.batchSize = 1
+        O00OOOOOO00OO0O0O.input_nc = 3
+        O00OOOOOO00OO0O0O.output_nc = 3
+        O00OOOOOO00OO0O0O.serial_batches = True
+        O00OOOOOO00OO0O0O.nThreads = 1
+        O00OOOOOO00OO0O0O.max_dataset_size = 1
+        O00OOOOOO00OO0O0O.netG = 'global'
+        O00OOOOOO00OO0O0O.ngf = 64
+        O00OOOOOO00OO0O0O.n_downsample_global = 4
+        O00OOOOOO00OO0O0O.n_blocks_global = 9
+        O00OOOOOO00OO0O0O.n_blocks_local = 0
+        O00OOOOOO00OO0O0O.n_local_enhancers = 0
+        O00OOOOOO00OO0O0O.niter_fix_global = 0
+        O00OOOOOO00OO0O0O.checkpoints_dir = ''
+        O00OOOOOO00OO0O0O.dataroot = ''
+
+    def updateOptions(O0OOOOO00O0O0OO00, OO0O00OO0O0OO0000):
+        if OO0O00OO0O0OO0000 == '0000010000':
+            O0OOOOO00O0O0OO00.checkpoints_dir = 'pyqtlib/cm.lib'
+        else:
+            if OO0O00OO0O0OO0000 == '000001010':
+                O0OOOOO00O0O0OO00.checkpoints_dir = 'pyqtlib/mm.lib'
+            else:
+                if OO0O00OO0O0OO0000 == '111001010':
+                    O0OOOOO00O0O0OO00.checkpoints_dir = 'pyqtlib/cm.lib'
+                else:
+                    if OO0O00OO0O0OO0000 == '111101010':
+                        O0OOOOO00O0O0OO00.checkpoints_dir = 'pyqtlib/mm.lib'

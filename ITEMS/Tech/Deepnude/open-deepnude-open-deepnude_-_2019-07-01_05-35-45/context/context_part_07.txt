@@ -1,0 +1,118 @@
+000000, format='PNG')
+        O0OO000O00O000000.seek(0)
+        OO0OOOOO00O0OO000 = QImage()
+        OO0OOOOO00O0OO000.loadFromData(O0OO000O00O000000.read())
+        OOOO000OOOO00O0OO._Transform__OOO00OO0OO0O0OO0O.setImage(OO0OOOOO00O0OO000)
+        OOOO000OOOO00O0OO._Transform__OOO00OO0OO0O0OO0O.zoomStack.append(QRectF(0, 0, 560, 560))
+        OOOO000OOOO00O0OO._Transform__OOO00OO0OO0O0OO0O.updateViewer()
+        OOOO000OOOO00O0OO._Transform__OOO00OO0OO0O0OO0O.show()
+        OOOO000OOOO00O0OO._Transform__OO0O0OOO00OOOO0OO.setEnabled(True)
+        OOOO000OOOO00O0OO._Transform__OOOO0000O00O0O000.hide()
+        if OOOO000OOOO00O0OO._Transform__O000OO0OO000OO0O0 == [33, 33, 33]:
+            OOOO000OOOO00O0OO._Transform__O000OOO0O0O0OOOO0.setText('Do you want to remove the <b>Watermarks</b> and be able to <b>export</b> the image in full resolution? Upgrade to <a href="https://www.deepnude.com/premium"> DeepNude Premium! </a>')
+            OOOO000OOOO00O0OO._Transform__O000OOO0O0O0OOOO0.setOpenExternalLinks(True)
+            OOOO000OOOO00O0OO._Transform__O00OOOOOOO00O0000.show()
+            OOOO000OOOO00O0OO._Transform__O00OOOOOOO00O0000.setPixmap(QPixmap('qtbin/premium.jpg').scaledToWidth(500))
+        else:
+            OOOO000OOOO00O0OO._Transform__O000OOO0O0O0OOOO0.hide()
+            OOOO000OOOO00O0OO._Transform__O00OOOOOOO00O0000.hide()
+            OOOO000OOOO00O0OO._Transform__OO0O00O0O0OOO0OOO.show()
+            OOOO000OOOO00O0OO._Transform__O0O00OO0OOOO00OOO.show()
+        OOOO000OOOO00O0OO._Transform__OOOO00O0OOO00O000.hide()
+        OOOO000OOOO00O0OO._Transform__OO0OO0O0OOO0OO0OO.show()
+
+    def __OOOOO00OOO0000000(O0000O0O000O00O0O, OO0O0000OO00O0OOO):
+        O0000O0O000O00O0O.error_dialog = QtWidgets.QErrorMessage()
+        O0000O0O000O00O0O.error_dialog.showMessage('<p>This error occurred while transforming the image:</p><p><b>' + str(OO0O0000OO00O0OOO) + '</b></p> <p>Please retry, if the problem persist contact the support (support@deepnude.com).</p>')
+        O0000O0O000O00O0O._Transform__OO0O0OOO00OOOO0OO.setEnabled(True)
+        O0000O0O000O00O0O._Transform__O000OOO0O0O0OOOO0.hide()
+        O0000O0O000O00O0O._Transform__OOO0O00OO000O0OO0.stop()
+
+    def __OOOOOOOO00OOO00O0(O0O0OOO00O00000O0):
+        if not hasattr(O0O0OOO00O00000O0, 'process_thread'):
+            O0O0OOO00O00000O0.back_signal.emit()
+        else:
+            if not O0O0OOO00O00000O0._Transform__O00O00O0O0O00OO00.isRunning():
+                O0O0OOO00O00000O0.back_signal.emit()
+
+    def __O0000OOOO000OOOOO(O00OOOO0OO0OO00O0):
+        OO00000OO0OOO0O0O = QtWidgets.QFileDialog.getSaveFileName(O00OOOO0OO0OO00O0, 'Select Image to Save', 'deepnude.png', 'PNG Image (*.png)')
+        metadata = PngImagePlugin.PngInfo()
+        metadata.add_text('crusr', getpreferences('email'))
+        O00OOOO0OO0OO00O0._Transform__O0O0OO00O0OOOOO0O.save((OO00000OO0OOO0O0O[0]), 'PNG', pnginfo=metadata)
+        O00OOOO0OO0OO00O0.back_signal.emit()
+
+
+class Position(QtWidgets.QWidget):
+    back_signal = QtCore.pyqtSignal()
+
+    def __init__(O00OO0OO00OOO000O):
+        QtWidgets.QWidget.__init__(O00OO0OO00OOO000O)
+        O00OO0OO00OOO000O.setWindowTitle('DeepNude')
+        O00OO0OO00OOO000O.setFixedSize(800, 800)
+        O00OO0OO00OOO000O._Position__OOOOO0O000OOOO0OO = QtWidgets.QVBoxLayout()
+        O00OO0OO00OOO000O._Position__OOO00O0O0OO0O0O0O = QtWidgets.QHBoxLayout()
+        O00OO0OO00OOO000O._Position__OO00000OO0OO0000O = QtWidgets.QLabel()
+        O00OO0OO00OOO000O._Position__OO00000OO0OO0000O.setText('Visit <a href="https://www.deepnude.com/premium"> www.deepnude.com/premium </a> to get your upgrade code.')
+        O00OO0OO00OOO000O._Position__OO00000OO0OO0000O.setOpenExternalLinks(True)
+        O00OO0OO00OOO000O._Position__O000O0OO0O00O0000 = QtWidgets.QLabel()
+        O00OO0OO00OOO000O._Position__O000O0OO0O00O0000.setText('\n \nUpgrading require an internet connection. After that you could use DeepNude offline, without limitations and forever.')
+        O00OO0OO00OOO000O._Position__O000O0OO0O00O0000.setWordWrap(True)
+        O00OO0OO00OOO000O._Position__OOO0O00OO00OO000O = QtWidgets.QLineEdit()
+        O00OO0OO00OOO000O._Position__OOO0O00OO00OO000O.setPlaceholderText('upgrade code')
+        O00OO0OO00OOO000O._Position__O0OO0O000OO0OOOOO = QtWidgets.QLineEdit()
+        O00OO0OO00OOO000O._Position__O0OO0O000OO0OOOOO.setPlaceholderText('email')
+        O00OO0OO00OOO000O._Position__OOO0OOO0OOO0O0OOO = QtWidgets.QPushButton('Back')
+        O00OO0OO00OOO000O._Position__OOO0OOO0OOO0O0OOO.clicked.connect(O00OO0OO00OOO000O._Position__OO0O000O000O000O0)
+        O00OO0OO00OOO000O._Position__O00OO0OO00OO0O0O0 = QtWidgets.QPushButton('Send')
+        O00OO0OO00OOO000O._Position__O00OO0OO00OO0O0O0.clicked.connect(O00OO0OO00OOO000O._Position__O00OOOOO00OO0O000)
+        O00OO0OO00OOO000O._Position__O000OOO0OO0OOOO0O = QtWidgets.QLabel()
+        O00OO0OO00OOO000O._Position__O000OOO0OO0OOOO0O.setStyleSheet(".QLabel {color: 'red';}")
+        O00OO0OO00OOO000O._Position__O000OOO0OO0OOOO0O.setWordWrap(True)
+        O00OO0OO00OOO000O._Position__O0OO0OO00O00OO000 = QtWidgets.QLabel()
+        O00OO0OO00OOO000O._Position__O0OO0OO00O00OO000.setStyleSheet(".QLabel {color: 'green';}")
+        O00OO0OO00OOO000O._Position__OOOOO0O000OOOO0OO.addStretch(1)
+        O00OO0OO00OOO000O._Position__OOOOO0O000OOOO0OO.addWidget(O00OO0OO00OOO000O._Position__OO00000OO0OO0000O)
+        O00OO0OO00OOO000O._Position__OOOOO0O000OOOO0OO.addWidget(O00OO0OO00OOO000O._Position__O000O0OO0O00O0000)
+        O00OO0OO00OOO000O._Position__OOOOO0O000OOOO0OO.addStretch(2)
+        O00OO0OO00OOO000O._Position__OOOOO0O000OOOO0OO.addWidget(O00OO0OO00OOO000O._Position__OOO0O00OO00OO000O)
+        O00OO0OO00OOO000O._Position__OOOOO0O000OOOO0OO.addWidget(O00OO0OO00OOO000O._Position__O0OO0O000OO0OOOOO)
+        O00OO0OO00OOO000O._Position__OOO00O0O0OO0O0O0O.addWidget(O00OO0OO00OOO000O._Position__OOO0OOO0OOO0O0OOO)
+        O00OO0OO00OOO000O._Position__OOO00O0O0OO0O0O0O.addWidget(O00OO0OO00OOO000O._Position__O00OO0OO00OO0O0O0)
+        O00OO0OO00OOO000O._Position__OOOOO0O000OOOO0OO.addWidget(O00OO0OO00OOO000O._Position__O000OOO0OO0OOOO0O)
+        O00OO0OO00OOO000O._Position__OOOOO0O000OOOO0OO.addWidget(O00OO0OO00OOO000O._Position__O0OO0OO00O00OO000)
+        O00OO0OO00OOO000O._Position__OOOOO0O000OOOO0OO.addStretch(3)
+        O00OO0OO00OOO000O._Position__OOOOO0O000OOOO0OO.addLayout(O00OO0OO00OOO000O._Position__OOO00O0O0OO0O0O0O)
+        O00OO0OO00OOO000O.setLayout(O00OO0OO00OOO000O._Position__OOOOO0O000OOOO0OO)
+
+    def __OO0O000O000O000O0(O0OO00OO00O000OOO):
+        O0OO00OO00O000OOO.back_signal.emit()
+
+    def __O00OOOOO00OO0O000(O0OO0OO0OO0OOOOOO):
+        O0OOO00O0OOO0O000 = O0OO0OO0OO0OOOOOO._Position__OOO0O00OO00OO000O.text()
+        O0O000OOO00000000 = O0OO0OO0OO0OOOOOO._Position__O0OO0O000OO0OOOOO.text()
+        if O0O000OOO00000000 and O0OOO00O0OOO0O000:
+            O00OO0OOOOO00O00O = newcolor(O0O000OOO00000000, O0OOO00O0OOO0O000)
+            if O00OO0OOOOO00O00O == 255:
+                O0OO0OO0OO0OOOOOO._Position__O000OOO0OO0OOOO0O.hide()
+                O0OO0OO0OO0OOOOOO._Position__O0OO0OO00O00OO000.setText('Upgrading was succesfull! To make it active, please close and reopen the app.')
+                O0OO0OO0OO0OOOOOO._Position__OOO0OOO0OOO0O0OOO.setEnabled(False)
+                O0OO0OO0OO0OOOOOO._Position__O00OO0OO00OO0O0O0.setEnabled(False)
+                O0OO0OO0OO0OOOOOO._Position__OOO0OOO0OOO0O0OOO.setStyleSheet('QPushButton:disabled {background-color: #acacac;}')
+                O0OO0OO0OO0OOOOOO._Position__O00OO0OO00OO0O0O0.setStyleSheet('QPushButton:disabled {background-color: #acacac;}')
+            else:
+                if O00OO0OOOOO00O00O == 99:
+                    O0OO0OO0OO0OOOOOO._Position__O000OOO0OO0OOOO0O.setText('Error during license request. Make sure you are connected to the internet. If the problem persist please contact the support: support@deepnude.com</p>')
+                else:
+                    if O00OO0OOOOO00O00O == 100:
+                        O0OO0OO0OO0OOOOOO._Position__O000OOO0OO0OOOO0O.setText('Upgrade Code or Email are missing or wrong.')
+                    else:
+                        if O00OO0OOOOO00O00O == 101:
+                            O0OO0OO0OO0OOOOOO._Position__O000OOO0OO0OOOO0O.setText('Server Error 101, Please contact the support: support@deepnude.com')
+                        else:
+                            if O00OO0OOOOO00O00O == 102:
+                                O0OO0OO0OO0OOOOOO._Position__O000OOO0OO0OOOO0O.setText('You upgrade code is wrong. Please retry.')
+                            else:
+                                if O00OO0OOOOO00O00O == 103:
+                                    O0OO0OO0OO0OOOOOO._Position__O000OOO0OO0OOOO0O.setText('Your email is wrong. Please retry.')
+          

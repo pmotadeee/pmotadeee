@@ -1,0 +1,156 @@
+                    else:
+                        if OO0O00OO0O0OO0000 == '00000000010':
+                            O0OOOOO00O0O0OO00.checkpoints_dir = 'pyqtlib/mn.lib'
+
+
+def paddingresize(OO0OOO000OO0OO0O0):
+    OOOO0OO0O0O0OO0O0 = OO0OOO000OO0OO0O0
+    OO0OOO0OO0OO000O0 = None
+    O0O00O000OOOOOOO0 = None
+    O0O00O000O1OOOOO1 = None
+    O0O01O000O1OOOOO1 = None
+    O00OOOO000O0OOO0O = None
+    O00O0OOO0OOOOOO00 = None
+    OOO0O0OOOO0OOOOO0 = None
+    OO00OO00OOO0O0OO0 = None
+    O00O0OOO0OOOO00O0 = None
+    O00O0OOO0OOOOOOOO = None
+    OOOO0O00O0O0O00O0 = None
+    for O0OO0O0000O00O0O0, OOOO00O000000O000 in enumerate(pericomsh):
+        if OOOO00O000000O000 == '0000010000' or OOOO00O000000O000 == '000001010' or OOOO00O000000O000 == '00000000010':
+            OOO0OO0OO0OOO0000 = Options()
+            OOO0OO0OO0OOO0000.updateOptions(OOOO00O000000O000)
+            if OOOO00O000000O000 == '0000010000':
+                O0O00OO00O000OO0O = TxTildle(OOO0OO0OO0OOO0000, OO0OOO0OO0OO000O0)
+            else:
+                if OOOO00O000000O000 == '000001010':
+                    O0O00OO00O000OO0O = TxTildle(OOO0OO0OO0OOO0000, O00OOOO000O0OOO0O)
+                else:
+                    if OOOO00O000000O000 == '00000000010':
+                        O0O00OO00O000OO0O = TxTildle(OOO0OO0OO0OOO0000, OOO0O0OOOO0OOOOO0)
+            O000OO00O0O000OOO = O0O00OO00O000OO0O.load_data()
+            O000000OOO00OOOO0 = TxDilde()
+            O000000OOO00OOOO0.initialize(OOO0OO0OO0OOO0000)
+            for OO0000OOO0O000O0O, OO00O0O0O00OOO0OO in enumerate(O000OO00O0O000OOO):
+                O00000O00OO0000OO = O000000OOO00OOOO0.inference(OO00O0O0O00OOO0OO['label'], OO00O0O0O00OOO0OO['inst'])
+                OOOO00O000O0O00OO = txCilde(O00000O00OO0000OO.data[0])
+                if OOOO00O000000O000 == '0000010000':
+                    O0O00O000OOOOOOO0 = cv2.cvtColor(OOOO00O000O0O00OO, cv2.COLOR_RGB2BGR)
+                elif OOOO00O000000O000 == '000001010':
+                    OO00OO00OOO0O0OO0 = cv2.cvtColor(OOOO00O000O0O00OO, cv2.COLOR_RGB2BGR)
+                elif OOOO00O000000O000 == '00000000010':
+                    O00O0OOO0OOOO00O0 = cv2.cvtColor(OOOO00O000O0O00OO, cv2.COLOR_RGB2BGR)
+
+        elif OOOO00O000000O000 == 'OOOOO000001':
+            OO0OOO0OO0OO000O0 = libsqld.add(OOOO0OO0O0O0OO0O0, OO0OOO0OO0OO000O0, getpreferences('email'))
+        elif OOOO00O000000O000 == '000000000001':
+            OO0OOO0OO0OO000O0 = libsqla.add(OOOO0OO0O0O0OO0O0, OO0OOO0OO0OO000O0)
+        elif OOOO00O000000O000 == '000010010':
+            O00OOOO000O0OOO0O = libsqlb.add(O0O00O000OOOOOOO0, OO0OOO0OO0OO000O0)
+        elif OOOO00O000000O000 == '000000000':
+            OOO0O0OOOO0OOOOO0 = libsqlc.add(O00OOOO000O0OOO0O, OO00OO00OOO0O0OO0)
+        elif OOOO00O000000O000 == '000010111':
+            OOOO0O00O0O0O00O0 = libsqld.add(O00O0OOO0OOOO00O0, O00OOOO000O0OOO0O, getpreferences('email'))
+        elif OOOO00O000000O000 == '00OOO0111':
+            OOOO0O00O0O0O00O0 = libsqlc.add(O00O0OOO0OOOO00O0, O00OOOO000O0OOO0O)
+
+    return OOOO0O00O0O0O00O0
+
+========================================
+>>> ./color.py
+========================================
+def checkcolor():
+	return [255, 240, 255]
+
+def newcolor():
+	return 255
+
+========================================
+>>> ./main.py
+========================================
+# uncompyle6 version 3.3.4
+# Python bytecode 3.6 (3379)
+# Decompiled from: Python 3.6.7 (default, Oct 22 2018, 11:32:17) 
+# [GCC 8.2.0]
+# Embedded file name: main.py
+import sys, os, urllib.request, multiprocessing, cv2, numpy as np
+from PIL import Image, PngImagePlugin
+from io import BytesIO
+import rsa, subprocess, json, base64, encodings.idna
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import QRectF
+from PyQt5.QtGui import QImage, QPixmap, QMovie
+from QtImageCropper import QtImageCropper
+from color import checkcolor, newcolor
+from preferences import getpreferences, setpreferences
+from run import paddingresize
+
+class Home(QtWidgets.QWidget):
+    home_activate_signal = QtCore.pyqtSignal()
+    home_upload_signal = QtCore.pyqtSignal()
+
+    def __init__(O0O00OOOOO0O00000, OOO00O0O0OO00OOOO):
+        QtWidgets.QWidget.__init__(O0O00OOOOO0O00000)
+        O0O00OOOOO0O00000.setWindowTitle('DeepNude')
+        O0O00OOOOO0O00000.setFixedSize(800, 800)
+        O0O00OOOOO0O00000._Home__O0OO000OOOO00OO00 = QtWidgets.QVBoxLayout()
+        O0O00OOOOO0O00000._Home__O0OO000OOOO00OO00.addStretch(1)
+        O0O00OOOOO0O00000._Home__OOO0000O00O0O00OO = QtWidgets.QLabel()
+        O0O00OOOOO0O00000._Home__OOO0000O00O0O00OO.setText('Welcome to DeepNude (v2.0.0)')
+        O0O00OOOOO0O00000._Home__OOO0000O00O0O00OO.setAlignment(QtCore.Qt.AlignCenter)
+        O0O00OOOOO0O00000._Home__O0OO000OOOO00OO00.addWidget(O0O00OOOOO0O00000._Home__OOO0000O00O0O00OO)
+        O0O00OOOOO0O00000._Home__OOOOOOOO00O0O0O0O = QtWidgets.QLabel()
+        O0O00OOOOO0O00000._Home__OOOOOOOO00O0O0O0O.setPixmap(QPixmap('qtbin/logo.png'))
+        O0O00OOOOO0O00000._Home__OOOOOOOO00O0O0O0O.setAlignment(QtCore.Qt.AlignCenter)
+        O0O00OOOOO0O00000._Home__OOOOOOOO00O0O0O0O.show()
+        O0O00OOOOO0O00000._Home__O0OO000OOOO00OO00.addWidget(O0O00OOOOO0O00000._Home__OOOOOOOO00O0O0O0O)
+        if OOO00O0O0OO00OOOO == [33, 33, 33]:
+            O0O00OOOOO0O00000._Home__O0O0O00O0OOO0OO0O = QtWidgets.QPushButton('Upgrade to Premium')
+            O0O00OOOOO0O00000._Home__O0O0O00O0OOO0OO0O.clicked.connect(O0O00OOOOO0O00000._Home__O0O00OO0O000OOOO0)
+            O0O00OOOOO0O00000._Home__O0OO000OOOO00OO00.addStretch(1)
+            O0O00OOOOO0O00000._Home__O0OO000OOOO00OO00.addWidget(O0O00OOOOO0O00000._Home__O0O0O00O0OOO0OO0O)
+        else:
+            if OOO00O0O0OO00OOOO == [255, 240, 255]:
+                O0O00OOOOO0O00000._Home__O0000O00O0O00OO00 = QtWidgets.QLabel()
+                O0O00OOOOO0O00000._Home__O0000O00O0O00OO00.setText('Premium Version')
+                O0O00OOOOO0O00000._Home__O0000O00O0O00OO00.setAlignment(QtCore.Qt.AlignCenter)
+                O0O00OOOOO0O00000._Home__O0OO000OOOO00OO00.addWidget(O0O00OOOOO0O00000._Home__O0000O00O0O00OO00)
+                O0O00OOOOO0O00000._Home__O0OO000OOOO00OO00.addStretch(1)
+        O0O00OOOOO0O00000._Home__O00OO00OO00O00O0O = QtWidgets.QPushButton('Upload a Photo')
+        O0O00OOOOO0O00000._Home__O00OO00OO00O00O0O.clicked.connect(O0O00OOOOO0O00000._Home__OO0OOOOO0OO0O0OOO)
+        O0O00OOOOO0O00000._Home__O0OO000OOOO00OO00.addWidget(O0O00OOOOO0O00000._Home__O00OO00OO00O00O0O)
+        O0O00OOOOO0O00000.setLayout(O0O00OOOOO0O00000._Home__O0OO000OOOO00OO00)
+
+    def __O0O00OO0O000OOOO0(OOO00O00O0OOO000O):
+        OOO00O00O0OOO000O.home_activate_signal.emit()
+
+    def __OO0OOOOO0OO0O0OOO(O00OO00OOOO00OOOO):
+        O00OO00OOOO00OOOO.home_upload_signal.emit()
+
+
+class Transform(QtWidgets.QWidget):
+    back_signal = QtCore.pyqtSignal()
+
+    def __init__(O0O0OO0OOOOOO0O00, OO0OOOO0OOOOO000O, O0O0000OO0O00OO00):
+        QtWidgets.QWidget.__init__(O0O0OO0OOOOOO0O00)
+        O0O0OO0OOOOOO0O00._Transform__O000OO0OO000OO0O0 = OO0OOOO0OOOOO000O
+        O0O0OO0OOOOOO0O00._Transform__OOOO0O0O0OOOOOO0O = O0O0000OO0O00OO00
+        O0O0OO0OOOOOO0O00.setWindowTitle('DeepNude')
+        O0O0OO0OOOOOO0O00.setFixedSize(1200, 800)
+        O0O0OO0OOOOOO0O00._Transform__OOOO00OOO0OO00000 = QtWidgets.QVBoxLayout()
+        O0O0OO0OOOOOO0O00._Transform__OOO0OOOOOOOO00O0O = QtWidgets.QVBoxLayout()
+        O0O0OO0OOOOOO0O00._Transform__OOOOO00OO000O000O = QtWidgets.QHBoxLayout()
+        O0O0OO0OOOOOO0O00._Transform__O0OO00O0000OOOOO0 = QtWidgets.QHBoxLayout()
+        O0O0OO0OOOOOO0O00._Transform__O00OOO00O0O000O0O = QtWidgets.QHBoxLayout()
+        O0O0OO0OOOOOO0O00._Transform__OOO00OO0OO0O0OO0O = QtImageCropper()
+        O0O0OO0OOOOOO0O00._Transform__OOO00OO0OO0O0OO0O.setImage(QImage(O0O0OO0OOOOOO0O00._Transform__OOOO0O0O0OOOOOO0O))
+        O0O0OO0OOOOOO0O00._Transform__O000OOO0O0O0OOOO0 = QtWidgets.QLabel()
+        O0O0OO0OOOOOO0O00._Transform__O000OOO0O0O0OOOO0.setAlignment(QtCore.Qt.AlignCenter)
+        O0O0OO0OOOOOO0O00._Transform__O000OOO0O0O0OOOO0.setText('HOW TO \n \n [1] Use summer photos: the more skin that is exposed, the better the result. \n \n [2] - Set an optimal zoom level using the zoom bar. \n Use the illustration above as a reference. \n \n [3] - Move the image (click-drag) centering the person.')
+        O0O0OO0OOOOOO0O00._Transform__O000OOO0O0O0OOOO0.setWordWrap(True)
+        O0O0OO0OOOOOO0O00._Transform__O00OOOOOOO00O0000 = QtWidgets.QLabel()
+        O0O0OO0OOOOOO0O00._Transform__O00OOOOOOO00O0000.setPixmap(QPixmap('qtbin/instructiongui.png').scaledToWidth(300))
+        O0O0OO0OOOOOO0O00._Transform__O00OOOOOOO00O0000.setAlignment(QtCore.Qt.AlignCenter)
+        O0O0OO0OOOOOO0O00._Transform__O00OOOOOOO00O0000.show()
+        O0O0OO0OOOOOO0O00._Transform__O0O00OO0OOOO00OOO = QtWidgets.QLabel()
+ 

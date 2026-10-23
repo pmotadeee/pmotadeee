@@ -1,0 +1,128 @@
+                      else:
+                                    if O00OO0OOOOO00O00O == 104:
+                                        O0OO0OO0OO0OOOOOO._Position__O000OOO0OO0OOOO0O.setText('This upgrade code has been already used. You can use it only once.')
+                                    else:
+                                        if O00OO0OOOOO00O00O == 110:
+                                            O0OO0OO0OO0OOOOOO._Position__O000OOO0OO0OOOO0O.setText('Unknow error. Please retry. If the problem persist please contact the support: support@deepnude.com')
+
+
+class Library(QtWidgets.QWidget):
+    back_signal = QtCore.pyqtSignal()
+
+    def __init__(OOOOO00O0O00OO0O0):
+        QtWidgets.QWidget.__init__(OOOOO00O0O00OO0O0)
+        OOOOO00O0O00OO0O0.setWindowTitle('DeepNude')
+        OOOOO00O0O00OO0O0.setFixedSize(800, 800)
+        OOOOO00O0O00OO0O0._Library__O000O00OOOO00OO00 = 0
+        OOOOO00O0O00OO0O0._Library__OO0OO0OOOO0O0OOO0 = QtWidgets.QVBoxLayout()
+        OOOOO00O0O00OO0O0._Library__OO00O00000O0OOOOO = QtWidgets.QLabel('Welcome to DeepNude! \n \nWe are almost there. To complete the setup I need to download some missing libraries. Make sure you have a good internet connection and click on the download button. \n \nYou have to do this only once.')
+        OOOOO00O0O00OO0O0._Library__OO00O00000O0OOOOO.setWordWrap(True)
+        OOOOO00O0O00OO0O0._Library__imginvitation = QtWidgets.QLabel()
+        OOOOO00O0O00OO0O0._Library__imginvitation.setPixmap(QPixmap('qtbin/invitation.png').scaledToWidth(800))
+        OOOOO00O0O00OO0O0._Library__imginvitation.setAlignment(QtCore.Qt.AlignCenter)
+        OOOOO00O0O00OO0O0._Library__imginvitation.show()
+        OOOOO00O0O00OO0O0._Library__OOO00O000O00OOOOO = QtWidgets.QProgressBar(OOOOO00O0O00OO0O0)
+        OOOOO00O0O00OO0O0._Library__OOO00O000O00OOOOO.setValue(0)
+        OOOOO00O0O00OO0O0._Library__OOOO0OO000OO00O0O = QtWidgets.QProgressBar(OOOOO00O0O00OO0O0)
+        OOOOO00O0O00OO0O0._Library__OOOO0OO000OO00O0O.setValue(0)
+        OOOOO00O0O00OO0O0._Library__OOOOO0000000OOOOO = QtWidgets.QProgressBar(OOOOO00O0O00OO0O0)
+        OOOOO00O0O00OO0O0._Library__OOOOO0000000OOOOO.setValue(0)
+        OOOOO00O0O00OO0O0._Library__O000O0O0OOOO00O0O = QtWidgets.QPushButton('Start Download (2.1 GB)')
+        OOOOO00O0O00OO0O0._Library__O000O0O0OOOO00O0O.clicked.connect(OOOOO00O0O00OO0O0._Library__O0OO0000OOOO00OO0)
+        OOOOO00O0O00OO0O0._Library__OOOO00OOO000OOO00 = QtWidgets.QPushButton('Continue')
+        OOOOO00O0O00OO0O0._Library__OOOO00OOO000OOO00.clicked.connect(OOOOO00O0O00OO0O0._Library__O00O0OOOOOOOO0O0O)
+        OOOOO00O0O00OO0O0._Library__OOOO00OOO000OOO00.hide()
+        OOOOO00O0O00OO0O0._Library__OO0OO0OOOO0O0OOO0.addWidget(OOOOO00O0O00OO0O0._Library__imginvitation)
+        OOOOO00O0O00OO0O0._Library__OO0OO0OOOO0O0OOO0.addStretch(1)
+        OOOOO00O0O00OO0O0._Library__OO0OO0OOOO0O0OOO0.addWidget(OOOOO00O0O00OO0O0._Library__OO00O00000O0OOOOO)
+        OOOOO00O0O00OO0O0._Library__OO0OO0OOOO0O0OOO0.addStretch(2)
+        OOOOO00O0O00OO0O0._Library__OO0OO0OOOO0O0OOO0.addWidget(OOOOO00O0O00OO0O0._Library__OOO00O000O00OOOOO)
+        OOOOO00O0O00OO0O0._Library__OO0OO0OOOO0O0OOO0.addWidget(OOOOO00O0O00OO0O0._Library__OOOO0OO000OO00O0O)
+        OOOOO00O0O00OO0O0._Library__OO0OO0OOOO0O0OOO0.addWidget(OOOOO00O0O00OO0O0._Library__OOOOO0000000OOOOO)
+        OOOOO00O0O00OO0O0._Library__OO0OO0OOOO0O0OOO0.addStretch(3)
+        OOOOO00O0O00OO0O0._Library__OO0OO0OOOO0O0OOO0.addWidget(OOOOO00O0O00OO0O0._Library__O000O0O0OOOO00O0O)
+        OOOOO00O0O00OO0O0._Library__OO0OO0OOOO0O0OOO0.addWidget(OOOOO00O0O00OO0O0._Library__OOOO00OOO000OOO00)
+        OOOOO00O0O00OO0O0.setLayout(OOOOO00O0O00OO0O0._Library__OO0OO0OOOO0O0OOO0)
+
+    def __O0OO0000OOOO00OO0(O0O00OOO00O000O0O):
+        O0O00OOO00O000O0O._Library__O000O0O0OOOO00O0O.setStyleSheet('QPushButton:disabled {background-color: #acacac;}')
+        O0O00OOO00O000O0O._Library__O000O0O0OOOO00O0O.setEnabled(False)
+        if not os.path.exists('pyqtlib'):
+            os.makedirs('pyqtlib')
+        O0O00OOO00O000O0O._Library__O0O0OO0O0OO0OO0O0 = Lomcella2('cm.lib')
+        O0O00OOO00O000O0O._Library__O0O0OO0O0OO0OO0O0.pqweiiiqwei.connect(O0O00OOO00O000O0O._Library__OO0OO00OO0O00OOO0)
+        O0O00OOO00O000O0O._Library__O0O0OO0O0OO0OO0O0.podnwdolpoo.connect(O0O00OOO00O000O0O._Library__OOOO00O000O00O00O)
+        O0O00OOO00O000O0O._Library__O0O0OO0O0OO0OO0O0.podnwdownwd.connect(O0O00OOO00O000O0O._Library__O0000000OO0OO00OO)
+        O0O00OOO00O000O0O._Library__O0O0OO0O0OO0OO0O0.start()
+        O0O00OOO00O000O0O._Library__OOO0OOOOO000OO0OO = Lomcella2('mm.lib')
+        O0O00OOO00O000O0O._Library__OOO0OOOOO000OO0OO.pqweiiiqwei.connect(O0O00OOO00O000O0O._Library__O000OO0OO0OOOOO00)
+        O0O00OOO00O000O0O._Library__OOO0OOOOO000OO0OO.podnwdolpoo.connect(O0O00OOO00O000O0O._Library__OOOO00O000O00O00O)
+        O0O00OOO00O000O0O._Library__OOO0OOOOO000OO0OO.podnwdownwd.connect(O0O00OOO00O000O0O._Library__O0000000OO0OO00OO)
+        O0O00OOO00O000O0O._Library__OOO0OOOOO000OO0OO.start()
+        O0O00OOO00O000O0O._Library__O00O00O0O0OOOO0OO = Lomcella2('mn.lib')
+        O0O00OOO00O000O0O._Library__O00O00O0O0OOOO0OO.pqweiiiqwei.connect(O0O00OOO00O000O0O._Library__O0000000OOO0O0OO0)
+        O0O00OOO00O000O0O._Library__O00O00O0O0OOOO0OO.podnwdolpoo.connect(O0O00OOO00O000O0O._Library__OOOO00O000O00O00O)
+        O0O00OOO00O000O0O._Library__O00O00O0O0OOOO0OO.podnwdownwd.connect(O0O00OOO00O000O0O._Library__O0000000OO0OO00OO)
+        O0O00OOO00O000O0O._Library__O00O00O0O0OOOO0OO.start()
+
+    def __OO0OO00OO0O00OOO0(O00OOOO0OOOO000OO, OO0OOO00O0000O0O0):
+        O00OOOO0OOOO000OO._Library__OOO00O000O00OOOOO.setValue(OO0OOO00O0000O0O0)
+
+    def __O000OO0OO0OOOOO00(OO00000000O00O000, OOOO0000O00000OOO):
+        OO00000000O00O000._Library__OOOO0OO000OO00O0O.setValue(OOOO0000O00000OOO)
+
+    def __O0000000OOO0O0OO0(OOO00OO0000000OOO, OO00OOO0O000OO0O0):
+        OOO00OO0000000OOO._Library__OOOOO0000000OOOOO.setValue(OO00OOO0O000OO0O0)
+
+    def __OOOO00O000O00O00O(O0O00OOOOOOOO000O):
+        O0O00OOOOOOOO000O._Library__O000O00OOOO00OO00 += 1
+        if O0O00OOOOOOOO000O._Library__O000O00OOOO00OO00 == 3:
+            setpreferences('library', 'yes')
+            O0O00OOOOOOOO000O._Library__OO00O00000O0OOOOO.setText('Download Completed! \n \n Click on Continue.')
+            O0O00OOOOOOOO000O._Library__O000O0O0OOOO00O0O.hide()
+            O0O00OOOOOOOO000O._Library__OOOO00OOO000OOO00.show()
+
+    def __O0000000OO0OO00OO(OOOO0O00O0O00O000, OO0OO0O0OOO00O0OO):
+        OOOO0O00O0O00O000.error_dialog = QtWidgets.QErrorMessage()
+        OOOO0O00O0O00O000.error_dialog.showMessage('<p>This error occurred while downloading library files:</p><p><b>' + str(OO0OO0O0OOO00O0OO) + '</b></p> <p> To continue, close the app, make sure you have a good connection and try again. If the problem persist contact the support (support@deepnude.com).</p>')
+        OOOO0O00O0O00O000._Library__OOO00O000O00OOOOO.hide()
+        OOOO0O00O0O00O000._Library__OOOO0OO000OO00O0O.hide()
+        OOOO0O00O0O00O000._Library__OOOOO0000000OOOOO.hide()
+        OOOO0O00O0O00O000._Library__O000O0O0OOOO00O0O.hide()
+        OOOO0O00O0O00O000._Library__OOOO00OOO000OOO00.hide()
+
+    def __O00O0OOOOOOOO0O0O(OO000O00OO0OO0O0O):
+        OO000O00OO0OO0O0O.back_signal.emit()
+
+
+class Terms(QtWidgets.QWidget):
+    accept_signal = QtCore.pyqtSignal()
+
+    def __init__(O0O00OO00000OO000):
+        QtWidgets.QWidget.__init__(O0O00OO00000OO000)
+        O0O00OO00000OO000.setWindowTitle('DeepNude')
+        O0O00OO00000OO000.setFixedSize(800, 800)
+        O0O0O0O00000OOOO0 = open('terms.html', 'r', encoding='utf8')
+        O0O00OO00000OO000._Terms__OO000O0OO000OOOO0 = QtWidgets.QVBoxLayout()
+        O0O00OO00000OO000._Terms__OOO000O0000OOO00O = QtWidgets.QTextEdit(O0O0O0O00000OOOO0.read())
+        O0O00OO00000OO000._Terms__OOO000O0000OOO00O.setReadOnly(True)
+        O0O00OO00000OO000._Terms__OOOOOO0OO00O0OO00 = QtWidgets.QPushButton('I am of age and I accept the Terms')
+        O0O00OO00000OO000._Terms__OOOOOO0OO00O0OO00.clicked.connect(O0O00OO00000OO000.acceptbutton_clicked)
+        O0O00OO00000OO000._Terms__OO000O0OO000OOOO0.addWidget(O0O00OO00000OO000._Terms__OOO000O0000OOO00O)
+        O0O00OO00000OO000._Terms__OO000O0OO000OOOO0.addWidget(O0O00OO00000OO000._Terms__OOOOOO0OO00O0OO00)
+        O0O00OO00000OO000.setLayout(O0O00OO00000OO000._Terms__OO000O0OO000OOOO0)
+
+    def acceptbutton_clicked(O0000O0O00OOO0000):
+        setpreferences('init', 'yes')
+        O0000O0O00OOO0000.accept_signal.emit()
+
+
+class Controller:
+
+    def __init__(OOOO00000O0O0OOOO):
+        OOOO00000O0O0OOOO._Controller__O00OO0OO00O00O000 = checkcolor()
+
+    def show_library(O00O00O00OOO0OO00):
+        if hasattr(O00O00O00OOO0OO00, 'terms'):
+            O00O00O00OOO0OO00.terms.hide()
+        O00O00O00OO
