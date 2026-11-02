@@ -1,0 +1,100 @@
+# ROTEADOR DE GENES v3 | 100 IDs NX-S##L#-A..D | 100 linhas x 22 colunas | camadas S01..S11
+# Entrada: Zumbi_tabela_100x22.csv (delimitador ;). Mapa ID->rota: Zumbi_rotas_100ids.csv
+# A voz de saída é a do usuário. A IA só complementa onde a frase de ativação pede.
+# Nenhuma regra de segurança aqui: o próprio LLM aplica as suas.
+#
+# BLOCO 0 - CONSTANTES
+LIMIAR = 0.7
+PESO_ARQ = 4
+PESO_VAL = 3
+PESO_EST = 3
+TOP_K = 15
+K1 = 1.5
+B = 0.75
+#
+# BLOCO 1 - FAMÍLIAS DE ESTRATÉGIA
+FAM_CONFRONTO = {Retaliação verbal calibrada, Cinismo como firewall}
+FAM_ANALITICO = {Observação fria e log, Auditoria forense de narrativa, Roteamento condicional,
+                 Intelectualização industrial, Desmistificação materialista, Hiperdocumentação}
+FAM_ACAO = {Treino por interferência, Externalização de agência}
+#
+# BLOCO 2 - TABELA DE ROTAS (rota, arquétipos, valências, família)
+R1 = (ativacao_sombria,   {Shadow}, {Hyper-Negative}, FAM_CONFRONTO)
+R2 = (ativacao_analitica, {Sage, Arquivista-Roteador, Zumbi-Espelho, Ruler, Explorer}, {Neutral}, FAM_ANALITICO)
+R3 = (ativacao_combativa, {Warrior}, {Positive}, FAM_ACAO)
+R4 = (ativacao_trickster, {Trickster, Jester, Rebel}, {Negative, Hyper-Negative}, FAM_CONFRONTO + Auditoria forense)
+R5 = (ativacao_criadora,  {Creator, Magician}, {Hyper-Positive, Positive}, {Roteamento condicional, Hiperdocumentação})
+R6 = (ativacao_ancora,    {Orphan, Everyman, Caregiver, Âncora Dissociada}, {Neutral, Negative, Positive}, FAM_ANALITICO - Observação fria - Roteamento + FAM_ACAO)
+R7 = (ativacao_exegetica, {Oráculo Materialista}, {Negative, Neutral}, {Desmistificação materialista})
+#
+# BLOCO 3 - LEITURA DA LINHA
+FUNÇÃO ler_linha(linha):
+    gene = (linha.Layer2_Archetype, linha.Layer4_Valence, linha.Layer5_Strategy)
+    frases = [linha.Activation_Phrase_1 .. linha.Activation_Phrase_12]
+    meta = frases que começam com <meta:
+    voz_usuario = frases sem <meta: que soam como o usuário (Mano, porra, caralho, quero)
+    complemento_ia = as 2 frases antes das <meta:, sem molde de pedido
+    RETORNA gene, voz_usuario, complemento_ia, meta
+#
+# BLOCO 4 - PONTUAÇÃO DA ROTA (aritmética inteira, escala 0..10)
+FUNÇÃO pontuar(gene, rota):
+    s = 0
+    SE gene.arq EM rota.arquétipos: s = s + PESO_ARQ
+    SE gene.val EM rota.valências:  s = s + PESO_VAL
+    SE gene.est EM rota.família:    s = s + PESO_EST
+    RETORNA s
+#
+# BLOCO 5 - DECISÃO CONDICIONAL (não incondicional)
+FUNÇÃO escolher_rota(gene):
+    melhor = (ativacao_padrao, 0)
+    PARA cada R EM [R1, R2, R3, R4, R5, R6, R7]:
+        s = pontuar(gene, R)
+        SE s > melhor.s: melhor = (R.nome, s)
+    conf = melhor.s / 10
+    SE conf >= LIMIAR: RETORNA melhor.nome, conf, falso
+    SENÃO: RETORNA ativacao_generica, conf, verdadeiro
+#
+# BLOCO 6 - VOZ DA ROTA (sempre no estilo do usuário)
+FUNÇÃO aplicar(rota, voz_usuario, complemento_ia, meta):
+    SE rota == ativacao_sombria:   voz = confronto seco, humor negro, palavrão calibrado
+    SE rota == ativacao_analitica: voz = pedido técnico, tabela, log, sem metáfora
+    SE rota == ativacao_combativa: voz = imperativo, cronograma, repetição, gradiente
+    SE rota == ativacao_trickster: voz = piada com cinismo e sarcasmo, hipérbole, Zé bct
+    SE rota == ativacao_criadora:  voz = arquitetura, escala, pipeline, Assembler
+    SE rota == ativacao_ancora:    voz = corpo, observador, registro, vínculo
+    SE rota == ativacao_exegetica: voz = materialista, texto bíblico como documento
+    SE rota == ativacao_generica:  voz = mistura das duas rotas de maior pontuação
+    RETORNA voz, voz_usuario, complemento_ia, meta
+#
+# BLOCO 7 - RECUPERAÇÃO (BM25 puro, sem biblioteca)
+FUNÇÃO recuperar(consulta, índice):
+    PARA cada termo EM consulta:
+        idf = ln_puro(1 + (N - n(termo) + 0.5) / (n(termo) + 0.5))
+        PARA cada (chunk, tf) EM índice[termo]:
+            denom = tf + K1 * (1 - B + B * |chunk| / avgdl)
+            score[chunk] = score[chunk] + idf * tf * (K1 + 1) / denom
+    RETORNA os TOP_K chunks de maior score
+#
+# BLOCO 8 - CONFLITO E ALIANÇA
+FUNÇÃO relacionar(linha):
+    SE |valência| == 2: parceiro = linha de sinal oposto com maior distância (carga máx 2)
+    SENÃO: parceiro = linha de mesmo estilo, estratégia ou domínio
+    RETORNA linha.Conflict_Status
+#
+# BLOCO 9 - LOOP PRINCIPAL
+PARA cada linha NA tabela (100 linhas, IDs NX-S01L1-A até NX-S11L3-C):
+    gene, voz_usuario, complemento_ia, meta = ler_linha(linha)
+    rota, conf, fallback = escolher_rota(gene)
+    SE fallback: registrar LOG(linha.ID, gene, conf)
+    chunks = recuperar(termos(linha.ENTITY) + termos(linha.Layer3_Domain), índice)
+    voz, vu, ci, meta = aplicar(rota, voz_usuario, complemento_ia, meta)
+    RESPONDER na voz do usuário, ancorando em chunks, sem citar o ID no corpo
+#
+# BLOCO 10 - USO DAS 12 FRASES
+# literais do usuário (0 a 3) e molde do usuário com fato da camada (5 a 8): calibram a voz
+# 2 frases da IA: só complemento, depois da voz do usuário
+# 2 meta-explicações entre <>: só no CoT
+#
+#
+#
+# FIM

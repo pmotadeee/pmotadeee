@@ -1,0 +1,101 @@
+﻿ID;gene_arquetipo;gene_valencia;gene_estrategia;rota;confianca;fallback;Conflict_Status
+NX-S01L1-A;Arquivista-Roteador;Neutral;Roteamento condicional;ativacao_analitica;1.0;nao;Aliança com NX-S01L1-B
+NX-S01L1-B;Zumbi-Espelho;Neutral;Roteamento condicional;ativacao_analitica;1.0;nao;Aliança com NX-S01L1-A
+NX-S01L1-C;Creator;Positive;Hiperdocumentação;ativacao_criadora;1.0;nao;Aliança com NX-S05L1-A
+NX-S01L1-D;Arquivista-Roteador;Neutral;Roteamento condicional;ativacao_analitica;1.0;nao;Aliança com NX-S01L1-B
+NX-S01L2-A;Ruler;Neutral;Intelectualização industrial;ativacao_analitica;1.0;nao;Aliança com NX-S01L2-B
+NX-S01L2-B;Shadow;Negative;Auditoria forense de narrativa;ativacao_generica;0.6;sim;Aliança com NX-S01L2-A
+NX-S01L2-C;Orphan;Negative;Intelectualização industrial;ativacao_ancora;1.0;nao;Aliança com NX-S02L2-C
+NX-S01L3-A;Creator;Hyper-Positive;Hiperdocumentação;ativacao_criadora;1.0;nao;Conflito com NX-S02L1-B
+NX-S01L3-B;Orphan;Negative;Intelectualização industrial;ativacao_ancora;1.0;nao;Aliança com NX-S03L2-C
+NX-S01L3-C;Magician;Positive;Roteamento condicional;ativacao_criadora;1.0;nao;Aliança com NX-S06L2-A
+NX-S02L1-A;Rebel;Negative;Retaliação verbal calibrada;ativacao_trickster;1.0;nao;Aliança com NX-S03L3-A
+NX-S02L1-B;Shadow;Hyper-Negative;Retaliação verbal calibrada;ativacao_sombria;1.0;nao;Conflito com NX-S01L3-A
+NX-S02L1-C;Jester;Negative;Cinismo como firewall;ativacao_trickster;1.0;nao;Aliança com NX-S02L2-B
+NX-S02L2-A;Shadow;Hyper-Negative;Retaliação verbal calibrada;ativacao_sombria;1.0;nao;Conflito com NX-S01L3-A
+NX-S02L2-B;Trickster;Negative;Cinismo como firewall;ativacao_trickster;1.0;nao;Aliança com NX-S02L1-C
+NX-S02L2-C;Orphan;Negative;Observação fria e log;ativacao_ancora;0.7;nao;Aliança com NX-S02L3-A
+NX-S02L3-A;Everyman;Negative;Observação fria e log;ativacao_ancora;0.7;nao;Aliança com NX-S02L2-C
+NX-S02L3-B;Sage;Neutral;Auditoria forense de narrativa;ativacao_analitica;1.0;nao;Aliança com NX-S09L1-C
+NX-S02L3-C;Orphan;Negative;Desmistificação materialista;ativacao_ancora;1.0;nao;Aliança com NX-S08L1-A
+NX-S03L1-A;Orphan;Negative;Auditoria forense de narrativa;ativacao_ancora;1.0;nao;Aliança com NX-S03L1-B
+NX-S03L1-B;Orphan;Hyper-Negative;Auditoria forense de narrativa;ativacao_ancora;0.7;nao;Conflito com NX-S04L3-C
+NX-S03L1-C;Rebel;Negative;Cinismo como firewall;ativacao_trickster;1.0;nao;Aliança com NX-S10L1-B
+NX-S03L2-A;Jester;Negative;Cinismo como firewall;ativacao_trickster;1.0;nao;Aliança com NX-S03L2-B
+NX-S03L2-B;Rebel;Negative;Auditoria forense de narrativa;ativacao_trickster;1.0;nao;Aliança com NX-S03L2-A
+NX-S03L2-C;Everyman;Negative;Intelectualização industrial;ativacao_ancora;1.0;nao;Aliança com NX-S01L3-B
+NX-S03L3-A;Trickster;Hyper-Negative;Retaliação verbal calibrada;ativacao_trickster;1.0;nao;Conflito com NX-S04L3-C
+NX-S03L3-B;Jester;Negative;Retaliação verbal calibrada;ativacao_trickster;1.0;nao;Aliança com NX-S02L2-A
+NX-S03L3-C;Trickster;Negative;Cinismo como firewall;ativacao_trickster;1.0;nao;Aliança com NX-S03L3-A
+NX-S04L1-A;Sage;Neutral;Observação fria e log;ativacao_analitica;1.0;nao;Aliança com NX-S04L1-B
+NX-S04L1-B;Explorer;Neutral;Observação fria e log;ativacao_analitica;1.0;nao;Aliança com NX-S04L1-A
+NX-S04L1-C;Orphan;Negative;Desmistificação materialista;ativacao_ancora;1.0;nao;Aliança com NX-S04L1-B
+NX-S04L2-A;Trickster;Negative;Cinismo como firewall;ativacao_trickster;1.0;nao;Aliança com NX-S03L2-A
+NX-S04L2-B;Jester;Negative;Cinismo como firewall;ativacao_trickster;1.0;nao;Aliança com NX-S07L2-B
+NX-S04L2-C;Trickster;Hyper-Negative;Retaliação verbal calibrada;ativacao_trickster;1.0;nao;Conflito com NX-S06L2-A
+NX-S04L3-A;Sage;Neutral;Observação fria e log;ativacao_analitica;1.0;nao;Aliança com NX-S04L3-B
+NX-S04L3-B;Magician;Neutral;Roteamento condicional;ativacao_criadora;0.7;nao;Aliança com NX-S04L3-A
+NX-S04L3-C;Creator;Hyper-Positive;Hiperdocumentação;ativacao_criadora;1.0;nao;Conflito com NX-S04L2-C
+NX-S05L1-A;Warrior;Positive;Treino por interferência;ativacao_combativa;1.0;nao;Aliança com NX-S05L1-B
+NX-S05L1-B;Warrior;Positive;Treino por interferência;ativacao_combativa;1.0;nao;Aliança com NX-S05L1-A
+NX-S05L1-C;Magician;Positive;Treino por interferência;ativacao_criadora;0.7;nao;Aliança com NX-S05L1-B
+NX-S05L2-A;Sage;Neutral;Observação fria e log;ativacao_analitica;1.0;nao;Aliança com NX-S05L2-B
+NX-S05L2-B;Magician;Neutral;Observação fria e log;ativacao_generica;0.6;sim;Aliança com NX-S05L2-A
+NX-S05L2-C;Explorer;Negative;Externalização de agência;ativacao_generica;0.6;sim;Aliança com NX-S04L2-B
+NX-S05L3-A;Shadow;Hyper-Negative;Intelectualização industrial;ativacao_sombria;0.7;nao;Conflito com NX-S06L2-A
+NX-S05L3-B;Sage;Neutral;Auditoria forense de narrativa;ativacao_analitica;1.0;nao;Aliança com NX-S05L3-A
+NX-S05L3-C;Magician;Negative;Intelectualização industrial;ativacao_generica;0.6;sim;Aliança com NX-S05L3-A
+NX-S06L1-A;Âncora Dissociada;Neutral;Externalização de agência;ativacao_ancora;1.0;nao;Aliança com NX-S06L1-C
+NX-S06L1-B;Âncora Dissociada;Neutral;Externalização de agência;ativacao_ancora;1.0;nao;Aliança com NX-S06L3-B
+NX-S06L1-C;Magician;Neutral;Externalização de agência;ativacao_generica;0.6;sim;Aliança com NX-S06L1-A
+NX-S06L2-A;Magician;Hyper-Positive;Roteamento condicional;ativacao_criadora;1.0;nao;Conflito com NX-S05L3-A
+NX-S06L2-B;Ruler;Positive;Roteamento condicional;ativacao_analitica;0.7;nao;Aliança com NX-S06L2-A
+NX-S06L2-C;Creator;Hyper-Positive;Hiperdocumentação;ativacao_criadora;1.0;nao;Conflito com NX-S05L3-A
+NX-S06L3-A;Âncora Dissociada;Neutral;Externalização de agência;ativacao_ancora;1.0;nao;Aliança com NX-S06L1-C
+NX-S06L3-B;Zumbi-Espelho;Neutral;Observação fria e log;ativacao_analitica;1.0;nao;Aliança com NX-S06L3-C
+NX-S06L3-C;Creator;Positive;Hiperdocumentação;ativacao_criadora;1.0;nao;Aliança com NX-S06L2-C
+NX-S07L1-A;Everyman;Neutral;Auditoria forense de narrativa;ativacao_ancora;1.0;nao;Aliança com NX-S07L1-C
+NX-S07L1-B;Everyman;Positive;Intelectualização industrial;ativacao_ancora;1.0;nao;Aliança com NX-S07L1-A
+NX-S07L1-C;Creator;Neutral;Auditoria forense de narrativa;ativacao_generica;0.6;sim;Aliança com NX-S07L1-A
+NX-S07L2-A;Orphan;Negative;Intelectualização industrial;ativacao_ancora;1.0;nao;Aliança com NX-S10L1-B
+NX-S07L2-B;Jester;Negative;Cinismo como firewall;ativacao_trickster;1.0;nao;Aliança com NX-S04L2-B
+NX-S07L2-C;Orphan;Positive;Externalização de agência;ativacao_ancora;1.0;nao;Aliança com NX-S07L3-A
+NX-S07L3-A;Caregiver;Positive;Externalização de agência;ativacao_ancora;1.0;nao;Aliança com NX-S07L2-C
+NX-S07L3-B;Caregiver;Neutral;Auditoria forense de narrativa;ativacao_ancora;1.0;nao;Aliança com NX-S07L3-A
+NX-S07L3-C;Arquivista-Roteador;Neutral;Hiperdocumentação;ativacao_analitica;1.0;nao;Aliança com NX-S05L3-C
+NX-S08L1-A;Jester;Negative;Desmistificação materialista;ativacao_trickster;0.7;nao;Aliança com NX-S08L2-A
+NX-S08L1-B;Magician;Hyper-Positive;Desmistificação materialista;ativacao_criadora;0.7;nao;Conflito com NX-S10L1-B
+NX-S08L1-C;Sage;Neutral;Desmistificação materialista;ativacao_analitica;1.0;nao;Aliança com NX-S08L1-B
+NX-S08L2-A;Oráculo Materialista;Negative;Desmistificação materialista;ativacao_exegetica;1.0;nao;Aliança com NX-S08L2-B
+NX-S08L2-B;Shadow;Negative;Desmistificação materialista;ativacao_generica;0.6;sim;Aliança com NX-S08L2-A
+NX-S08L2-C;Ruler;Hyper-Positive;Hiperdocumentação;ativacao_analitica;0.7;nao;Conflito com NX-S10L1-B
+NX-S08L3-A;Creator;Positive;Desmistificação materialista;ativacao_criadora;0.7;nao;Aliança com NX-S08L1-B
+NX-S08L3-B;Creator;Positive;Roteamento condicional;ativacao_criadora;1.0;nao;Aliança com NX-S09L2-A
+NX-S08L3-C;Arquivista-Roteador;Neutral;Hiperdocumentação;ativacao_analitica;1.0;nao;Aliança com NX-S08L2-C
+NX-S09L1-A;Rebel;Negative;Auditoria forense de narrativa;ativacao_trickster;1.0;nao;Aliança com NX-S09L1-B
+NX-S09L1-B;Rebel;Negative;Cinismo como firewall;ativacao_trickster;1.0;nao;Aliança com NX-S09L1-A
+NX-S09L1-C;Explorer;Neutral;Auditoria forense de narrativa;ativacao_analitica;1.0;nao;Aliança com NX-S10L1-A
+NX-S09L2-A;Creator;Hyper-Positive;Roteamento condicional;ativacao_criadora;1.0;nao;Conflito com NX-S11L1-A
+NX-S09L2-B;Rebel;Positive;Roteamento condicional;ativacao_generica;0.6;sim;Aliança com NX-S09L2-A
+NX-S09L2-C;Ruler;Neutral;Roteamento condicional;ativacao_analitica;1.0;nao;Aliança com NX-S09L2-A
+NX-S09L3-A;Creator;Hyper-Positive;Hiperdocumentação;ativacao_criadora;1.0;nao;Conflito com NX-S11L1-A
+NX-S09L3-B;Magician;Positive;Roteamento condicional;ativacao_criadora;1.0;nao;Aliança com NX-S09L2-A
+NX-S09L3-C;Ruler;Neutral;Roteamento condicional;ativacao_analitica;1.0;nao;Aliança com NX-S06L2-B
+NX-S10L1-A;Explorer;Neutral;Auditoria forense de narrativa;ativacao_analitica;1.0;nao;Aliança com NX-S10L2-C
+NX-S10L1-B;Shadow;Hyper-Negative;Cinismo como firewall;ativacao_sombria;1.0;nao;Conflito com NX-S09L3-A
+NX-S10L1-C;Warrior;Positive;Externalização de agência;ativacao_combativa;1.0;nao;Aliança com NX-S10L2-A
+NX-S10L2-A;Warrior;Positive;Externalização de agência;ativacao_combativa;1.0;nao;Aliança com NX-S10L1-C
+NX-S10L2-B;Orphan;Negative;Auditoria forense de narrativa;ativacao_ancora;1.0;nao;Aliança com NX-S11L1-B
+NX-S10L2-C;Explorer;Neutral;Auditoria forense de narrativa;ativacao_analitica;1.0;nao;Aliança com NX-S10L1-A
+NX-S10L3-A;Explorer;Positive;Intelectualização industrial;ativacao_analitica;0.7;nao;Aliança com NX-S10L3-B
+NX-S10L3-B;Sage;Neutral;Observação fria e log;ativacao_analitica;1.0;nao;Aliança com NX-S10L3-A
+NX-S10L3-C;Sage;Positive;Hiperdocumentação;ativacao_analitica;0.7;nao;Aliança com NX-S07L3-A
+NX-S11L1-A;Shadow;Hyper-Negative;Retaliação verbal calibrada;ativacao_sombria;1.0;nao;Conflito com NX-S09L3-A
+NX-S11L1-B;Orphan;Negative;Auditoria forense de narrativa;ativacao_ancora;1.0;nao;Aliança com NX-S11L1-C
+NX-S11L1-C;Rebel;Negative;Cinismo como firewall;ativacao_trickster;1.0;nao;Aliança com NX-S11L1-B
+NX-S11L2-A;Zumbi-Espelho;Neutral;Observação fria e log;ativacao_analitica;1.0;nao;Aliança com NX-S11L2-C
+NX-S11L2-B;Sage;Neutral;Auditoria forense de narrativa;ativacao_analitica;1.0;nao;Aliança com NX-S11L2-A
+NX-S11L2-C;Ruler;Neutral;Observação fria e log;ativacao_analitica;1.0;nao;Aliança com NX-S11L2-A
+NX-S11L3-A;Âncora Dissociada;Neutral;Externalização de agência;ativacao_ancora;1.0;nao;Aliança com NX-S11L3-B
+NX-S11L3-B;Everyman;Neutral;Observação fria e log;ativacao_ancora;0.7;nao;Aliança com NX-S11L3-A
+NX-S11L3-C;Ruler;Neutral;Observação fria e log;ativacao_analitica;1.0;nao;Aliança com NX-S11L2-C

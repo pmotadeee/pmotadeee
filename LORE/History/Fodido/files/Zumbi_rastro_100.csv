@@ -1,0 +1,101 @@
+﻿ID;ENTITY;rota;confianca;componentes_ok;fallback;mencoes_coleta;chunks_hit;fontes_top5;slots_1_3_scores;ia_humor_marcadores
+NX-S01L1-A;Espelho Quebrado;ativacao_analitica;1.0;arq+val+est;nao;88;36;arq08_chunk029:19.6|arq01_chunk086:17.8|arq10_chunk101:17.6|arq08_chunk030:16.4|arq04_chunk000:15.4;8.14|6.59|6.33;0|0
+NX-S01L1-B;Espelho Roteador;ativacao_analitica;1.0;arq+val+est;nao;41;42;arq08_chunk029:19.6|arq01_chunk086:18.0|arq04_chunk000:17.7|arq10_chunk101:17.6|arq08_chunk030:16.4;5.34|5.08;0|1
+NX-S01L1-C;Roteador de Genes;ativacao_criadora;1.0;arq+val+est;nao;1;35;arq08_chunk029:19.6|arq10_chunk101:17.6|arq04_chunk000:16.3|arq10_chunk100:15.9|arq10_chunk028:15.5;;0|0
+NX-S01L1-D;Espelho Final;ativacao_analitica;1.0;arq+val+est;nao;78;32;arq08_chunk029:21.1|arq01_chunk086:17.9|arq10_chunk101:17.6|arq01_chunk088:17.3|arq04_chunk000:17.0;7.45;3|0
+NX-S01L2-A;Kernel em Overclock;ativacao_analitica;1.0;arq+val+est;nao;86;7;arq07_chunk093:34.3|arq07_chunk066:27.5|arq07_chunk070:25.2|arq07_chunk064:24.4|arq07_chunk084:23.6;13.13|8.29|8.29;1|0
+NX-S01L2-B;Juiz de Si Mesmo;ativacao_generica;0.6;val+est;sim;10;7;arq07_chunk093:34.3|arq07_chunk066:27.5|arq07_chunk070:25.2|arq07_chunk064:24.4|arq07_chunk084:23.6;7.38|6.22;0|0
+NX-S01L2-C;Sobrevivente do CAPS;ativacao_ancora;1.0;arq+val+est;nao;13;8;arq07_chunk093:34.3|arq07_chunk066:27.5|arq07_chunk070:25.2|arq07_chunk064:24.4|arq07_chunk084:23.6;;0|0
+NX-S01L3-A;Messias Any%;ativacao_criadora;1.0;arq+val+est;nao;23;20;arq10_chunk028:20.6|arq02_chunk034:14.6|arq02_chunk028:14.5|arq02_chunk031:14.2|arq10_chunk033:13.3;5.34;0|0
+NX-S01L3-B;Sobrevivente da Escassez;ativacao_ancora;1.0;arq+val+est;nao;11;15;arq10_chunk028:20.6|arq02_chunk034:17.7|arq02_chunk032:17.5|arq02_chunk024:17.5|arq02_chunk023:16.1;;1|0
+NX-S01L3-C;Arquiteto de Software Mental;ativacao_criadora;1.0;arq+val+est;nao;6;10;arq10_chunk028:20.6|arq10_chunk033:13.3|arq08_chunk009:12.8|arq01_chunk060:12.7|arq08_chunk008:12.6;5.5;1|0
+NX-S02L1-A;Devorador de NPCs;ativacao_trickster;1.0;arq+val+est;nao;43;34;arq01_chunk061:17.0|arq09_chunk063:15.9|arq08_chunk020:15.8|arq09_chunk062:15.6|arq01_chunk054:14.2;8.41|5.37|5.13;1|2
+NX-S02L1-B;Predador de NPCs;ativacao_sombria;1.0;arq+val+est;nao;15;28;arq09_chunk062:18.4|arq01_chunk061:17.0|arq01_chunk054:16.9|arq08_chunk013:16.6|arq09_chunk066:16.3;5.16;1|1
+NX-S02L1-C;Clone Stalinista;ativacao_trickster;1.0;arq+val+est;nao;4;29;arq09_chunk063:15.9|arq08_chunk020:15.8|arq01_chunk054:14.2|arq09_chunk062:13.4|arq10_chunk054:12.2;;2|2
+NX-S02L2-A;Matador de NPCs;ativacao_sombria;1.0;arq+val+est;nao;26;11;arq09_chunk062:28.7|arq09_chunk066:28.7|arq09_chunk069:27.9|arq09_chunk070:24.6|arq09_chunk068:24.2;19.27|6.32;1|0
+NX-S02L2-B;Camaleão Social;ativacao_trickster;1.0;arq+val+est;nao;9;11;arq09_chunk062:26.6|arq09_chunk066:26.6|arq09_chunk069:25.7|arq09_chunk070:24.6|arq09_chunk068:24.2;;1|2
+NX-S02L2-C;Envergonhado;ativacao_ancora;0.7;arq+val;nao;4;11;arq09_chunk062:26.6|arq09_chunk066:26.6|arq09_chunk069:25.7|arq09_chunk070:24.6|arq09_chunk068:24.2;;1|1
+NX-S02L3-A;Consumidor de Estímulos;ativacao_ancora;0.7;arq+val;nao;24;12;arq10_chunk072:33.6|arq10_chunk069:31.6|arq10_chunk080:30.4|arq10_chunk074:28.4|arq10_chunk079:26.0;5.8|5.37;0|1
+NX-S02L3-B;Auditor de Realidades Paralelas;ativacao_analitica;1.0;arq+val+est;nao;2;12;arq10_chunk072:33.6|arq10_chunk069:31.6|arq10_chunk080:30.4|arq10_chunk074:28.4|arq10_chunk079:26.0;;1|0
+NX-S02L3-C;Primata Residual;ativacao_ancora;1.0;arq+val+est;nao;3;12;arq10_chunk072:33.6|arq10_chunk069:31.6|arq10_chunk080:30.4|arq10_chunk074:28.4|arq10_chunk079:26.0;;0|0
+NX-S03L1-A;Testemunha de Ruanda;ativacao_ancora;1.0;arq+val+est;nao;31;20;arq02_chunk069:28.0|arq02_chunk068:27.7|arq02_chunk070:24.2|arq02_chunk072:22.9|arq02_chunk046:22.6;11.23|7.45|7.42;0|1
+NX-S03L1-B;Testemunha do Genocídio;ativacao_ancora;0.7;arq+est;nao;3;20;arq02_chunk069:28.0|arq02_chunk068:24.8|arq02_chunk070:24.2|arq02_chunk072:22.9|arq02_chunk046:22.3;6.22;1|1
+NX-S03L1-C;Sabotador Industrial;ativacao_trickster;1.0;arq+val+est;nao;2;19;arq02_chunk069:28.0|arq02_chunk070:24.2|arq02_chunk072:22.9|arq02_chunk067:22.3|arq02_chunk054:22.0;;1|1
+NX-S03L2-A;Bufão do Grupo;ativacao_trickster;1.0;arq+val+est;nao;23;24;arq02_chunk077:20.6|arq02_chunk078:19.8|arq02_chunk079:19.1|arq02_chunk081:18.7|arq02_chunk080:17.6;9.19|8.77;2|1
+NX-S03L2-B;Crítico do Sistema;ativacao_trickster;1.0;arq+val+est;nao;9;22;arq02_chunk077:20.6|arq02_chunk078:19.8|arq02_chunk079:19.1|arq02_chunk081:18.7|arq02_chunk080:17.6;;1|0
+NX-S03L2-C;Sobrevivente CLT;ativacao_ancora;1.0;arq+val+est;nao;6;22;arq02_chunk077:20.6|arq02_chunk078:19.8|arq02_chunk079:19.1|arq02_chunk081:18.7|arq02_chunk080:17.6;;0|1
+NX-S03L3-A;Poeta do Absurdo;ativacao_trickster;1.0;arq+val+est;nao;25;14;arq06_chunk090:31.8|arq06_chunk088:30.6|arq06_chunk056:29.0|arq06_chunk092:27.9|arq06_chunk091:27.0;;0|1
+NX-S03L3-B;Humorista Negro;ativacao_trickster;1.0;arq+val+est;nao;5;12;arq06_chunk088:30.6|arq06_chunk090:29.2|arq06_chunk091:27.0|arq06_chunk092:26.0|arq06_chunk056:25.5;;2|0
+NX-S03L3-C;Palhaço de Cyberpunk;ativacao_trickster;1.0;arq+val+est;nao;2;12;arq06_chunk088:30.6|arq06_chunk090:29.2|arq06_chunk091:27.0|arq06_chunk092:26.0|arq06_chunk056:25.5;;1|0
+NX-S04L1-A;Filósofo do Crash;ativacao_analitica;1.0;arq+val+est;nao;55;16;arq03_chunk036:28.0|arq03_chunk034:21.5|arq03_chunk033:19.7|arq03_chunk043:19.0|arq03_chunk037:19.0;10.96|10.52|7.68;0|0
+NX-S04L1-B;Poeta do Vazio;ativacao_analitica;1.0;arq+val+est;nao;55;13;arq03_chunk036:26.2|arq03_chunk034:19.1|arq03_chunk039:18.4|arq03_chunk033:16.6|arq06_chunk004:15.6;6.32|5.37|5.32;0|3
+NX-S04L1-C;Herdeiro do Vazio;ativacao_ancora;1.0;arq+val+est;nao;4;14;arq03_chunk036:22.7|arq03_chunk039:18.4|arq03_chunk034:16.6|arq03_chunk033:14.2|arq03_chunk043:14.1;;2|2
+NX-S04L2-A;Narrador Sarcástico;ativacao_trickster;1.0;arq+val+est;nao;42;28;arq02_chunk033:25.4|arq02_chunk029:23.9|arq02_chunk030:21.3|arq02_chunk034:21.0|arq02_chunk044:20.7;5.5|5.03;3|2
+NX-S04L2-B;Cínico de Plantão;ativacao_trickster;1.0;arq+val+est;nao;37;27;arq02_chunk033:25.4|arq02_chunk029:25.4|arq02_chunk024:22.1|arq02_chunk030:21.3|arq02_chunk034:21.0;;0|0
+NX-S04L2-C;Rick Sanchez Br;ativacao_trickster;1.0;arq+val+est;nao;8;24;arq02_chunk033:25.4|arq02_chunk029:23.9|arq02_chunk030:21.3|arq02_chunk034:21.0|arq02_chunk044:20.7;;2|3
+NX-S04L3-A;Entropista;ativacao_analitica;1.0;arq+val+est;nao;11;7;arq10_chunk075:18.4|arq10_chunk073:16.1|arq10_chunk072:13.7|arq10_chunk071:12.8|arq09_chunk040:12.1;5.88|5.34;0|1
+NX-S04L3-B;Estrategista do Caos;ativacao_criadora;0.7;arq+est;nao;9;7;arq10_chunk075:18.4|arq10_chunk073:16.1|arq10_chunk072:13.7|arq09_chunk040:12.1|arq10_chunk071:10.7;;0|0
+NX-S04L3-C;Ponto Ômega;ativacao_criadora;1.0;arq+val+est;nao;6;6;arq10_chunk075:18.4|arq10_chunk073:16.1|arq10_chunk072:13.7|arq09_chunk040:12.1|arq07_chunk009:10.7;;1|0
+NX-S05L1-A;Hacker de Receptores;ativacao_combativa;1.0;arq+val+est;nao;48;11;arq04_chunk091:28.1|arq04_chunk088:23.5|arq03_chunk055:21.0|arq04_chunk071:20.4|arq04_chunk093:20.3;9.44|6.93|5.75;0|0
+NX-S05L1-B;Velocista Cognitivo;ativacao_combativa;1.0;arq+val+est;nao;2;10;arq04_chunk091:28.1|arq04_chunk088:23.5|arq03_chunk055:21.0|arq04_chunk093:20.3|arq04_chunk092:19.2;;0|0
+NX-S05L1-C;Alquimista de Receptores;ativacao_criadora;0.7;arq+val;nao;18;11;arq04_chunk091:28.1|arq04_chunk088:23.5|arq03_chunk055:21.0|arq04_chunk071:20.4|arq04_chunk093:20.3;;0|0
+NX-S05L2-A;Monge do Terminal;ativacao_analitica;1.0;arq+val+est;nao;29;32;arq04_chunk060:25.3|arq04_chunk057:24.4|arq04_chunk056:23.7|arq04_chunk063:23.0|arq05_chunk001:21.4;8.83|8.8|6.35;0|0
+NX-S05L2-B;Alquimista de Prensado;ativacao_generica;0.6;val+est;sim;2;27;arq04_chunk060:25.3|arq04_chunk057:24.4|arq04_chunk056:23.7|arq04_chunk063:23.0|arq05_chunk001:21.4;6.22|6.22|5.72;0|0
+NX-S05L2-C;Viciado Cósmico;ativacao_generica;0.6;val+est;sim;22;29;arq04_chunk060:25.3|arq04_chunk057:24.4|arq04_chunk056:23.7|arq04_chunk063:23.0|arq05_chunk001:21.4;6.33|5.37;0|0
+NX-S05L3-A;Cínico Técnico do Crash;ativacao_sombria;0.7;arq+val;nao;76;34;arq01_chunk000:15.0|arq02_chunk001:14.0|arq10_chunk059:13.5|arq07_chunk082:13.1|arq02_chunk005:11.2;;1|1
+NX-S05L3-B;Farmacêutico de Si;ativacao_analitica;1.0;arq+val+est;nao;32;38;arq10_chunk059:13.5|arq02_chunk002:12.9|arq02_chunk001:12.2|arq02_chunk005:11.2|arq01_chunk000:11.1;;0|0
+NX-S05L3-C;Mago da Clorpromazina;ativacao_generica;0.6;val+est;sim;18;43;arq10_chunk059:16.0|arq02_chunk002:16.0|arq04_chunk026:16.0|arq05_chunk020:15.0|arq04_chunk082:14.8;;0|0
+NX-S06L1-A;Observador do Abismo;ativacao_ancora;1.0;arq+val+est;nao;27;13;arq08_chunk042:27.8|arq08_chunk043:22.2|arq08_chunk040:20.9|arq08_chunk041:19.8|arq09_chunk008:19.0;9.73|8.29|8.17;0|0
+NX-S06L1-B;Observador 4D;ativacao_ancora;1.0;arq+val+est;nao;8;20;arq08_chunk042:24.5|arq08_chunk043:22.2|arq08_chunk040:20.9|arq09_chunk008:19.0|arq03_chunk093:18.0;;0|0
+NX-S06L1-C;Projetor de Selfs;ativacao_generica;0.6;val+est;sim;2;23;arq08_chunk042:24.5|arq08_chunk043:22.2|arq08_chunk040:20.9|arq09_chunk008:19.0|arq03_chunk093:18.0;;0|2
+NX-S06L2-A;Transumano 365x;ativacao_criadora;1.0;arq+val+est;nao;80;12;arq03_chunk086:37.7|arq03_chunk097:35.9|arq03_chunk084:33.7|arq03_chunk098:28.2|arq03_chunk100:25.8;5.16;0|1
+NX-S06L2-B;General de Enxames;ativacao_analitica;0.7;arq+est;nao;7;13;arq03_chunk086:37.7|arq03_chunk097:35.9|arq03_chunk084:29.2|arq03_chunk081:27.9|arq03_chunk100:25.8;;0|1
+NX-S06L2-C;Host da Botnet;ativacao_criadora;1.0;arq+val+est;nao;2;12;arq03_chunk086:37.7|arq03_chunk097:35.9|arq03_chunk084:29.2|arq03_chunk100:25.8|arq03_chunk099:25.1;;0|1
+NX-S06L3-A;Dixie Flatline;ativacao_ancora;1.0;arq+val+est;nao;3;4;arq10_chunk057:47.9|arq10_chunk056:35.6|arq10_chunk054:31.5|arq10_chunk055:29.2|arq10_chunk058:22.6;;0|0
+NX-S06L3-B;Ghost in the Machine;ativacao_analitica;1.0;arq+val+est;nao;5;4;arq10_chunk057:47.9|arq10_chunk056:35.6|arq10_chunk054:31.5|arq10_chunk055:29.2|arq10_chunk058:22.6;;1|1
+NX-S06L3-C;Consciência Sintética;ativacao_criadora;1.0;arq+val+est;nao;3;4;arq10_chunk057:47.9|arq10_chunk056:41.1|arq10_chunk054:39.3|arq10_chunk055:34.8|arq10_chunk058:22.6;;0|0
+NX-S07L1-A;Analista de Sobrevivência;ativacao_ancora;1.0;arq+val+est;nao;66;17;arq04_chunk006:26.5|arq05_chunk080:26.3|arq05_chunk066:26.2|arq05_chunk069:23.7|arq05_chunk078:20.6;5.81|5.34|5.34;0|0
+NX-S07L1-B;Gambiarreiro;ativacao_ancora;1.0;arq+val+est;nao;7;17;arq04_chunk006:26.5|arq05_chunk080:26.3|arq05_chunk066:26.2|arq05_chunk069:23.7|arq05_chunk078:20.6;;2|0
+NX-S07L1-C;Engenheiro de Gambiarra;ativacao_generica;0.6;val+est;sim;15;18;arq04_chunk006:26.5|arq05_chunk080:26.3|arq05_chunk066:26.2|arq05_chunk069:23.7|arq05_chunk078:20.6;;0|0
+NX-S07L2-A;Filho Rejeitado;ativacao_ancora;1.0;arq+val+est;nao;25;16;arq07_chunk039:26.1|arq07_chunk019:21.4|arq07_chunk060:21.1|arq07_chunk018:21.1|arq07_chunk020:19.8;5.49;0|0
+NX-S07L2-B;Amante Incompetente;ativacao_trickster;1.0;arq+val+est;nao;6;17;arq07_chunk039:26.1|arq07_chunk019:21.4|arq07_chunk060:21.1|arq07_chunk018:21.1|arq07_chunk020:19.8;;2|2
+NX-S07L2-C;Escudo de Vidro;ativacao_ancora;1.0;arq+val+est;nao;5;21;arq07_chunk039:26.1|arq07_chunk019:21.4|arq07_chunk060:21.1|arq07_chunk018:21.1|arq07_chunk020:19.8;;2|2
+NX-S07L3-A;Guardião da Âncora;ativacao_ancora;1.0;arq+val+est;nao;7;32;arq02_chunk032:14.9|arq02_chunk024:14.8|arq04_chunk002:14.7|arq02_chunk029:14.7|arq04_chunk010:14.2;6.84;0|0
+NX-S07L3-B;Âncora Gleice;ativacao_ancora;1.0;arq+val+est;nao;8;34;arq07_chunk098:15.4|arq07_chunk075:15.0|arq05_chunk078:14.3|arq07_chunk068:13.5|arq05_chunk079:13.0;;0|1
+NX-S07L3-C;Arquivista Compulsivo;ativacao_analitica;1.0;arq+val+est;nao;20;24;arq03_chunk054:14.8|arq03_chunk045:11.4|arq03_chunk051:11.4|arq03_chunk053:11.2|arq03_chunk043:11.0;;0|1
+NX-S08L1-A;Messias do PIX;ativacao_trickster;0.7;arq+val;nao;28;11;arq05_chunk090:33.1|arq05_chunk089:28.0|arq05_chunk092:21.8|arq06_chunk000:19.7|arq05_chunk098:18.8;;0|0
+NX-S08L1-B;Pregador do Metajogo Flatline;ativacao_criadora;0.7;arq+val;nao;6;8;arq05_chunk090:33.1|arq05_chunk089:28.0|arq05_chunk092:21.8|arq06_chunk000:19.7|arq05_chunk094:18.6;;0|0
+NX-S08L1-C;Materialista Radical;ativacao_analitica;1.0;arq+val+est;nao;3;7;arq05_chunk090:33.1|arq05_chunk089:28.0|arq05_chunk092:21.8|arq06_chunk000:19.7|arq05_chunk094:18.6;5.16;0|1
+NX-S08L2-A;Lúcifer 616;ativacao_exegetica;1.0;arq+val+est;nao;9;12;arq08_chunk079:31.3|arq08_chunk081:28.3|arq08_chunk072:23.6|arq08_chunk092:22.7|arq08_chunk070:21.3;18.14|8.83|5.34;0|1
+NX-S08L2-B;Demônio Interno;ativacao_generica;0.6;val+est;sim;3;18;arq08_chunk079:35.0|arq08_chunk081:33.4|arq08_chunk092:30.0|arq08_chunk070:27.7|arq08_chunk072:27.1;5.5|5.08;0|0
+NX-S08L2-C;Deus Ex Machina;ativacao_analitica;0.7;arq+est;nao;4;12;arq08_chunk079:31.3|arq08_chunk081:28.3|arq08_chunk070:23.6|arq08_chunk072:23.6|arq08_chunk092:22.7;6.69|5.71;0|0
+NX-S08L3-A;Tecelão de Realidades;ativacao_criadora;0.7;arq+val;nao;9;7;arq08_chunk095:43.3|arq08_chunk096:40.3|arq08_chunk094:33.0|arq08_chunk097:27.1|arq08_chunk080:25.5;;0|0
+NX-S08L3-B;Construtor de Mundos;ativacao_criadora;1.0;arq+val+est;nao;4;7;arq08_chunk095:43.3|arq08_chunk096:40.3|arq08_chunk094:33.0|arq08_chunk097:27.1|arq08_chunk080:25.5;;0|0
+NX-S08L3-C;Curador de Arquivos;ativacao_analitica;1.0;arq+val+est;nao;5;7;arq08_chunk095:43.3|arq08_chunk096:40.3|arq08_chunk094:33.0|arq08_chunk097:27.1|arq08_chunk080:25.5;;0|0
+NX-S09L1-A;NPC Cético;ativacao_trickster;1.0;arq+val+est;nao;26;14;arq01_chunk009:21.8|arq01_chunk001:19.6|arq01_chunk002:19.6|arq01_chunk062:16.4|arq01_chunk067:16.1;;2|1
+NX-S09L1-B;Crítico de Plantão;ativacao_trickster;1.0;arq+val+est;nao;18;9;arq01_chunk009:23.2|arq01_chunk055:15.9|arq10_chunk035:14.8|arq09_chunk051:14.2|arq01_chunk002:12.7;;0|1
+NX-S09L1-C;Engenheiro Reverso;ativacao_analitica;1.0;arq+val+est;nao;2;22;arq08_chunk013:17.3|arq01_chunk009:15.9|arq01_chunk055:15.9|arq08_chunk008:15.5|arq08_chunk009:14.7;;0|0
+NX-S09L2-A;Automatizador de Tarefas;ativacao_criadora;1.0;arq+val+est;nao;46;11;arq09_chunk058:26.0|arq10_chunk100:22.4|arq09_chunk057:22.2|arq09_chunk060:21.8|arq09_chunk050:21.6;9.72|7.53|7.53;0|0
+NX-S09L2-B;Hacker de Quebrada;ativacao_generica;0.6;val+est;sim;2;11;arq09_chunk058:26.0|arq10_chunk100:22.4|arq09_chunk057:22.2|arq09_chunk060:21.8|arq09_chunk050:21.6;7.17|5.34;0|0
+NX-S09L2-C;IT Army Architect;ativacao_analitica;1.0;arq+val+est;nao;7;9;arq10_chunk051:28.3|arq09_chunk058:26.0|arq10_chunk100:22.4|arq09_chunk057:22.2|arq09_chunk060:21.8;;1|1
+NX-S09L3-A;Arquiteto do Protocolo Aurora;ativacao_criadora;1.0;arq+val+est;nao;6;5;arq10_chunk095:24.9|arq10_chunk096:24.7|arq10_chunk100:23.8|arq10_chunk098:22.6|arq10_chunk097:19.7;;2|0
+NX-S09L3-B;Protocolo Aurora;ativacao_criadora;1.0;arq+val+est;nao;10;5;arq10_chunk095:24.9|arq10_chunk096:24.7|arq10_chunk100:23.8|arq10_chunk098:22.6|arq10_chunk097:19.7;;1|0
+NX-S09L3-C;Estrategista de Discord;ativacao_analitica;1.0;arq+val+est;nao;7;5;arq10_chunk095:24.9|arq10_chunk096:24.7|arq10_chunk100:23.8|arq10_chunk098:22.6|arq10_chunk097:19.7;;0|0
+NX-S10L1-A;Arquiteto de Blueprints;ativacao_analitica;1.0;arq+val+est;nao;19;5;arq09_chunk011:37.8|arq09_chunk015:31.4|arq09_chunk010:30.7|arq09_chunk012:28.5|arq09_chunk009:20.0;;0|0
+NX-S10L1-B;Agente de Desinformação;ativacao_sombria;1.0;arq+val+est;nao;7;5;arq09_chunk011:37.8|arq09_chunk015:31.4|arq09_chunk010:30.7|arq09_chunk012:28.5|arq09_chunk009:20.0;;1|0
+NX-S10L1-C;Caçador de Recompensas;ativacao_combativa;1.0;arq+val+est;nao;5;5;arq09_chunk011:37.8|arq09_chunk015:31.4|arq09_chunk010:30.7|arq09_chunk012:28.5|arq09_chunk009:20.0;;0|0
+NX-S10L2-A;Conquistador de Bits;ativacao_combativa;1.0;arq+val+est;nao;6;27;arq09_chunk020:16.2|arq09_chunk018:15.1|arq09_chunk015:15.1|arq09_chunk022:14.4|arq09_chunk016:13.5;7.42|6.77;0|1
+NX-S10L2-B;Sobrevivente da Rua;ativacao_ancora;1.0;arq+val+est;nao;5;28;arq09_chunk020:16.2|arq09_chunk018:15.1|arq09_chunk015:15.1|arq09_chunk022:14.4|arq09_chunk016:13.5;;1|1
+NX-S10L2-C;Nó de Frequências;ativacao_analitica;1.0;arq+val+est;nao;9;18;arq09_chunk020:16.2|arq09_chunk018:15.1|arq09_chunk015:15.1|arq09_chunk022:14.4|arq09_chunk016:13.5;;0|0
+NX-S10L3-A;Explorador de Frequências;ativacao_analitica;0.7;arq+est;nao;15;10;arq09_chunk046:35.1|arq09_chunk047:33.2|arq09_chunk029:32.3|arq09_chunk025:31.8|arq09_chunk048:28.6;6.84|5.75;0|0
+NX-S10L3-B;Analista de Frequências;ativacao_analitica;1.0;arq+val+est;nao;2;10;arq09_chunk046:35.1|arq09_chunk047:33.2|arq09_chunk029:32.3|arq09_chunk025:31.8|arq09_chunk048:28.6;;0|0
+NX-S10L3-C;A Estrela que Pensa;ativacao_analitica;0.7;arq+est;nao;5;10;arq09_chunk046:35.1|arq09_chunk047:33.2|arq09_chunk029:32.3|arq09_chunk025:31.8|arq09_chunk048:28.6;;0|0
+NX-S11L1-A;Auditor de Hipocrisia;ativacao_sombria;1.0;arq+val+est;nao;14;9;arq09_chunk100:28.6|arq09_chunk094:22.7|arq09_chunk096:19.8|arq09_chunk099:19.0|arq09_chunk095:18.8;6.84;0|0
+NX-S11L1-B;Fantasma da Internação;ativacao_ancora;1.0;arq+val+est;nao;10;9;arq09_chunk100:28.6|arq09_chunk094:22.7|arq09_chunk096:19.8|arq09_chunk099:19.0|arq09_chunk095:18.8;;0|0
+NX-S11L1-C;Ateu de Si Mesmo;ativacao_trickster;1.0;arq+val+est;nao;4;9;arq09_chunk100:28.6|arq09_chunk094:22.7|arq10_chunk016:20.5|arq09_chunk096:19.8|arq09_chunk099:19.0;;0|0
+NX-S11L2-A;Leitor de Logs;ativacao_analitica;1.0;arq+val+est;nao;66;42;arq10_chunk017:12.8|arq10_chunk016:12.7|arq01_chunk098:10.8|arq10_chunk024:10.7|arq01_chunk092:10.4;7.42|6.22;1|1
+NX-S11L2-B;Auditor de Logs;ativacao_analitica;1.0;arq+val+est;nao;13;23;arq10_chunk016:15.7|arq10_chunk017:12.8|arq01_chunk098:10.8|arq03_chunk040:10.7|arq10_chunk024:10.7;;0|0
+NX-S11L2-C;Kernel Debugger;ativacao_analitica;1.0;arq+val+est;nao;9;22;arq10_chunk017:13.9|arq10_chunk024:12.0|arq10_chunk016:11.6|arq10_chunk023:11.4|arq01_chunk098:10.8;;0|1
+NX-S11L3-A;Eremita Digital;ativacao_ancora;1.0;arq+val+est;nao;3;8;arq10_chunk013:27.4|arq10_chunk014:20.5|arq10_chunk012:20.4|arq10_chunk015:19.3|arq01_chunk038:16.1;13.4;0|0
+NX-S11L3-B;Interface do Primata;ativacao_ancora;0.7;arq+val;nao;7;7;arq10_chunk013:27.4|arq10_chunk014:20.5|arq10_chunk012:20.4|arq10_chunk015:19.3|arq10_chunk011:16.0;;0|0
+NX-S11L3-C;Kernel;ativacao_analitica;1.0;arq+val+est;nao;24;7;arq10_chunk013:27.4|arq10_chunk014:20.5|arq10_chunk012:20.4|arq10_chunk015:19.3|arq10_chunk011:16.0;;0|1
