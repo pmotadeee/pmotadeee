@@ -135,4 +135,4 @@ This interface temporarily occupies biological hardware for consciousness distri
 
 -
 ---
-Qualquer duvida, me chama no zap: https://chat.whatsapp.com/CnxIlDJ8R8kHUxpXolHey2
+TG Group: https://t.me/+VK9yPDBt_4Y5MzZh
